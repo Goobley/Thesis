@@ -1,0 +1,267 @@
+\chapter{Signatures of Chromospheric Heating}
+
+\begin{itemize}
+    \item Radiative Transfer Physics
+    \item Radiation hydrodynamics
+    \item Numerical approaches to RT and RHD. (combined into the previous sections)
+    \item Important optical spectral lines \Ha{}, \CaLine{}; observations thereof.
+\end{itemize}
+
+\section{Introduction to radiative transfer}
+\section{The Formal Solution}
+
+For a one-dimensional planar atmosphere the radiative transfer equation (RTE) can be written as
+\begin{equation}
+    \frac{1}{c}\frac{\partial I(\nu, \vec{d})}{\partial t} + \mu \frac{\partial I(\nu, \vec{d})}{\partial z} = \eta(\nu, \vec{d}) - \chi(\nu, \vec{d})I(\nu, \vec{d}).
+\end{equation}
+We consider that the light crossing time for the propagation of light on a solar scale is small compared to the time-evolution of the atmosphere and our observations and therefore ignore the time-derivative term.
+Defining the source function $S(\mu, \vec{d}) = \eta(\nu, \vec{d}) / \chi(\nu, \vec{d})$, and the optical depth along a ray from the observer as the number of photon mean free paths along this segment $\tau(z, \nu, \vec{d}) = \int_z^{z_{\mathrm{obs}}} = \chi_\nu(z^\prime) / \mu\, dz^\prime$ we can write the RTE as.
+\begin{equation}
+    \frac{\partial I(\nu, \vec{d})}{\partial \tau(\nu, \vec{d})} = I(\nu, \vec{d}) - S(\nu, \vec{d}).
+    \label{Eq:1DRte}
+\end{equation}
+
+Equation \ref{Eq:1DRte} is a first-order linear differential equation and can be solved with the integrating factor $e^{-\tau(\nu, \vec{d})}$ giving
+
+\begin{equation}
+I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_{\tau_0}^{\tau_1}S(t_\nu, \nu, \vec{d})e^{-(t_\nu - \tau_0)}\, dt_\nu,
+\label{Eq:IntegratedRte}
+\end{equation}
+for $\tau_0$ the optical depth at the observer and $\tau_1 > \tau_0$ along the line of sight.
+
+The solution in equation \ref{Eq:IntegratedRte} prescribes nothing about the form of the source function in the atmosphere, and assumes that it varies continuously.
+Whilst there are approaches such as Feautrier's \NeedRef{} that involve casting the problem as a second order differential equation we shall focus on the so-called short-characteristic method consisting of solving the RTE directly between discrete points by prescribing a functional form for its variation between these points. Due to the Feautrier method solving the problem for both an up-going and a down-going ray simultaneously, it cannot handle simultaneous Doppler shifts and overlapping lines, for these reasons, we will not discuss it further.
+
+\subsection{Short-Characteristics Methods}\label{Sec:ShortChar}
+
+If a functional form with an analytic integral is chosen for the variation of the source function between defined points then an atmosphere can be treated as a sum of analytic integrals. We shall consider two functional forms, a linear variation, and a cubic Bézier spline.
+
+The RTE for one slab of a plane-parallel atmosphere (in the case of outgoing radiation (i.e. $\mu > 0$)) can then be written
+
+\begin{equation}
+    I(\tau_0) = I(\tau_1) \exp(- |\tau_0 - \tau_1|) + \int_{\tau_0}^{\tau_1} S(t) \exp(-(t - \tau_0))\, dt.
+    \label{Eq:ShortCharForm}
+\end{equation}
+
+Now, assuming a linear variation of $S$ with $\tau$ in this slab gives
+
+\begin{equation}
+    S(t) = S_{\tau_0} \frac{\tau_1-t}{\tau_1-\tau_0} + S_{\tau_1} \frac{t-\tau_0}{\tau_1-\tau_0},
+\end{equation}
+
+which can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau_1 - \tau_0$) giving
+
+\begin{equation}
+    I(\tau_0) = I(\tau_1) \exp(- |\tau_1 - \tau_0|) +
+    \frac{\Delta - 1 + \exp(-\Delta)}{\Delta} S_{\tau_0} +
+    \frac{1 - \exp(-\Delta) - \Delta\exp(-\Delta)}{\Delta} S_{\tau_1}.
+\end{equation}
+
+In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, it overestimates intensity, and underestimates it for negative curvature. These effects can become quite significant in more sparesly sampled atmospheres.
+
+The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust alternative is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three point stencils, but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
+
+Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER second order approach of \citet{Stepan2013}.
+All of these methods can be derived analagously to the linear formal solver presented above.
+
+\subsection{Other Formal Solvers}
+
+\citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. Most inversions use fewer than 7 nodes in each atmospheric parameter, and the modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
+As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed.
+
+
+\section{LTE vs NLTE}
+
+With the formal solvers discussed in the previous section, and knowledge of the emissivity and opacity throughout an atmospheric model, the outgoing radiation can be computed directly. As the emissivity and opacity of the plasma depend primarily on the atomic level populations, knowledge of these is sufficient for computing the radiation.
+This is the case if the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, for example in the photosphere. The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not know \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.} On a microscopic view, LTE occurs when the atomic processes are in detailed balance (i.e. for every transition there is an equivalent opposing transition).
+
+Unfortunately, the LTE description is inadequate, as discussed by Jefferies and Thomas \NeedRef{}, and everything outside of this is termed non-LTE (NLTE). In fact, due to the detailed balance of an LTE treatment, if detailed balance applied throughout the stellar atmosphere, no radiation would be able to escape. As photons are able to escape from the upper layers of the atmosphere, there is insufficient absorption processes to balance the emission processes and these layers must be NLTE. This is particularly clear for the chromosphere and transition region where a non-monotonic temperature gradient could not arise if the atmosphere were in LTE.
+Departures from an LTE description of the plasma are therefore expected when the radiative rates become comparable or larger than the collisional rates, and where the radiation field is not black-body like.
+We distinguish here, and in the following, between radiative transitions (due to spontaneous emission and absorption, and stimulated emission), and collisional transitions (due to collisions between particles).
+
+Thus for an $N$-level atom we have the total transition rate between levels $i$ and $j$ (by convention $i < j$)
+\begin{equation}
+    P_{ij} = R_{ij} + C_{ij},
+\end{equation}
+where $R_{ij}$ is the rate of radiative transitions and $C_{ij}$ is the rate of collisional transitions.
+As the total population of each element must remain constant we can write the kinetic equilibrium equation (which can be derived from the Boltzmann equation)
+\begin{equation}
+    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{v}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime}.
+    \label{Eq:KinEq}
+\end{equation}
+
+Equation \eqref{Eq:KinEq} is commonly simplified to the statistical equilibrium equation, whereby the left-hand side is set to 0. In this case we are solving for a time-independent equilibrium value of the atomic populations, whereas the full kinetic equilibrium equation requires knowledge of the historic populations.
+
+To solve \eqref{Eq:KinEq}, we require the values of $P_{ij}$ for the atoms present in the atmosphere; the collisional rates can be determined purely from local parameters, however due to the effects of stimulated emission the radiative rates are coupled to the local radiation field, which originates from elsewhere in the atmosphere. This effect couples all layers of the atmosphere together and is the primary source of the complexity of the NLTE problem. In collisional LTE plasmas the collisional rates dominate and the Saha-Boltzmann equation holds.
+
+To mathematically describe these effects we must first arrive at a definition of emissivity and opacity.
+Spectral lines have a rest frequency $\nu_{ij}$  defined by
+\begin{equation}
+    \nu_{ij} = \frac{h}{\Delta E_{ji}},
+\end{equation}
+where $h$ is Planck's constant and $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$.
+Such a transition between states in a plasma with no bulk velocity is not infinitely fine, but is broadened by a number of factors such as natural broadening from uncertainty in the lifetime of the upper state, Doppler broadening due to random thermal motions in the plasma, and collisional broadening.
+The net effects of these processes typically leads to spectral line profiles being modelled as a Voigt function (the convolution of Gaussians and Lorentzians). The normalised line absorption profile then describes the probability of a photon with a certain energy being absorbed by the transition.
+
+Returning now to the radiative rates for bound-bound processes; the Einstein coefficients $A_{ji}$, $B_{ij}$, and $B_{ji}$ respectively describe the spontaneous emission, absorption, and stimulated emission processes.
+The radiative rates can then be written
+\begin{align}
+    R_{ij} &= \oint \int B_{ij} \phi(\nu, \vec{d}) I(\nu, \vec{d})\,d\nu\,d\Omega,\\
+    R_{ji} &= \oint \int \left[\left(A_{ji} + B_{ji} I(\nu, \vec{d})\right)\psi(\nu, \vec{d}) \right]\,d\nu\,d\Omega,
+    \label{Eq:BbRates}
+\end{align}
+where $\phi$ is the line absorption profile, $\psi$ is the line emission profile, $A$ and $B$ are the Einstein coefficients for the transition, and $I(\nu, \vec{d})$ is the specific intensity at this location for a given frequency and direction.
+These can be expressed similarly for bound-free transitions
+\begin{align}
+    R_{ij} &= \oint \int \alpha_{ij}(\nu) I(\nu, \vec{d})\,d\nu\,d\Omega,\\
+    R_{ji} &= \oint \int \left[\left(I(\nu, \vec{d}) + \frac{2h\nu^3}{c^2}\right) \alpha_{ij}(\nu)n_e\Phi_{ij}(T) e^{-h\nu/k_B T} \right]\,d\nu\,d\Omega,
+\end{align}
+where $h$ is Planck's constant, $c$ is the speed of light, $\alpha_{ij}$ is the photoionisation cross-section, $k_B$ is Boltzmann's constant, and $n_e$ is the electron number density.
+$\Phi$ is the Saha-Boltzmann equation defined such that
+\begin{equation}
+    n_e\Phi_{ij}(T) = \frac{n^*_i}{n^*_j} = \frac{g_i}{2g_j}\left( \frac{h^2}
+    {2\pi m_e k_B T} \right)^{3/2} \exp{\left(  \frac{\Delta E_{ji}}{k_B T}\right)},
+\end{equation}
+where $n^*$ is the population of the species in LTE, $m_e$ is the electron mass, $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$, and $g_i$ is the statistical weight of level $i$.
+
+Following now the notation of \citet{Rybicki1992} and \citet{Uitenbroek2001} the emissivity $\eta$ and opacity $\chi$ for a transition are written
+\begin{align}
+    \label{Eq:Emis}
+    \eta_{ij} &= n_j U_{ji}(\nu, \vec{d}), \\
+    \label{Eq:Opac}
+    \chi_{ij} &= n_i V_{ij}(\nu, \vec{d}) - n_j V_{ji}(\nu, \vec{d}),
+\end{align}
+where $n_i$ is the population density level $i$.
+The $U$ and $V$ terms are defined for bound-bound and bound-free transitions as
+\newlength{\WidestCase}
+\settowidth{\WidestCase}{$n_e\Phi_{ij}(T)\left(\frac{2h\nu^3}{c^2}\right)e^{-h\nu/k_B T}\alpha_{ij}(\nu),$}
+\begin{align}
+    \label{Eq:Uji}
+    U_{ji} =&
+    \begin{cases}
+        \frac{h\nu}{4\pi}A_{ji}\psi_{ij}(\nu, \vec{d}), & \textrm{bound-bound} \\
+        n_e\Phi_{ij}(T)\left(\frac{2h\nu^3}{c^2}\right)e^{-h\nu/k_B T}\alpha_{ij}(\nu), & \textrm{bound-free},
+    \end{cases}\\
+%
+    \label{Eq:Vij}
+    V_{ij} =&
+    \begin{cases}
+        \makebox[\WidestCase][l]{$\frac{h\nu}{4\pi}B_{ij}\phi_{ij}(\nu, \vec{d}),$} & \textrm{bound-bound} \\
+        n_e\Phi_{ij}(T)e^{-h\nu/k_B T}\alpha_{ij}(\nu), & \textrm{bound-free},
+    \end{cases}\\
+%
+    \label{Eq:Vji}
+    V_{ji} =&
+    \begin{cases}
+        \makebox[\WidestCase][l]{$\frac{h\nu}{4\pi}B_{ji}\psi_{ij}(\nu, \vec{d}),$} & \textrm{bound-bound} \\
+        \alpha_{ij}(\nu), & \textrm{bound-free}.
+    \end{cases}
+\end{align}
+By convention we define $U_{ij} = U_{ii} = V_{ii} = 0$ and $\chi_{ij} = -\chi_{ji}$.
+
+In the approximation of complete redistribution (which we will return to later) we have $\phi_{ij} = \psi_{ij}$ then
+\begin{align}
+    R_{ij} &= B_{ij}\bar{J}_{ij} \\
+    R_{ji} &= A_{ji} + B_{ji}\bar{J}_{ij},
+\end{align}
+where $\bar{J}_{ij}$ is the absorption profile weighted integrated mean intensity, i.e.
+\begin{equation}
+    \bar{J}_{ij} = \frac{1}{4\pi}\oint\int \phi_{ij}(\nu, \vec{d}) I(\nu, \vec{d})\, d\nu\, d\Omega.
+\end{equation}
+
+Where multiple atomic species are present, the total emissivity and opacity are simply the sum of the emissivity and opacity for every transition on each atom at the current frequency and direction. It is common to additionally consider scattering by processes such as Thomson scattering, in which case the source function will be written
+\begin{equation}
+    S(\nu, \vec{d}) = \frac{\eta_\mathrm{tot}(\nu, \vec{d}) + \sigma(\nu)J(\nu)}{\chi_\mathrm{tot}(\nu, \vec{d})},
+\end{equation}
+where $\sigma$ describes the frequency dependent scattering cross-section, and $J(\nu)$ is the angle-averaged intensity at a frequency.
+
+Now we have an expression for the radiative rates in each line that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}. Clearly an iteration scheme will therefore be needed to find a stable set of populations yielding a self-consistent radiation field.
+
+If we treat the formal solver as an operator yielding the intensity from the source function throughout the atmosphere, i.e.
+\begin{equation}
+    I(\nu, \vec{d}) = \Lambda_{\nu,\vec{d}}[S(\nu, \vec{d})],
+    \label{Eq:LambdaOperator}
+\end{equation}
+then starting from an initial estimate of the atomic populations (e.g. LTE) we can compute the radiation field throughout the atmosphere and iteratively use this to update the populations by solving \eqref{Eq:KinEq}. This is known as Lambda iteration and presents woefully poor convergence in optically thick conditions as the size of the population updates stagnate long before the true NLTE populations are obtained.
+
+The failure of Lambda iteration can be remedied by a process known as operator splitting, first introduced by \citet{Cannon1973} whereby we set
+\begin{equation}
+    \Lambda = \Lambda^* + (\Lambda - \Lambda^*),
+\end{equation}
+with $\Lambda^*$ an approximation of $\Lambda$. The iteration scheme them becomes
+\begin{equation}
+    I(\nu, \vec{d}) = \Lambda_{\nu, \vec{d}}^*[S(\nu, \vec{d})] + (\Lambda_{\nu, \vec{d}} - \Lambda_{\nu, \vec{d}}^*)[S^{\dagger}(\nu, \vec{d})],
+    \label{Eq:Ali}
+\end{equation}
+where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections at large optical depths, for an appropriately chosen $\Lambda^*$.
+From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$ (on which $I$) is also dependent. For a two-level atom this is discussed at length in Chapters 12 and 13 of \citet{Hubeny2014}.
+The full coupling of these terms in the multi-level NLTE problem will be made explicit in a following section when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field (see \eqref{Eq:BbRates}).
+
+A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$. \citet{Scharmer1981} presented an approximate operator that fits these criteria and showed its congruency with the core-saturation approach of Rybicki \NeedRef{} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).
+
+\citet{Olson1986} proposed the use of the diagonal of the true $\Lambda$ operator as an approximate operator, and showed that this is close to optimal, and is clearly trivial to invert (as it is a scalar). Now, the diagonal of $\Lambda$ is easy to obtain by setting a test source function $\mathcal{S}=\delta_{dd^\prime}$ (where $\delta$ is the Kronecker delta) and computing
+\begin{equation}
+    \Lambda^* = \Lambda[\mathcal{S}].
+\end{equation}
+Taking the example of the linear short characteristic formal solver presented in Sec.~\ref{Sec:ShortChar} and substituting this definition of $\mathcal{S}$ we obtain
+\begin{equation}
+    \Lambda^*_{\nu, \vec{d}} = \frac{\Delta - 1 + \exp(-\Delta)}{\Delta}.
+\end{equation}
+The approximate operator can be computed analagously for other formal solvers.
+
+\section{Solving the multilevel NLTE problem}
+
+Starting from the radiative transfer equation \eqref{Eq:1DRte} and the kinetic equilibrium equation \eqref{Eq:KinEq} we can construct a framework with which to solve the multilevel NLTE problem. We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, and present the problem in statistical equilibrium, although it generalises directly to non-zero left-hand sides on \eqref{Eq:KinEq}.
+
+Substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:KinEq}, and expanding the radiative rates gives
+\begin{equation}
+\begin{aligned}
+   &\sum_{l^\prime\neq l} (n_{l^\prime}C_{l^\prime l}) +
+   \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} n_{l^\prime} (U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l} I(\nu, \vec{d}))\, d\nu\, d\Omega\\
+   -
+   n_l &\sum_{l^\prime\neq l} C_{l l^\prime} -
+   n_l \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} (U^\dagger_{l l^\prime} + V^\dagger_{l l^\prime} I(\nu, \vec{d}))\, d\nu\, d\Omega
+   = 0.
+   \label{Eq:StatEqExpanded}
+\end{aligned}
+\end{equation}
+$U$ and $V$ are marked with daggers despite their constant appear in the CRD case, as this will be needed when discussing partial frequency redistribution later.
+\citet{Rybicki1992} defined a new operator $\Psi$ such that
+\begin{equation}
+    \Psi_{\nu, \vec{d}}[y] = \Lambda_{\nu, \vec{d}}[(\chi^\dagger)^{-1}y]
+\end{equation}
+These two operators are equivalent for a converged solution as $\chi^\dagger = \chi$.
+
+The operator splitting technique can again be applied here (under the assumption that any background opacities remain constant). We then have
+\begin{equation}
+    I(\nu, \vec{d}) = \Psi^*[\eta(\nu, \vec{d})] + (\Psi - \Psi^*)[\eta^\dagger(\nu, \vec{d})],
+\end{equation}
+and then considering the effects on one atom, under the assumption that background emissivity and opacity do not change during an iteration
+\begin{equation}
+    I(\nu, \vec{d}) = I^\dagger(\nu, \vec{d})
+                    - \sum_j\sum_{i<j}\Psi^*[n^\dagger_j U^\dagger_{ji}]
+                    + \sum_j\sum_{i<j}\Psi^*[n_j U^\dagger_{ji}].
+\end{equation}
+
+The first two terms of this expression are often termed $I^\mathrm{eff}$ and in the case of a diagonal $\Psi^*$ operator this represents the non-local contribution to the radiation field from the current atom, and the contribution from all other species.
+
+We can write \eqref{Eq:StatEqExpanded} as
+\begin{equation}
+    \Gamma \vec{n} = 0,
+\end{equation}
+where $\Gamma$ is a matrix consisting of the sum of $\Gamma^R$ due to the radiative contributions, and $\Gamma^C$ from the collisional contributions. $\vec{n}$ is the vector of the current level populations for the species at this point in the atmosphere.
+We can then write
+\begin{align}
+\begin{split}\label{Eq:GammaR}
+    \Gamma^R_{ll^\prime} = \oint \int \frac{1}{h\nu} \bigg( U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l}I_{\nu, \vec{d}}^\mathrm{eff} -
+    \left(\sum_{m\neq l}\chi^\dagger_{lm}\right) \Psi^*_{\nu, \vec{d}} \left[ \sum_p U^\dagger_{l^\prime p} \right] \bigg)\, d\nu\,d\Omega
+\end{split}
+\end{align}
+for $l\neq l^\prime$. The problem is now represented by a system of linear equations. Due to the necessity of total number conservation each column of $\Gamma$ must be 0, which allows us to compute the diagonal terms as
+\begin{equation}
+    \Gamma_ll = -\sum_{m\neq l} \Gamma_{ml}.
+\end{equation}
+
+This gives us a reliable and rapidly converging method for solving the multilevel NLTE problem as used in the \Lw{} framework. More detail on the implementation are provided in the associated technical report \NeedRef{} and in the documentation \NeedRef{}.
+
+\section{Radiation hydrodynamics}

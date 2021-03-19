@@ -1,0 +1,206 @@
+% This template was written by John Davies <john.davies@glasgow.ac.uk> 2017-02-06
+% It matches the university specification at the time of writing
+%   for the widths of the page margins and one-and-a-half line spacing
+% You may want to include more packages, particularly for heavy mathematics
+% Please let me know if you find any errors or wish to suggest improvements
+
+\documentclass[12pt,titlepage,oneside]{book}
+\usepackage[pdftex,    colorlinks=true,    bookmarksnumbered=true,    linkcolor=blue,
+  urlcolor=blue,    citecolor=blue,       bookmarksopen=false,  pagebackref=true,
+  pdfauthor={},    pdftitle={},    pdfkeywords={},
+  pdfsubject={},    pdfcreator={},
+  pdfproducer={}, pdfencoding=auto, psdextra, breaklinks=true]{hyperref}
+  %% Use draft option in hyperref for tracking down ``endlink'' nexting errors
+
+%% set line stretch if required
+\usepackage{setspace}
+\setstretch{1.5}
+
+%% Graphics
+\usepackage[pdftex]{graphicx, color}
+\graphicspath{{./Figures/}}
+\usepackage{float}
+\usepackage{pdfpages, rotating}
+\definecolor{lightGrey}{rgb}{0.9,0.9,0.9}
+\definecolor{Red}{rgb}{1.0,0.0,0.0}
+%% \usepackage{pgfplots}
+%% \pgfplotsset{compat=1.10}
+\usepackage{subcaption}
+
+%% Fonts and dummy text
+\usepackage[utf8]{inputenc}
+\usepackage[default,regular,semibold]{sourceserifpro}
+% \usepackage[default,regular,black]{sourceserifpro}
+\usepackage[scaled=0.85]{beramono}
+\usepackage[small, euler-digits, T1]{eulervm}
+\usepackage{amsfonts,amsmath}
+
+\usepackage[T1]{fontenc} % modern encoding
+\usepackage{lipsum}
+
+\renewcommand{\mathbf}{\mathbold} %for Eulervm, uses bold instead of bf
+% \let\oldhat\hat
+% \renewcommand{\vec}[1]{\mathbf{#1}} %vec gives bolded vectors
+% \renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
+\DeclareMathOperator{\spn}{span}
+\DeclareMathOperator{\row}{row}
+\DeclareMathOperator{\cols}{col}
+\DeclareMathOperator{\nul}{null}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\nullity}{nullity}
+\DeclareMathOperator{\range}{range}
+\DeclareMathOperator{\image}{image}
+\DeclareMathOperator{\mathion}{ion}
+
+% \usepackage{eurosym}
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+  \usepackage{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+% Comment out the next three lines of LaTeX if you wish to use Computer Modern fonts
+%   (this is the default for LaTeX)
+% Make sure that your TeX installation can produce good pdf with these fonts.
+% The following three lines are a good alternative if you don't use much mathematics
+% \usepackage{mathptmx}  % uses Times for text and mathematics
+% \usepackage[scaled]{helvet} %  helvetica for sanserif, scaled 95% by default
+% \usepackage{courier}  % courier for typewriter font, pretty ugly but available
+% otherwise the stix package offers more options and symbols
+% \usepackage{stix}  % uses Times for text and a range of fonts for mathematics
+% End of choices for fonts
+% \usepackage{graphicx}  % standard package for importing graphics files
+% \usepackage{cite}  % improves format of numerical citations, such as [1-3]
+\usepackage[top=1.8cm, bottom=1.8cm,left=4.0cm,right=1.5cm, includeheadfoot]{geometry}
+% These margins are the university guidelines
+% \usepackage[onehalfspacing]{setspace}  % gives one-and-a-half line spacing
+% doublespacing is another option and can be changed in the text
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\slshape CMJ Osborne} \fancyhead[R]{\slshape \leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\newlength{\quarterPage}
+\setlength{\quarterPage}{7.42cm}
+\usepackage[update,prepend]{epstopdf}
+
+\usepackage[toc,page]{appendix}
+
+% \usepackage{abstract}
+% \renewcommand{\abstractnamefont}{\normalfont\bfseries}
+% \renewcommand{\abstracttextfont}{\normalfont}
+
+\usepackage[shorthands=off,UKenglish]{babel}
+\usepackage{natbib}
+
+\setcitestyle{aasjournal}
+\setcitestyle{aysep={}}
+\bibliographystyle{aasjournal}
+\setlength\bibsep{0.2\baselineskip}
+
+\usepackage{listings}
+\usepackage{accsupp}
+% Line number printing mechanism
+\newcommand{\emptyaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  numbers=left,
+  firstnumber=1,
+  stepnumber=5,
+  numberfirstline=true,
+  backgroundcolor=\color[RGB]{248,248,248},
+  showstringspaces=false,
+  breaklines=true,
+  numberstyle=\footnotesize\emptyaccsupp,
+  keywordstyle=\color[rgb]{0.13,0.29,0.53}\bfseries,
+  stringstyle=\color[rgb]{0.31,0.60,0.02},
+  commentstyle=\color[rgb]{0.56,0.35,0.01}\itshape,
+}
+\usepackage{fancyvrb}
+\VerbatimFootnotes
+\usepackage{longtable,booktabs}
+\usepackage{grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% $if(links-as-notes)$
+% % Make links footnotes instead of hotlinks:
+% \renewcommand{\href}[2]{#2\footnote{\url{#1}}}
+% $endif$
+\usepackage[normalem]{ulem}
+% avoid problems with \sout in headers with hyperref:
+\pdfstringdefDisableCommands{\renewcommand{\sout}{}}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+%% Add extra \usepackage{...}'s here
+\usepackage{siunitx}
+\usepackage{parskip}
+
+\newcommand*{\Ca}{Ca\textsc{ii}}
+\newcommand*{\CaLine}{Ca\,\textsc{ii} \SI{8542}{\angstrom}}
+\newcommand*{\Ha}{H$\alpha$}
+\newcommand*{\Lw}{\textit{Lightweaver}}
+\newcommand*{\MsLw}{\textit{MsLightweaver}}
+\newcommand*{\NeedRef}{{\color{Red} REF}}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace*{1cm}  % Need the * or the space is swallowed at the top of the page
+\bfseries\Large
+Solar Chromospheric Response to Impulsive Heating\\
+\vspace{2cm}
+\normalfont\large{\bfseries{
+Christopher M. J. Osborne\\
+}}
+\vspace{2cm}
+Submitted in fulfilment of the requirements for the\\
+degree of Doctor of Philosophy\\
+\vspace{2cm}
+Astronomy and Astrophysics Group\\
+School of Physics and Astronomy\\
+University of Glasgow\\
+\vspace{1cm}
+\includegraphics[width=0.6\columnwidth]{GlaLogo.pdf}
+\\
+\vspace{1cm}
+% Insert month and year of date deposited with library for final version
+August 2021
+\end{titlepage}
+\frontmatter  % Turn off chapter numbering, use roman page numbers
+\include{abstract}
+\tableofcontents
+\listoftables
+\listoffigures
+\include{acknowledgements}
+\include{declaration}
+
+\mainmatter % Turn on chapter numbering, reset page numbers, use arabic
+\include{Introduction}
+\include{HeatingSignatures}
+\include{TimeDepRT}
+\include{2DRT}
+\include{Radynversion}
+\include{ConcludingRemarks}
+% and the other chapters
+\appendix
+
+{\small
+\bibliography{{Refs}}}
+
+\backmatter  % Turn off chapter numbering
+
+\end{document}
