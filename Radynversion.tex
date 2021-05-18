@@ -1,4 +1,4 @@
-\chapter{RADYNVERSION}
+\chapter{RADYNVERSION}\label{Chap:Radynversion}
 
 \begin{itemize}
     \item Introduction to inverse problems
@@ -8,3 +8,91 @@
     \item Model validation
     \item 2014-09-06 flar results
 \end{itemize}
+
+\section{Introduction to Inverse Problems}
+
+From the previous chapters we have an understanding of the so-called ``forwards-problem'' of RT, that is to say the problem of going from (in the time-independent case) an atmospheric model to outgoing radiation, and (in the time-dependent case) the atmospheric model and previous populations to the outgoing radiation and new populations.
+The inverse of this problem is not well-posed; there is no guarantee of uniqueness, as typically the problem is underdetermined.
+The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forwards process that is needed for the inverse process.
+
+It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this that the field of inversions seeks to achieve, by solving this inverse problem. As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations. We therefore use inversions to learn as much about the structure of the atmosphere that produced the observed radiation as possible.
+
+We can frame the aforementioned forwards and inverse processes as a mapping between spaces as shown in Fig. \NeedRef{}.
+
+\textbf{TODO: x => (y, z) diagram}
+
+Here $x$ is the space of atmospheric parameters, $y$ is the outgoing radiation, and $z$ is the information lost in the forward process. Clearly, $z$ is difficult to characterise, and we will discuss multiple approaches for replacing or reconstructing this information.
+
+\subsection{Milne-Eddington Inversions}
+
+The loss of information can be somewhat limited by placing constraints on the solution. One of the simplest sets of constraints that can be placed on the problem is that of a source function that changes linearly with continuum optical depth, whilst all other parameters are held constant throughout the atmosphere.
+This is a low-order approximation of the problem, and is convenient as we can express compute the outgoing intensity analytically.
+This can be done for the full Stokes polarised case of the RTE, but for illustration we choose to use only the scalar case here.
+With continuum opacity $\tau_c$ the source function is then defined as
+\begin{equation}
+    S(\tau_c) = S_0 + S_1 \tau_c,
+\end{equation}
+where $S0$ and $S1$ are constants.
+In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line core opacity i.e.
+\begin{equation}
+    \tau(\nu) = \tau_c (1 + \alpha \phi(\nu)),
+\end{equation}
+where $\phi$ is the line profile.
+
+Now, by integrating the RTE directly and assuming as semi-infinite atmosphere with no light entering the boundary at $\infty$ we obtain the outgoing intensity
+\begin{equation}
+I(\tau=0, \nu) = S_0 + \frac{S_1}{1 + \alpha\phi(\nu)}.
+\end{equation}
+
+Thanks to the analytic nature of this solution, it is easy to attempt to fit this to observations, and effects such as constant atmospheric velocity, and magnetic field can be included in the line profile.
+This approach works quite well for quiet photospheric lines, such as Fe I 6301 \AA and Fe I 6173 \AA as used in Hinode SOT and HMI \NeedRef{} Centeno?.
+
+The limitations on the description of source function restrict its applicability to chromospheric lines.
+However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
+
+There are substantial limitations to imposing a chosen source function.
+A far more flexible approach is to attempt to fit a source function.
+From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescirbed functional form over each interval we can write
+\begin{equation}
+    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau}\, d\tau,
+\end{equation}
+whereby we have once again assumed that $I(\tau=\infty)=0$.
+If the source function is taken to be constant in each slab this becomes
+\begin{equation}
+    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
+\end{equation}
+and for each slab, the associated integral represents its contribution to the outgoing intensity. In fact, as the each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
+We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
+This reponse function does not change with the source function due to the linearity of the problem.
+In theory we should therefore be able to infer the depth stratified form of the source function, however two primary difficulties arise.
+
+Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
+Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning and cannot be inverted directly.
+An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can tackle both problems at once.
+Nevertheless, this tends to produce oscillatory solutions, as shown in Fig. \NeedRef{}.
+
+% Therefore, there is a need for \emph{regularisation} of the solution, penalising deviations from smooth solutions.
+% This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
+Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enfore smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
+Ultimately, we seek to learn information about the atmospheric structure, and not simply the source function.
+In LTE, where the source function is set by the local atmospheric parameters, this approach has long been viable.
+The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions to perturbations in different atmospheric parameters at the same time as the formal solution.
+These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
+
+For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations is significantly more arduous.
+The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilbrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
+This is incredibly resource intensive, but has reliably been used since the NICOLE code \citep[first distributed 2000]{Socas-Navarro2015}.
+The Stockholm Inversion Code (STiC) also follows this procedure, using a modified form of RH, allowing for the application of PRD \citep{2019dlcr}.
+
+Analytic response functions for the multi-level NLTE problem were first derived by \NeedRef{} original \citet{Milic2018}, and are now implemented in the SNAPI code.
+These response functions should significantly reduce the computational cost of NLTE inversions, a necessity for current and next generation solar observations.
+
+An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH. \NeedRef{}
+
+{\color{Red} HAZEL?}
+
+All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
+Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
+It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and a worthwhile trade-off for being able to close the system.
+{\color{Red} Need to explain ``the system more clearly''}
+Clearly these constraints render these techniques very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
