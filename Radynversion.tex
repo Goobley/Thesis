@@ -76,7 +76,7 @@ Nevertheless, this tends to produce oscillatory solutions, as shown in Fig. \Nee
 Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enfore smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
 Ultimately, we seek to learn information about the atmospheric structure, and not simply the source function.
 In LTE, where the source function is set by the local atmospheric parameters, this approach has long been viable.
-The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions to perturbations in different atmospheric parameters at the same time as the formal solution.
+The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by Sanchez Almeida \NeedRef{}) to perturbations in different atmospheric parameters at the same time as the formal solution.
 These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
 
 For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations is significantly more arduous.
@@ -93,6 +93,127 @@ An alternative approach to reducing the computational overhead of NLTE inversion
 
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
-It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and a worthwhile trade-off for being able to close the system.
-{\color{Red} Need to explain ``the system more clearly''}
-Clearly these constraints render these techniques very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
+It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seed as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
+Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
+
+An ``inversion'' technique that has commonly been applied to flares in the last decade is that of forward modelling through the use of RHD codes.
+Where possible the energy input is constrained from observations, via techniques such as X-ray sectroscopy to deduce the non-thermal electron flux and spectral index.
+A challenging manual iteration technique then follows to attempt to obtain an agreement between the time-dependent simulation and the observations.
+This is extremely time-consuming both due to the manual aspect of the inversions and the computational requirements of the RHD simulations.
+Clearly, the human intervention necessary to optimise and analyse these simulations cannot scale to the large volumes of data coming already present and coming from future telescopes.
+This technique has nevertheless yielded interesting developments in our understanding of the structure of the flaring chromosphere from the investigation of spectral line shapes and continuum enhancements \citep{Kuridze2015,RubioDaCosta2016, Kowalski2017,Simoes2017}.
+
+Returning now to the lens of our mathematical spaces we can start to discuss the meaning of $z$ in practice.
+With the response function based inversions described previously, the size of $z$ is limited by the constraints placed on the atmospheric stratification, and the regularisation thereof.
+It then becomes feasible to ``explore'' this space using the gradient information from the response functions to guide the solution.
+It is worth noting that this approach does not guarantee the global minimum solution; whilst Levenberg-Marquadt is extremely efficient at finding local minima, it provides no further guarantees and the final solution may therefore be substantially influenced by the choice of starting atmosphere, which is typically made in an ad hoc fashion.
+The RHD based methods are also comparable in terms of exploration of $z$, except here the optimisation is done manually and the gradient information is replaced by intuition.
+
+As discussed previously, the assumptions that render NLTE response function based approach tractable, such as hydrostatic equilbrium, cannot be applied in flares where flows close to the sound speed or commonly observed \NeedRef{}.
+We therefore need an inversion technique that can operate outside of these constraints.
+Our standard RT forwards process can be framed as a function $y = f(x)$ with atmospheric inputs $x$ and line profiles $y$.
+Clearly this function is not bijective, but if we also capture the information lost in the forward process, we can instead define a bijective function $x = g(y, z)$ such that $g^{-1}$ represents the forwards process, and $g$ the inverse process.
+Our theory of radiative transfer does not give any immediate insight into the formulation of $g$ with so few constraints, so we instead turn to the field of machine learning.
+
+\section{Introduction to Machine Learning}
+
+Machine learning describes a family of generic algorithms that are used to make sense of data without being explicitly programmed.
+A model is defined by the researcher, but its final behaviour is determined by patterns in the data it is fed.
+The abundance of both observational and simulational solar data continues to increase and new approaches, such as machine learning, are needed to make use of this vast quantity of information in a computationally tractable manner, helping to highlight patters that can be further investigated by researchers.
+
+There are three primary varieties of machine learning algorithms: supervised, semi-supervised, and unsupervised learning.
+Supervised algorithms are the most common.
+The model is provided with a set of of examples (typically produced or preprocesed manually) and is then trained so that it represents and approximate transformation between the input and output data defined by the training data.
+We can further divide this class into classification and regression models.
+Classification associates each class with a discrete input, possibly labelling an image based on its contents, whereas regression approximates a continuous mathematical function.
+In both of these cases the model approximates a function which is learnt entirely from the training data.
+
+Unsupervised learning does not require the manually prepared set of examples, but instead organises data based on generic programmed criteria.
+Two commonly used examples of unsupervised learning are clustering and dimensionality reduction techniques.
+Clustering algorithms extract groups of similar objects (where similar is defined given a particular basis and metric determined by the choice of algorithm), and can be used to find patterns in large datasets.
+There are many kinds of dimensionality reduction techniques, but one of the most common and general choices is principal component analysis, where an orthogonal basis spanning the data is constructed and then sorted by the variance of the factors of each of these axes (i.e. the eigenvalues of the covariance matrix \NeedRef{}).
+For data of dimensionality $m$, keeping $m$ principal components allows for a perfect reconstruction, as this is simply a basis transformation, however, we can often discard terms with small variance and produce accurate approximate reconstructions of the data with substantially fewer than $m$ components.
+It is necessary to ensure that sufficient components are chosen for the reconstruction to be accurate, but such techniques can reveal patterns that are otherwise difficult to discern in the original high-dimensional spaces.
+
+Finally, as implied by the name, semi-supervised learning lies in between the two previously discussed classes.
+It still requires preprocessed training data which is used for some training, however unsupervised learning processes maybe used internally to the model, or in some cases data generated by the model is used in conjunction with this training data.
+This form of machine learning exists only within the realm of deep learning, built on neural networks.
+
+\subsection{Artificial Neural Networks}
+
+Artificial Neural Networks (ANNs) loosely follow the principle of biological neuronal systems, consisting of layers of interconnected neurons, the output of which is summed in synapses and then has a non-linear activation function applied to determine if the signal is passed on through the network.
+ANNs consists of multiple layers of neurons and synapses whereby we designate any layer that is neither the input nor the output a \emph{hidden layer}.
+If an ANN consists of more than one hidden layer it is termed a deep neural network (DNN), and these are considered to be the standard building blocks of modern machine learning \citep{Raschka2015}.
+
+There are many different architectures for ANNs, used for solving different problems.
+ANNs can vary in number of hidden layers, interconnectedness of neurons within these layers, connectedness of the layers to each other, and the activation function used in each layer.
+We distinguish two primary forms of layers, based on their interconnectivity, these are fully connected (FC) where each neuron in a layer is the linear combination of its inputs (typically the activation function applied to the neurons of the previous layer), and the convolutional layers of convolutional neural networks (CNNs, \citet{1998Lecun,2003Simard}) which connect only nearby neurons to exploit local structure in the input (in one or more dimensions).
+These convolutional layers can then be described as a set of filters learned during the training process which are cross-correlated with the input, the output of which is then passed through the activation function.
+CNNs are somewhat inspired by the neuronal structure of the visual cortex, and have been applied with great success in the fields of image analysis, processing, and generation \citep{Raschka2015}.
+A fully connected layer rarely works well for these tasks as a slight movement of an object within an image can easily invalidate its training whereas the layers of a CNN sweep across the image and are far less affected by this.
+
+As previously mentioned there are many common forms of activation function.
+Due to the backpropagation method used for training ANNs it is highly advantageous if these non-linear activation functions be trivially differentiable.
+Some common choices are the sigmoid function
+\begin{equation}
+    \mathrm{S}(x) = \frac{1}{1+e^{-x}},
+\end{equation}
+inverse tangent $\tan^{-1}(x)$, and variants of the rectified linear unit (ReLU; \citet{2010Nair}).
+\begin{equation}
+    \mathrm{ReLU}(x) = \mathrm{max}(0, x).
+\end{equation}
+All of these functions are used in the creation of ANN based models, but the ReLU family is key to modern machine learning for reasons of sparsity in its output.
+Classification ANNs will typically employ an activation function on the output layer (most frequently a normalised exponential to select a single discrete class), whereas ANNs employed in regression problems will rarely do so.
+
+\subsection{General Function Approximations}
+
+ANNs are universal function approximators; they can learn arbitrarily complex classification and regression problems \citep{Rumelhart1986,1989Cybenko}.
+This was theoretically proven for shallow neural networks (with only one hidden layer) using sigmoidal activation functions by \citet{1989Cybenko}.
+Increasing the precision to which a function is approximated may require exponential increases in layer width and training.
+A similar proof for the commonly used ReLU activation function was provided by \citet{Lu2017}, who also investigated the width needed to approximate different functions.
+Unfortunately these results can be difficult to apply to many real world scenarios where the intrinsic dimensionality of the function being approximated is not known (these results are also affected by any imperfections in the training data).
+It is also possible to increase the approximation capability of an ANN by increasing its depth (the number of stacked layers), these stacked layers then represent the composition of functions, and each additional layer increases the complexity of the representation of the input, allowing for very complex tasks to be approximated \citep{Raschka2015}.
+The approximation power of stacked layers explains why the DNN is core to modern machine learning.
+Care must be taken when designing a model to select appropriate width and depth for the problem at hand \citep{Lu2017}.
+
+\subsection{Training via backpropagation}
+
+ANNs are trained via a process known as backpropagation \citep{Rumelhart1986}.
+The networks are composed of linear combinations and (by our original requirements) differentiable activation functions.
+The entire network can then be differentiated by repeated applications of the chain rule (from output to input) to find the gradients of the output with respect to each weight and input, which then describes how each weight affects the output.
+Typically the output of the network when fed with data from the training set is compared against the expected output via a loss function, and then the gradient information from this loss used to minimise its magnitude.
+
+Updating the weights (the coefficients of the linear combinations in each layer) in the network can be carried out in a variety of ways, but it is a similar minimisation process to that used in inversions.
+The basic method is that of stochastic gradient descent (SGD) which takes a step through the loss space guided by the gradients for each batch of training data.
+The size of this step is known as the learning rate, and is a \emph{hyperparameter}\footnote{hyperparameters are tunable parameters that are often set by the researcher, or optimised by a process external to the training of the INN} of the ANN.
+It can be kept constant, vary following a prescribed evolution with epoch, or even modified based on the rate of convergence of the traioning procedure.
+As SGD is only affected by the most recent batch of data it can have difficulty escaping local minima and traversing plateaus in the loss space.
+
+Many improvements to SGD have been developed, such as the addition of momentum, which accelerates convergence and helps to avoid the solution being overly affected by a single batch of training data.
+Other modern algorithms based on the same principles as SGD have also been developed (e.g. Adam \citet{2014Kingma}) and often converge in fewer epochs (rounds of training) to similar or better solutions.
+None of these stochastic algorithms can guarantee a global minimum in the loss space, and such a requirement is not feasible for anything other than the smallest neural networks, where more time- and memory-consuming optimisers can be used due to the much more dimensionally compact spaces over which the optimsation occurs.
+Nevertheless, with sufficient training data and epochs a model capable of approximating the function we wish to learn should be able to descend into sufficiently good local minimum using these techniques.
+
+Auxiliary techniques to improve model convergence have also been developed, such as minibatching, in which the network is only shown a random portion of the training data each epoch.
+Clearly this can reduce the computational cost of an epoch, as fewer calculations are performed on this training set, but minibatching can also improve the convergence by avoiding the stagnation that arises in the traditional batched gradient descent where the entire training set is used to direct the step.
+
+\subsection{Difficulties training DNNs}
+
+As the number of layers in an ANN increase they can become much harder to train; the gradient with respect to the weights in early layers can easily become vanishingly small due to the repeated multiplication of small gradients in the deeper layers.
+The use of ReLU activation functions often minimises this effect, but can instead lead to exploding gradients due to their high dynamic range.
+\citet{2015He} developed residual networks (ResNets), which have greatly increased the depth and complexity of networks that can be effectively trained, and now networks with many hundreds of layers are frequently used \citep{Jegou2017}.
+The residual blocks of these networks contain so-called skip connections, which take the output from a layer and sum or concatenate it with the output of layer one or more levels deeper.
+These skip connections provide a path for gradients to propagate through the network, helping to avoid both vanishing and exploding gradients.
+Variants of the ReLU function are almost uniquely used in ResNets as these additionally provide sparsity to the representation (i.e. their output is 0 for all input less than or equal to 0), which can improve the expressiveness of the representation and aid in disentangling information propagating through the network \citep{Glorot2011}.
+
+Like all regression models with a large number of free parameters, ANNs can very easily enter a regime of overfitting their training set.
+In this situation the ANN has learnt to match its training set so closely that it is unlikely to perform reliably on inference of unseen data.
+Oftentimes this can manifest as memorisation, where the network has learnt to produce the expected output for a training sample, but not the relationship between the two.
+ANNs must therefore be trained with care and diligent use of validation data, prepared in the same way as the training set, but never shown to the network during training.
+The network's performance can be judged by how well it performs in inference on the validation set in between training epochs.
+If the performance on the training data continues to improve over time, but the performance on the validation set stagnates or worsens then the network has entered an overfitting regime.
+
+There are additional techniques that can be employed to mitigate overfitting, such as regularisation, which will attempt to prevent a model's weights from minimising the loss function too perfectly, for example by penalising overly large weights with a modified loss function, or randomly disactivating neurons in each layer during training (this approach is known as \emph{dropout}).
+
+The process of selecting hyperparameters for a model can be a challenging process of manual optimisation that is essential to training, and many advanced optimisers like Adam require additional hyperparameters that can drastically influence the rate of convergence.
+Approaches such as grid searches can be applied here, but given the computational requirements of training these models, an intuitive approach is often applied.
