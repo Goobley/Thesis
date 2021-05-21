@@ -26,6 +26,9 @@
 %% \usepackage{pgfplots}
 %% \pgfplotsset{compat=1.10}
 \usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,fit,arrows,intersections,external}
+% \tikzexternalize[prefix=TikzGen/]
 
 %% Fonts and dummy text
 \usepackage[utf8]{inputenc}
@@ -155,6 +158,7 @@
 \newcommand*{\MsLw}{\textit{MsLightweaver}}
 \newcommand*{\NeedRef}{{\color{Red} REF}}
 \newcommand*{\ExpandMe}{{\color{Red} EXPAND}}
+\newcommand*{\TODO}[1]{{\color{Red} TODO: #1}}
 \DeclareSIUnit\erg{erg}
 
 \begin{document}

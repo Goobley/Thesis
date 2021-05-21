@@ -17,11 +17,153 @@ The radiation field inside the plasma couples the atomic populations at all dept
 
 It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this that the field of inversions seeks to achieve, by solving this inverse problem. As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations. We therefore use inversions to learn as much about the structure of the atmosphere that produced the observed radiation as possible.
 
-We can frame the aforementioned forwards and inverse processes as a mapping between spaces as shown in Fig. \NeedRef{}.
 
-\textbf{TODO: x => (y, z) diagram}
+% \begin{figure}
+% \begin{tikzpicture}[
+%     % >=stealth,
+%     % bullet/.style={
+%     %     fill=black,
+%     %     circle,
+%     %     minimum width=1pt,
+%     %     inner sep=1pt
+%     % },
+%     % projection/.style={
+%     %     ->,
+%     %     thick,
+%     %     shorten <=2pt,
+%     %     shorten >=2pt
+%     % },
+%     % every fit/.style={
+%     %     ellipse,
+%     %     draw,
+%     %     inner sep=0pt
+%     % }
+%     % ]
+%     \node at (2,4.7) {$f$};
+%     % \draw[projection] (1,4.5) -- (3,4.5);
+%     \node at (0,5) {$X$};
+%     \node[bullet,label=below:$x$]    at (0,2.5){};
+%     \node at (4,5) {$Y$};
+%     \node[bullet,label=below:$f(x)$] at (4,2.5){};
+%     \node at (6,4.7) {$g$};
+%     % \draw[projection] (5,4.5) -- (7,4.5);
+%     \node at (8,5) {$Z$};
+%     \node[bullet,label=below:$g\big(f(x)\big)$] at (8,2.5){};
 
-Here $x$ is the space of atmospheric parameters, $y$ is the outgoing radiation, and $z$ is the information lost in the forward process. Clearly, $z$ is difficult to characterise, and we will discuss multiple approaches for replacing or reconstructing this information.
+%     \draw (0,2.5) ellipse (1.02cm and 2.2cm);
+%     \draw (4,2.5) ellipse (1.02cm and 2.2cm);
+%     \draw (8,2.5) ellipse (1.02cm and 2.2cm);
+
+%     \draw[projection] (0.3,2.5) -- (3.7,2.5);
+%     \draw[projection] (4.3,2.5) -- (7.7,2.5);
+%     \end{tikzpicture}
+% \end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[line width=1pt, >=latex]
+    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+
+    \node[above right=0.5cm and 4cm of x1] (y1) {$\vec{I}_1$};
+    \node[below=of y1] (y2) {$\vec{I}_2$};
+    \node[below=of y2] (y3) {$\vec{I}_3$};
+    \node[below=of y3] (y4) {$\vec{I}_4$};
+    \node[below=of y4] (y5) {$\vec{I}_5$};
+    % \node[right=4cm of x4] (aux2) {};
+
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(x1) (x4)}] (xSet) {};
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(y1) (y5)}] (ySet) {};
+
+    \node[below=2cm of y5,font=\bfseries, align=center] (yLabel) {$\mathcal{Y}$\\Observed Intensity};
+    % \node[left=3cm of ylabel.center,font=\bfseries, align=center] {$\mathcal{X}$\\Atmospheric Parameters};
+    \node[font=\bfseries, align=center] (xLabel) at (xSet |- yLabel){$\mathcal{X}$\\Atmospheric Parameters};
+
+    % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
+    % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
+    \draw[->, out=50, in=150] (xSet.90) to node[below] {$f(\vec{x})$} (ySet.90);
+    \draw[->, dotted, out=210, in=310] (ySet.270) to node[above] {$f^{-1}(\vec{y})$} (xSet.270);
+
+    \draw[->] (x1) -- (y2.170);
+    \draw[->] (x2) -- (y4.190);
+    \draw[->, dotted] (y2.150) -- (x1.5) node[midway, above] {?};
+    \draw[->, dotted] (y2.200) -- (x3.20) node[midway, below] {?};
+    \draw[->] (x3) -- (y2.175);
+    \draw[->] (x4) -- (y5.190);
+\end{tikzpicture}
+\caption{Degenerate Mapping}
+\label{Fig:DegenerateMapping}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[line width=1pt, >=latex]
+    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(x1) (x4)}] (xSet) {};
+
+    \node[above right=1cm and 3.5cm of xSet.center] (y1) {$(\vec{I}_2, z_1)$};
+    \node[below=of y1] (y2) {$(\vec{I}_4, z_1)$};
+    \node[below=of y2] (y3) {$(\vec{I}_5, z_1)$};
+    \node[right=0.5cm of y1] (y4) {$(\vec{I}_2, z_2)$};
+    \node[below=of y4] (y5) {$(\vec{I}_4, z_2)$};
+    \node[below=of y5] (y6) {$(\vec{I}_5, z_2)$};
+    \node[right=0.5cm of y4] (y7) {$(\vec{I}_2, z_3)$};
+    \node[below=of y7] (y8) {$(\vec{I}_4, z_3)$};
+    \node[below=of y8] (y9) {$(\vec{I}_5, z_3)$};
+    % \node[right=4cm of x4] (aux2) {};
+
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(y1) (y5) (y9)}] (ySet) {};
+
+    \node[shape=circle, draw=black, right=2cm of y8] (prod) {$\times$};
+    \draw[->, ultra thick] (prod.180) -- (ySet.0);
+
+    \node[above=2cm of prod] (yy3) {$\vec{I}_5$};
+    \node[above=0.5cm of yy3] (yy2) {$\vec{I}_4$};
+    \node[above=0.5cm of yy2] (yy1) {$\vec{I}_2$};
+    \node[shape=ellipse,draw=black,minimum size=1cm,fit={(yy1) (yy3)}] (yySet) {};
+    \draw[->, ultra thick] (yySet.270) -- (prod.90);
+
+    \node[below=2cm of prod] (z1) {$z_1$};
+    \node[below=0.5cm of z1] (z2) {$z_2$};
+    \node[below=0.5cm of z2] (z3) {$z_3$};
+    \node[shape=ellipse,draw=black,minimum size=1cm,fit={(z1) (z3)}] (zSet) {};
+    \draw[->, ultra thick] (zSet.90) -- (prod.270);
+
+    \node[below=6cm of ySet.center,font=\bfseries, align=center] (yLabel) {$\mathcal{Y}\times\mathcal{Z}$\\Observed Intensity $\times$ Latent Space};
+    \node[font=\bfseries, align=center] (xLabel) at (xSet |- yLabel){$\mathcal{X}$\\Atmospheric Parameters};
+    \node[font=\bfseries, align=center] (zLabel) at (zSet |- yLabel){$\mathcal{Z}$\\Latent Space};
+    \node[font=\bfseries, align=center, above=0.2cm of yySet.north] (yyLabel) {$\mathcal{Y}$\\Observed Intensity};
+
+    % \node[below=2cm of y5,font=\bfseries, align=center] (ylabel) {$\mathcal{Y}$\\Observed Intensity};
+    % \node[left=3cm of ylabel.center,font=\bfseries, align=center] {$\mathcal{X}$\\Atmospheric Parameters};
+
+    % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
+    % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
+    \draw[->, out=50, in=100] (xSet.90) to node[below] {$g^{-1}(\vec{x})$} (ySet.90);
+    \draw[->, dotted, out=260, in=310] (ySet.270) to node[above] {$g(\vec{y}, z)$} (xSet.270);
+
+    \draw[<->] (x1) -- (y4);
+    \draw[<->] (x2) -- (y2);
+    % \draw[->, dotted] (y2.150) -- (x1.5) node[midway, above] {?};
+    % \draw[->, dotted] (y2.200) -- (x3.20) node[midway, below] {?};
+    \draw[<->] (x3) -- (y7);
+    \draw[<->] (x4.350) -- (y6.190);
+
+
+\end{tikzpicture}
+\caption{Bijective Mapping. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
+\label{Fig:BijectiveMapping}
+\end{figure}
+
+The forward process can be described by the diagram in Fig.~\ref{Fig:DegenerateMapping}.
+This shows the theoretically degenerate nature of the problem; whilst the mapping from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse is not, and with the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
+We can instead frame the problem as shown in Fig.~\ref{Fig:BijectiveMapping}, where elements of $\mathcal{Z}$ represent the information lost in the forwards process and a bijective mapping $g$ may be written between these spaces.
+Clearly, $\mathcal{Z}$ is difficult to characterise, and we will discuss multiple approaches for replacing or reconstructing this information.
 
 \subsection{Milne-Eddington Inversions}
 
@@ -45,7 +187,7 @@ I(\tau=0, \nu) = S_0 + \frac{S_1}{1 + \alpha\phi(\nu)}.
 \end{equation}
 
 Thanks to the analytic nature of this solution, it is easy to attempt to fit this to observations, and effects such as constant atmospheric velocity, and magnetic field can be included in the line profile.
-This approach works quite well for quiet photospheric lines, such as Fe I 6301 \AA and Fe I 6173 \AA as used in Hinode SOT and HMI \NeedRef{} Centeno?.
+This approach works quite well for quiet photospheric lines, such as Fe I 6301 \AA{} and Fe I 6173 \AA{} as used in Hinode SOT and HMI \NeedRef{} Centeno?.
 
 The limitations on the description of source function restrict its applicability to chromospheric lines.
 However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
@@ -185,7 +327,7 @@ Typically the output of the network when fed with data from the training set is 
 
 Updating the weights (the coefficients of the linear combinations in each layer) in the network can be carried out in a variety of ways, but it is a similar minimisation process to that used in inversions.
 The basic method is that of stochastic gradient descent (SGD) which takes a step through the loss space guided by the gradients for each batch of training data.
-The size of this step is known as the learning rate, and is a \emph{hyperparameter}\footnote{hyperparameters are tunable parameters that are often set by the researcher, or optimised by a process external to the training of the INN} of the ANN.
+The size of this step is known as the learning rate, and is a \emph{hyperparameter}\footnote{Hyperparameters are tunable parameters that are often set by the researcher, or optimised by a process external to the training of the INN} of the ANN.
 It can be kept constant, vary following a prescribed evolution with epoch, or even modified based on the rate of convergence of the traioning procedure.
 As SGD is only affected by the most recent batch of data it can have difficulty escaping local minima and traversing plateaus in the loss space.
 
@@ -196,6 +338,8 @@ Nevertheless, with sufficient training data and epochs a model capable of approx
 
 Auxiliary techniques to improve model convergence have also been developed, such as minibatching, in which the network is only shown a random portion of the training data each epoch.
 Clearly this can reduce the computational cost of an epoch, as fewer calculations are performed on this training set, but minibatching can also improve the convergence by avoiding the stagnation that arises in the traditional batched gradient descent where the entire training set is used to direct the step.
+
+\TODO{Explain how frameworks make this kind of training easy/liken to \Lw{}}
 
 \subsection{Difficulties training DNNs}
 
@@ -217,3 +361,50 @@ There are additional techniques that can be employed to mitigate overfitting, su
 
 The process of selecting hyperparameters for a model can be a challenging process of manual optimisation that is essential to training, and many advanced optimisers like Adam require additional hyperparameters that can drastically influence the rate of convergence.
 Approaches such as grid searches can be applied here, but given the computational requirements of training these models, an intuitive approach is often applied.
+
+\section{The RADYNVERSION Model}
+
+Our approach towards inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.
+We wish to learn the form of the latent space, and by sampling this space sufficiently for a given observation we can infer the likelihoods of parameters of the flaring atmosphere.
+Nevertheless, we have no data on which to train which directly characterises the latent space, amd thus we turn to the technique of invertible neural networks (INNs) which naturally learn bijective functions to learn the bijective mapping \emph{and} the form of the latent space simultaneously.
+
+Our INN is trained using RHD simulations generated with RADYN, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
+As the function $x = g(y, z)$ (as shown in Fig.~\ref{Fig:BijectiveMapping}) is bijective, our INN can learn the function $g^{-1}$ as the forwards process, and $g$ as the inverse process.
+ANNs can learn to approximate any function, so they can be trained to transform any distribution to any other.
+We can therefore choose to characterise the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the simulations.
+The approach to inferring atmospheric parameters using the INN therefore differs to the approach of traditional methods that take guided explorations of the latent space.
+Due to the speed of the INN solution relative to the cost of formal solution and iteration that is required in conventional NLTE inversions, we can simply take a large number of samplings of our chosen latent space, and thus generate a probability density function for the atmospheric parameters at each location in the atmosphere, conditioned by our training set.
+For simplicity we choose to represent the latent space as the unit multi-variate Gaussian distribution with mean 0.
+
+The INN is a form of DNN in which invertible blocks are used.
+A traditional fully connected or convolutional layer is not generally invertible.
+Indeed, whilst a fully connected layer with equal number of inputs and outputs, and an invertible activation function \emph{can} be inverted, it is extremely computationally expensive to do so due to the cost of inverting the potentially large square matrix of weights.
+Instead, we use \emph{affine coupling layers} \citep{2014Dinh,2016Dinh} which are trivially reversible, and thus during the training of the forward process the inverse of this learned function is simultaneously trained ``for free''.
+The affine coupling layers used in our INN were first presented by \citet{2018Ardizzone}.
+The input vector $\vec{x}$ is first split into two halves $[x_1, x_2]$ which undergo the following affine transformations
+\begin{align}
+    y_1 &= x_1 \otimes \exp(s_2(x_2)) + t_2(x_2),\\
+    y_2 &= x_2 \otimes \exp(s_1(y_1)) + t_1(y_1),
+\end{align}
+where $\otimes$ represents the elementwise product of tensors and $s_i$ and $t_i$ ($i \in \{1, 2\}$) are arbitrarily complex differentiable functions (that need not be invertible).
+It is worth noting the order of operations here, as $y_1$ must be computed before $y_2$.
+The output $\vec{y}$ is then constructed from the concatenation of $y_1$ and $y_2$.
+The inverse of these affine transforms is given by
+\begin{align}
+    x_2 &= (y_2 - t_1(y_1)) \oslash \exp(s_1(y_1)),\\
+    x_1 &= (y_1 - t_2(x_2)) \oslash \exp(s_2(x_2)),
+\end{align}
+where $\oslash$ represents the elementwise division of tensors.
+We have stated that the $s_i$ and $t_i$ functions can be of arbitrary complexity, but clearly they need to be tailored to the particular task and for this reason we apply DNNs in this role.
+The networks used for $s_i$ and $t_i$ are identical, save for the application of a $\tan^{-1}$ transformation on the output of the $s_i$ block, which prevents extreme values from being produced whereby the exponential term would domination, or have no effect on the output of the block.
+
+In the spirit of DNNs we then stack multiple affine coupling layers to allow for increased representational capability within the INN.
+As the the input is split in half upon entering each affine layer, we can see that the data in each half does is only combined at the elementwise multiplication step in each layer on its journey through the network.
+To alleviate this, and further increase the generalisation capabilities of the network, we interleave a permutation layer between each affine coupling layer.
+This layer shuffles the data in a random, but fixed order which is different for each permuation layer, but allows for trivial reversibility.
+
+For the RADYNVERSION\footnote{RADYNVERSION is a portmanteau of RADYN and ``inversion''.} model we use five affine coupling layers, with four interleaved permutation layers.
+This is shown schematically in Fig. \NeedRef{}.
+Given the presence of four DNNs per affine coupling layer, our final model is composed of twenty DNNs.
+Each of these networks is an individual four-layer fully connected network utilising leaky ReLU activation functions following the first three layers, and a ReLU after the final layer.
+\TODO{Add Leaky ReLU explanation}
