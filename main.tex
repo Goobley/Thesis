@@ -17,18 +17,20 @@
 \setstretch{1.5}
 
 %% Graphics
-\usepackage[pdftex]{graphicx, color}
+\usepackage[pdftex]{graphicx, xcolor}
 \graphicspath{{./Figures/}}
 \usepackage{float}
 \usepackage{pdfpages, rotating}
 \definecolor{lightGrey}{rgb}{0.9,0.9,0.9}
 \definecolor{Red}{rgb}{1.0,0.0,0.0}
+\definecolor{TolBlue}{HTML}{0077BB}
+\definecolor{TolTeal}{HTML}{009988}
 %% \usepackage{pgfplots}
 %% \pgfplotsset{compat=1.10}
 \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{positioning,shapes,fit,arrows,intersections,external}
-% \tikzexternalize[prefix=TikzGen/]
+\tikzexternalize[prefix=TikzGen/]
 
 %% Fonts and dummy text
 \usepackage[utf8]{inputenc}
@@ -149,11 +151,13 @@
 
 %% Add extra \usepackage{...}'s here
 \usepackage{siunitx}
+\sisetup{detect-all}
 \usepackage{parskip}
 
 \newcommand*{\Ca}{Ca\textsc{ii}}
 \newcommand*{\CaLine}{Ca\,\textsc{ii} \SI{854.2}{\nano\m}}
 \newcommand*{\Ha}{H$\alpha$}
+\newcommand*{\Radyn}{RADYN}
 \newcommand*{\Lw}{\textit{Lightweaver}}
 \newcommand*{\MsLw}{\textit{MsLightweaver}}
 \newcommand*{\NeedRef}{{\color{Red} REF}}

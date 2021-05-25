@@ -9,6 +9,8 @@
     \item 2014-09-06 flar results
 \end{itemize}
 
+\emph{The contents of this chapter are based on my contributions to the research presented in \citet{Osborne2019}.}
+
 \section{Introduction to Inverse Problems}
 
 From the previous chapters we have an understanding of the so-called ``forwards-problem'' of RT, that is to say the problem of going from (in the time-independent case) an atmospheric model to outgoing radiation, and (in the time-dependent case) the atmospheric model and previous populations to the outgoing radiation and new populations.
@@ -83,8 +85,8 @@ It is, of course, of great value to constrain the atmospheric parameters associa
 
     % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
     % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
-    \draw[->, out=50, in=150] (xSet.90) to node[below] {$f(\vec{x})$} (ySet.90);
-    \draw[->, dotted, out=210, in=310] (ySet.270) to node[above] {$f^{-1}(\vec{y})$} (xSet.270);
+    \draw[->, out=50, in=150] (xSet.90) to node[below] {$f(x)$} (ySet.90);
+    \draw[->, dotted, out=210, in=310] (ySet.270) to node[above] {$f^{-1}(y)$} (xSet.270);
 
     \draw[->] (x1) -- (y2.170);
     \draw[->] (x2) -- (y4.190);
@@ -144,8 +146,8 @@ It is, of course, of great value to constrain the atmospheric parameters associa
 
     % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
     % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
-    \draw[->, out=50, in=100] (xSet.90) to node[below] {$g^{-1}(\vec{x})$} (ySet.90);
-    \draw[->, dotted, out=260, in=310] (ySet.270) to node[above] {$g(\vec{y}, z)$} (xSet.270);
+    \draw[->, out=50, in=100] (xSet.90) to node[below] {$g^{-1}(x)$} (ySet.90);
+    \draw[->, dotted, out=260, in=310] (ySet.270) to node[above] {$g(y, z)$} (xSet.270);
 
     \draw[<->] (x1) -- (y4);
     \draw[<->] (x2) -- (y2);
@@ -164,6 +166,7 @@ The forward process can be described by the diagram in Fig.~\ref{Fig:DegenerateM
 This shows the theoretically degenerate nature of the problem; whilst the mapping from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse is not, and with the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
 We can instead frame the problem as shown in Fig.~\ref{Fig:BijectiveMapping}, where elements of $\mathcal{Z}$ represent the information lost in the forwards process and a bijective mapping $g$ may be written between these spaces.
 Clearly, $\mathcal{Z}$ is difficult to characterise, and we will discuss multiple approaches for replacing or reconstructing this information.
+In the following, we denote individual samples of the atmospheric parameters $x$, the emergent line profiles $y$ and the latent space $z$.
 
 \subsection{Milne-Eddington Inversions}
 
@@ -311,12 +314,11 @@ Classification ANNs will typically employ an activation function on the output l
 
 ANNs are universal function approximators; they can learn arbitrarily complex classification and regression problems \citep{Rumelhart1986,1989Cybenko}.
 This was theoretically proven for shallow neural networks (with only one hidden layer) using sigmoidal activation functions by \citet{1989Cybenko}.
-Increasing the precision to which a function is approximated may require exponential increases in layer width and training.
+Increasing the precision to which a function is approximated may however require exponential increases in layer width and training.
 A similar proof for the commonly used ReLU activation function was provided by \citet{Lu2017}, who also investigated the width needed to approximate different functions.
 Unfortunately these results can be difficult to apply to many real world scenarios where the intrinsic dimensionality of the function being approximated is not known (these results are also affected by any imperfections in the training data).
-It is also possible to increase the approximation capability of an ANN by increasing its depth (the number of stacked layers), these stacked layers then represent the composition of functions, and each additional layer increases the complexity of the representation of the input, allowing for very complex tasks to be approximated \citep{Raschka2015}.
-The approximation power of stacked layers explains why the DNN is core to modern machine learning.
-Care must be taken when designing a model to select appropriate width and depth for the problem at hand \citep{Lu2017}.
+It is also possible to increase the approximation capability of an ANN by increasing its depth (the number of stacked layers), these stacked layers then represent the composition of functions, and each additional layer increases the complexity of the representation of its input, allowing for very complex tasks to be approximated \citep{Raschka2015}.
+The approximation power of stacked layers explains why the DNN is core to modern machine learning, however care must be taken when designing a model to select appropriate width and depth for the problem at hand \citep{Lu2017}.
 
 \subsection{Training via backpropagation}
 
@@ -339,7 +341,10 @@ Nevertheless, with sufficient training data and epochs a model capable of approx
 Auxiliary techniques to improve model convergence have also been developed, such as minibatching, in which the network is only shown a random portion of the training data each epoch.
 Clearly this can reduce the computational cost of an epoch, as fewer calculations are performed on this training set, but minibatching can also improve the convergence by avoiding the stagnation that arises in the traditional batched gradient descent where the entire training set is used to direct the step.
 
-\TODO{Explain how frameworks make this kind of training easy/liken to \Lw{}}
+A technique known as autodifferentiation has become prominent in the field of machine learning.
+It allows users to easily design custom blocks and compose these without the need to consider the implementation of the derivatives needed for training as these are computed by the framework.
+Frameworks (e.g. TensorFlow, PyTorch \NeedRef{}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
+This automatic nature of this approach has enabled the rate of development seen in machine learning in the last decade, as it allows researchers to spend longer thinking about design than low-level engineering.
 
 \subsection{Difficulties training DNNs}
 
@@ -349,6 +354,7 @@ The use of ReLU activation functions often minimises this effect, but can instea
 The residual blocks of these networks contain so-called skip connections, which take the output from a layer and sum or concatenate it with the output of layer one or more levels deeper.
 These skip connections provide a path for gradients to propagate through the network, helping to avoid both vanishing and exploding gradients.
 Variants of the ReLU function are almost uniquely used in ResNets as these additionally provide sparsity to the representation (i.e. their output is 0 for all input less than or equal to 0), which can improve the expressiveness of the representation and aid in disentangling information propagating through the network \citep{Glorot2011}.
+These variants include the leaky ReLU \citep[$\max(0.01x, x)$;][]{Maas2013} which still produces a small amount of gradient information for negative inputs, helping to prevent neurons with ReLU activation from ``dying'', and exponential linear units \citep[ELUs;][]{Clevert2015} which achieve a similar result in a smoothly varying fashion.
 
 Like all regression models with a large number of free parameters, ANNs can very easily enter a regime of overfitting their training set.
 In this situation the ANN has learnt to match its training set so closely that it is unlikely to perform reliably on inference of unseen data.
@@ -362,19 +368,19 @@ There are additional techniques that can be employed to mitigate overfitting, su
 The process of selecting hyperparameters for a model can be a challenging process of manual optimisation that is essential to training, and many advanced optimisers like Adam require additional hyperparameters that can drastically influence the rate of convergence.
 Approaches such as grid searches can be applied here, but given the computational requirements of training these models, an intuitive approach is often applied.
 
-\section{The RADYNVERSION Model}
+\section{The RADYNVERSION Model}\label{Sec:RadynversionModel}
 
 Our approach towards inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.
 We wish to learn the form of the latent space, and by sampling this space sufficiently for a given observation we can infer the likelihoods of parameters of the flaring atmosphere.
 Nevertheless, we have no data on which to train which directly characterises the latent space, amd thus we turn to the technique of invertible neural networks (INNs) which naturally learn bijective functions to learn the bijective mapping \emph{and} the form of the latent space simultaneously.
 
-Our INN is trained using RHD simulations generated with RADYN, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
+Our INN is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
 As the function $x = g(y, z)$ (as shown in Fig.~\ref{Fig:BijectiveMapping}) is bijective, our INN can learn the function $g^{-1}$ as the forwards process, and $g$ as the inverse process.
 ANNs can learn to approximate any function, so they can be trained to transform any distribution to any other.
 We can therefore choose to characterise the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the simulations.
 The approach to inferring atmospheric parameters using the INN therefore differs to the approach of traditional methods that take guided explorations of the latent space.
 Due to the speed of the INN solution relative to the cost of formal solution and iteration that is required in conventional NLTE inversions, we can simply take a large number of samplings of our chosen latent space, and thus generate a probability density function for the atmospheric parameters at each location in the atmosphere, conditioned by our training set.
-For simplicity we choose to represent the latent space as the unit multi-variate Gaussian distribution with mean 0.
+For simplicity we choose to represent the latent space as the unit multivariate Gaussian distribution with mean 0 and variance 1, which we denote $\mathcal{N}(0, \mathcal{I}_n)$ for an $n$ dimensional case.
 
 The INN is a form of DNN in which invertible blocks are used.
 A traditional fully connected or convolutional layer is not generally invertible.
@@ -399,12 +405,137 @@ We have stated that the $s_i$ and $t_i$ functions can be of arbitrary complexity
 The networks used for $s_i$ and $t_i$ are identical, save for the application of a $\tan^{-1}$ transformation on the output of the $s_i$ block, which prevents extreme values from being produced whereby the exponential term would domination, or have no effect on the output of the block.
 
 In the spirit of DNNs we then stack multiple affine coupling layers to allow for increased representational capability within the INN.
-As the the input is split in half upon entering each affine layer, we can see that the data in each half does is only combined at the elementwise multiplication step in each layer on its journey through the network.
+As the the input is split in half upon entering each affine layer, we can see that the data in each half is only combined at the elementwise multiplication step in each layer on its journey through the network.
 To alleviate this, and further increase the generalisation capabilities of the network, we interleave a permutation layer between each affine coupling layer.
 This layer shuffles the data in a random, but fixed order which is different for each permuation layer, but allows for trivial reversibility.
 
-For the RADYNVERSION\footnote{RADYNVERSION is a portmanteau of RADYN and ``inversion''.} model we use five affine coupling layers, with four interleaved permutation layers.
-This is shown schematically in Fig. \NeedRef{}.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[line width=1pt, >=latex,
+    block/.style={
+    draw,
+    rectangle,
+    minimum width={width("Affine Coupling Layer")+2pt},
+    font=\small}]
+    \node [draw, anchor=center] (Input) {Input};
+
+    \node [block, right=1cm of Input.0, rotate=90, anchor=north] (Acl1) {Affine Coupling Layer};
+    \node [block, right=of Acl1.north, rotate=90, anchor=north] (P1) {Permutation Layer};
+
+    \node [block, right=of P1.north, rotate=90, anchor=north] (Acl2) {Affine Coupling Layer};
+    \node [block, right=of Acl2.north, rotate=90, anchor=north] (P2) {Permutation Layer};
+
+    \node [block, right=of P2.north, rotate=90, anchor=north] (Acl3) {Affine Coupling Layer};
+    \node [block, right=of Acl3.north, rotate=90, anchor=north] (P3) {Permutation Layer};
+
+    \node [block, right=of P3.north, rotate=90, anchor=north] (Acl4) {Affine Coupling Layer};
+    \node [block, right=of Acl4.north, rotate=90, anchor=north] (P4) {Permutation Layer};
+
+    \node [block, right=of P4.north, rotate=90, anchor=north] (Acl5) {Affine Coupling Layer};
+
+    \node [draw, below right=1cm and 1cm of Acl5.center, anchor=180] (LatentSpace) {Latent Space};
+    \node [draw,
+           minimum width={width("Latent Space")+2pt},
+           above right=1cm and 1cm of Acl5.center, anchor=180] (Output) {Output};
+
+    \draw[->, color=TolBlue] (Input.20) to (Input.20 -| Acl1.north);
+    \draw[->, color=TolBlue] (Input.20 -| Acl1.south) -- (Input.20 -| P1.north);
+    \draw[->, color=TolBlue] (Input.20 -| P1.south)   -- (Input.20 -| Acl2.north);
+    \draw[->, color=TolBlue] (Input.20 -| Acl2.south) -- (Input.20 -| P2.north);
+    \draw[->, color=TolBlue] (Input.20 -| P2.south)   -- (Input.20 -| Acl3.north);
+    \draw[->, color=TolBlue] (Input.20 -| Acl3.south) -- (Input.20 -| P3.north);
+    \draw[->, color=TolBlue] (Input.20 -| P3.south)   -- (Input.20 -| Acl4.north);
+    \draw[->, color=TolBlue] (Input.20 -| Acl4.south) -- (Input.20 -| P4.north);
+    \draw[->, color=TolBlue] (Input.20 -| P4.south)   -- (Input.20 -| Acl5.north);
+    \draw[->, color=TolBlue] (Input.20 -| Acl5.south) to[out=0, in=180] (Output.180);
+
+    \node [draw, circle, fill, inner sep=0pt, minimum size=2pt,
+           right=2cm of Acl5.center] (Mix) {};
+
+    \draw[->, color=TolTeal] (Output.south -| Mix) -- (Mix);
+    \draw[->, color=TolTeal] (LatentSpace.north -| Mix) -- (Mix);
+    \draw[->, color=TolTeal] (Mix) to[out=180, in=0] (Input.340 -| Acl5.south);
+    \draw[->, color=TolTeal] (Input.340 -| Acl5.north) -- (Input.340 -| P4.south);
+    \draw[->, color=TolTeal] (Input.340 -| P4.north) -- (Input.340 -| Acl4.south);
+    \draw[->, color=TolTeal] (Input.340 -| Acl4.north) -- (Input.340 -| P3.south);
+    \draw[->, color=TolTeal] (Input.340 -| P3.north) -- (Input.340 -| Acl3.south);
+    \draw[->, color=TolTeal] (Input.340 -| Acl3.north) -- (Input.340 -| P2.south);
+    \draw[->, color=TolTeal] (Input.340 -| P2.north) -- (Input.340 -| Acl2.south);
+    \draw[->, color=TolTeal] (Input.340 -| Acl2.north) -- (Input.340 -| P1.south);
+    \draw[->, color=TolTeal] (Input.340 -| P1.north) -- (Input.340 -| Acl1.south);
+    \draw[->, color=TolTeal] (Input.340 -| Acl1.north) -- (Input.340);
+\end{tikzpicture}
+\caption{Structure of the final RADYNVERSION network. The forwards process is shown with the {\color{TolBlue}blue} arrows, and the inverse process with {\color{TolTeal}teal} arrows.}
+\label{Fig:RadynversionDiagram}
+\end{figure}
+
+For the RADYNVERSION\footnote{RADYNVERSION is a portmanteau of \Radyn{} and ``inversion''.} model we use five affine coupling layers, with four interleaved permutation layers.
+This is shown schematically in Fig. \ref{Fig:RadynversionDiagram}.
 Given the presence of four DNNs per affine coupling layer, our final model is composed of twenty DNNs.
-Each of these networks is an individual four-layer fully connected network utilising leaky ReLU activation functions following the first three layers, and a ReLU after the final layer.
-\TODO{Add Leaky ReLU explanation}
+Each of these networks is an individual four-layer fully connected network utilising leaky ReLU activation functions after each of the first three layers, and a ReLU following the final layer.
+
+The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time, in our case the temperature $T$, electron density $n_e$, and velocity $v$.
+These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
+The arge dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $v\mapsto\mathrm{sign}(v)\log_{10} \left( |v_{\mathrm{km\, s^{-1}}}| + 1\right)$.
+The mapping for $v$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
+These logarithmic mappings preserve detail better over each decade than a simple linear rescaling.
+
+The output consists of line profiles, in this case \Ha{} and \CaLine{}.
+Both of these are interpolated onto fixed wavelength grids, with 30 points each (a half width of \SI{0.14}{\nano\metre} for \Ha{} and \SI{0.1}{\nano\metre} for \CaLine{}).
+The intensity values of the spectral lines are scaled to cover the range [0, 1] whilst preserving the relative intensity of the two (which conveys important information regarding continuum emission).
+
+Our model then has an input dimensionality of 150 and an output dimensionality of 60.
+We choose, by experimentation, to set the size of the latent space to same as the input, however we cannot prove the opimality of such a choice as it depends on the (unknown) intrinsic dimensionality of the problem.
+Thus the input and total output (i.e. output and latent space) must be of length at least 210.
+To improve the generalisation performance of the network and allow it a greater dimensionality for its representation of the data we choose to set the input and output size to 384.
+The input to the network is zero-padded to this length, and the output and latent space are concatenated with zero-padding in between.
+The deep neural networks used inside the affine coupling layers have an input and output of length 192, but this is increased to 384 for the inner layers, to further increase their representational ability.
+
+The RADYNVERSION model presented here considers each set of atmospheric parameters and observables as instantaneous quantities.
+As we have discussed, it is usually necessary to consider time-dependent populations in flares, and clearly we do not do that here.
+The atomic populations are not considered directly with this model, and we are interested in whether there is sufficient information present in this reduced description of the atmosphere to reproduce the emergent line profiles and whether an ANN can then learn to decode this information.
+
+\subsection{Training Data}
+
+To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{}.
+These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
+All models are heated by a symmetric triangular electron beam pulse, modelled using the Fokker-Planck module (with an initial power law distribution of electron energies), of \SI{20}{\s} duration, with a peak at \SI{10}{\s}.
+The total beam deposition varies between \SIrange[range-phrase={~and~}]{3e10}{1e12}{\erg\per\square\cm}, the low-energy cutoff is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
+All of these simulations last for \SI{50}{\s}, with data saved every \SI{0.1}{\s}.
+
+Not all combinations of these parameters converged, in particular some simulations with lower values for the low-energy cutoff, higher spectral indices, and high total energy deposition were not present in the grid.
+From the 81 simulations we then have 40,500 individual timesteps of which we separate 20\% for validation purposes.
+The atmospheric parameters and line profiles are mapped onto their fixed grids and prepared as discussed in Section~\ref{Sec:RadynversionModel}.
+Our height stratification is chosen to primarily sample the chromosphere, and places 45 linearly spaced points below \SI{3.5}{\mega\metre}, with a constant spacing of \SI{79.2}{\kilo\metre}.
+The remaining 5 points are then expontially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
+
+
+\subsection{Training Method}
+
+Our training method is based on the one presented in \citet{2018Ardizzone} and makes the network is constructed using their framework. \NeedRef{}
+The INN is trained in both directions to ensure the conditioning of both the forwards and inverse problems.
+The model is trained using minibatching with the same minibatch of the training set being used in both directions.
+Both training directions are also constrained by two loss functions.
+The forwards direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\mathrm{true}||_2^2$, where $y$ indicates the output of the network and $y_\mathrm{true}$ the expected output) on the output vector of line profiles and zero padding.
+This latent space is constrained by a Maximum Mean Discrepancy (MMD) loss.
+The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\mathrm{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
+This is discussed in depth, along with implementation details in Section~\ref{Sec:Mmd}.
+During the forward process the MMD loss is used to ensure that the network learns to map the true latent space to our chosen form for it (the multivariate unit Gaussian distribution).
+A traditional regression loss cannot be applied here, as we would have to assign fixed ``samples'' from the latent space for each timestep in the training set, which cannot be done without understanding the true latent space.
+Its aim is instead to condition the distribution produced in the latent space.
+To this end, whilst $y$ is included in the MMD loss terms (as this is an important component of the output), the gradients on $y$ due to the MMD loss are ignored, so as not to affect the training of the forwards model.
+For both the L2 and MMD losses to converge on the forwards process ensures that samples of $z$ are correctly independent of $y$ as they must not contain copies of the same information for the reverse process to work correctly.
+
+The reverse process is trained similarly, with an additional two losses.
+An L2 loss is used for $x$ and the zero-padding to ensure the expected atmosphere parameters are produced (and that the padding remain 0), and an MMD loss ensuring the correct distribution of $x$ for random latent samples.
+
+Both of the forwards and backwards losses are linearly combined to produce a set of weighted gradients used to update the network.
+These gradients are used in conjunction with the Adam optimiser \citep{2014Kingma} with $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$, $\beta_i$ control the decay rate for momentum of the first- and second-moment estimates of the gradients and $\epsilon$ simply prevents division by zero.
+The learning rate was initialised to $1.5\times0^{-3}$ and decays by a factor of $0.004^{1/1333}$ every 12 epochs.
+
+
+\subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}
+
+\subsection{Validation}
+
+\subsection{Proof of Concept Results}
