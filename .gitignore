@@ -47,3 +47,12 @@ TikzGen/*
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+*.brf
+*.depytx
+*.md5
+*.dpth
+*.auxlock
+
+*.pytxcode
+pythontex-files-*/
