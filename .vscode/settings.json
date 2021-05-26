@@ -1,0 +1,131 @@
+// {
+//     "latex-workshop.latex.external.build.command": "./build.sh",
+//     "latex-workshop.latex.external.build.args": ["%DOC%"]
+// }
+{   // LaTeX Workshop
+    "latex-workshop.latex.autoBuild.run": "onFileChange",
+    "latex-workshop.latex.autoBuild.cleanAndRetry.enabled": false,
+    "latex-workshop.latex.tools": [
+        {
+            "name": "pdflatex",
+            "command": "pdflatex",
+            "args": [
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "%DOC%"
+            ],
+        },
+        {
+            "name": "pythontex",
+            "command": "pythontex",
+            "args": [
+                // "--interpreter",
+                // "\"python:/home/goobley/miniconda3/envs/LightweaverDev/bin/python\"",
+                "%DOC%"
+            ],
+            "env": {
+                "PATH": ["/home/goobley/miniconda3/envs/LightweaverDev/bin",
+                    "/home/goobley/miniconda3/condabin",
+                    "/usr/local/bin", "/usr/bin"]
+            }
+        },
+        {
+            "name": "buildscript",
+            "command": "./build.sh",
+            "args": [
+                "%DOC%"
+            ],
+        },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": [
+                "%DOCFILE%"
+            ]
+        },
+        {
+            "name": "makeindex-nomencl",
+            "command": "makeindex",
+            "args": [
+                "%DOCFILE%.nlo",
+                "-s",
+                "nomencl.ist",
+                "-o",
+                "%DOCFILE%.nls"
+            ]
+        },
+        {
+            "name": "makeindex-aux",
+            "command": "makeindex",
+            "args": [
+                "%DOCFILE%.aux",
+            ]
+        },
+        {
+            "name": "makeindex-idx",
+            "command": "makeindex",
+            "args": [
+                "%DOCFILE%.idx"
+            ]
+        },
+      ],
+    "latex-workshop.latex.recipes": [
+    {
+        "name": "buildscript-latexmk",
+        "tools": [
+            "buildscript"
+        ]
+    },
+    {
+        "name": "pdflatex->pytex->bibtex->pdflatex*2",
+        "tools": [
+            // "conda-configure",
+            // "conda-activate",
+            "pdflatex",
+            "pythontex",
+            "bibtex",
+            "makeindex-aux",
+            "makeindex-idx",
+            "makeindex-nomencl",
+            "pdflatex",
+            "makeindex-nomencl",
+            "pdflatex"
+        ]
+    },
+    ],
+    "latex-workshop.latex.clean.fileTypes": [
+        "*.aux",
+        "*.bbl",
+        "*.blg",
+        "*.idx",
+        "*.ind",
+        "*.lof",
+        "*.lot",
+        "*.out",
+        "*.toc",
+        "*.acn",
+        "*.acr",
+        "*.alg",
+        "*.glg",
+        "*.glo",
+        "*.gls",
+        "*.ist",
+        "*.fls",
+        "*.log",
+        "*.fdb_latexmk",
+        "*.ilg",
+        "*.nlo",
+        "*.nls",
+        "*synctex.gz",
+        "pythontex-files-*/*.pytxmcr",
+        "pythontex-files-*/*.pytxpyg",
+        "pythontex-files-*/pythontex_data.pkl",
+        "*.pytxcode",
+        "*/*.aux",
+        "*/figures/Chapter*-Figure*",
+        "*/data/*_counts.h5",
+    ],
+    "python.pythonPath": "/home/goobley/miniconda3/envs/LightweaverDev/bin/python",
+    "workbench.colorTheme": "Default Dark+"
+}

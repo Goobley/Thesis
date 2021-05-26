@@ -1,5 +1,34 @@
 \chapter{RADYNVERSION}\label{Chap:Radynversion}
 
+\begin{pycode}[Radynversion]
+name = 'Radynversion'
+chRad = texfigure.Manager(
+    pytex,
+    './04Radynversion',
+    number=4,
+    python_dir='./04Radynversion/python',
+    fig_dir='./04Radynversion/Figs',
+    data_dir='./04Radynversion/Data'
+)
+\end{pycode}
+
+\begin{pycode}[Radynversion]
+with open(chRad.data_file('Validation/Schemas.pickle'), 'rb') as f:
+    schemas = pickle.load(f)
+
+forwards = np.load(chRad.data_file('Validation/ForwardsProcess.npz'))
+reverse = np.load(chRad.data_file('Validation/ReverseProcess.npz'))
+fig = plt.figure()
+ax = fig.gca()
+
+ax.imshow(np.random.randn(25, 20))
+ax.set_title('Test')
+latexFig = chRad.save_figure('Rand', fig, fext='.pgf')
+latexFig.caption = 'Here\'s some randomness'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('Rand')|
+
 \begin{itemize}
     \item Introduction to inverse problems
     \item Spectral line inversions
@@ -11,6 +40,8 @@
 
 \emph{The contents of this chapter are based on my contributions to the research presented in \citet{Osborne2019}.}
 
+
+
 \section{Introduction to Inverse Problems}
 
 From the previous chapters we have an understanding of the so-called ``forwards-problem'' of RT, that is to say the problem of going from (in the time-independent case) an atmospheric model to outgoing radiation, and (in the time-dependent case) the atmospheric model and previous populations to the outgoing radiation and new populations.
@@ -18,7 +49,6 @@ The inverse of this problem is not well-posed; there is no guarantee of uniquene
 The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forwards process that is needed for the inverse process.
 
 It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this that the field of inversions seeks to achieve, by solving this inverse problem. As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations. We therefore use inversions to learn as much about the structure of the atmosphere that produced the observed radiation as possible.
-
 
 % \begin{figure}
 % \begin{tikzpicture}[
@@ -500,7 +530,7 @@ The atomic populations are not considered directly with this model, and we are i
 To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{}.
 These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
 All models are heated by a symmetric triangular electron beam pulse, modelled using the Fokker-Planck module (with an initial power law distribution of electron energies), of \SI{20}{\s} duration, with a peak at \SI{10}{\s}.
-The total beam deposition varies between \SIrange[range-phrase={~and~}]{3e10}{1e12}{\erg\per\square\cm}, the low-energy cutoff is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
+The total beam deposition varies between \SI{3e10}{\erg\per\square\cm} and \SI{1e12}{\erg\per\square\cm}, the low-energy cutoff is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
 All of these simulations last for \SI{50}{\s}, with data saved every \SI{0.1}{\s}.
 
 Not all combinations of these parameters converged, in particular some simulations with lower values for the low-energy cutoff, higher spectral indices, and high total energy deposition were not present in the grid.
@@ -508,7 +538,6 @@ From the 81 simulations we then have 40,500 individual timesteps of which we sep
 The atmospheric parameters and line profiles are mapped onto their fixed grids and prepared as discussed in Section~\ref{Sec:RadynversionModel}.
 Our height stratification is chosen to primarily sample the chromosphere, and places 45 linearly spaced points below \SI{3.5}{\mega\metre}, with a constant spacing of \SI{79.2}{\kilo\metre}.
 The remaining 5 points are then expontially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
-
 
 \subsection{Training Method}
 
@@ -530,8 +559,34 @@ The reverse process is trained similarly, with an additional two losses.
 An L2 loss is used for $x$ and the zero-padding to ensure the expected atmosphere parameters are produced (and that the padding remain 0), and an MMD loss ensuring the correct distribution of $x$ for random latent samples.
 
 Both of the forwards and backwards losses are linearly combined to produce a set of weighted gradients used to update the network.
-These gradients are used in conjunction with the Adam optimiser \citep{2014Kingma} with $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$, $\beta_i$ control the decay rate for momentum of the first- and second-moment estimates of the gradients and $\epsilon$ simply prevents division by zero.
-The learning rate was initialised to $1.5\times0^{-3}$ and decays by a factor of $0.004^{1/1333}$ every 12 epochs.
+We define three hyperparameter weights for this purpose $w_\mathrm{pred}$, $w_\mathrm{latent}$, and $w_\mathrm{rev}$.
+These are combined to produce the losses
+\begin{align}
+    loss_f &= w_\mathrm{pred} L2_f + w_\mathrm{latent} MMD_f,\\
+    loss_b &= 0.5w_\mathrm{pred} L2_b + \xi(n)w_\mathrm{rev} MMD_b,
+\end{align}
+where $f$ and $b$ represent the forwards and backwards terms respectively, and $\xi$ is a term that gradually increases towards unity so as to limit the impact of the backwards MMD term on early epochs.
+It is parameterised as
+\begin{equation}
+    \xi(n) = \left( \min\left( \frac{n}{0.4 N_\mathrm{fade}}, 1 \right) \right)^3,
+\end{equation}
+where $n$ is the current epoch, and $N_fade$ is the number of epochs needed for this term to become unity.
+To ensure that the output in the zero-padded sections remains close to zero we use $xi$ to initialise these to a small amount of random noise, decaying over this same period.
+This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
+Empirically we found that for the fade-in period of 800 epochs (over which $\xi$ increases to 1), a good choice for the loss weights was $w_\mathrm{pred}=$4000, $w_\mathrm{latent}=$900, and $w_\mathrm{rev}=$1000.
+After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each block of these.
+From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ being increased by the same amount.
+These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forwards process would not reliably converge.
+
+The gradients computed from these losses are used in conjunction with the Adam optimiser \citep{2014Kingma} with $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
+The $\beta_i$ terms control the decay rate for momentum of the first- and second-moment estimates of the gradients and $\epsilon$ simply prevents division by zero.
+These gradients are clipped to a range of $\pm15$ to help further mitigate problems with exploding gradients.
+This does not affect the final solution as the gradients will decrease as we approach a minimum.
+The learning rate was initialised to $1.5\times10^{-3}$ and decays by a factor of $0.004^{1/1333}$ every 12 epochs.
+Each minibatch contained 500 different samples and 20 minibatches were used per learning epoch.
+The final model was selected based on its L2 performance for the forwards and backwards results on the validation set.
+In this case the best performing model was the one saved after 11,400 epochs of training.
+
 
 
 \subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}

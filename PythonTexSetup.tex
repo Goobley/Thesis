@@ -1,0 +1,30 @@
+\begin{pythontexcustomcode}{py}
+import os
+import pickle
+
+import numpy as np
+import matplotlib.pyplot as plt
+import texfigure
+texfigure.preamble_setup()
+
+rc = {
+      'axes.titlesize': 12,
+      'axes.labelsize': 12,
+      'legend.fontsize': 10,
+      'xtick.labelsize': 10,
+      'ytick.labelsize': 10,
+      'xtick.major.pad': 3,
+      'xtick.minor.pad': 3,
+      'ytick.major.pad': 3,
+      'ytick.minor.pad': 3,
+      'xtick.direction': 'in',
+      'ytick.direction': 'in',
+      'savefig.bbox': 'tight'
+      }
+texfigure.configure_latex_plots(pytex, **rc)
+pytex.formatter = texfigure.repr_latex_formatter
+\end{pythontexcustomcode}
+% NOTE(cmo): This empty block ensures that python tex always "does something"
+% and fixes an issue with latexmk looking for the dependencies file
+\begin{pycode}
+\end{pycode}

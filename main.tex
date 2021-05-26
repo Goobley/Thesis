@@ -37,7 +37,7 @@
 \usepackage[default,regular,semibold]{sourceserifpro}
 % \usepackage[default,regular,black]{sourceserifpro}
 \usepackage[scaled=0.85]{beramono}
-\usepackage[small, euler-digits, T1]{eulervm}
+\usepackage[small, T1]{eulervm}
 \usepackage{amsfonts,amsmath}
 
 \usepackage[T1]{fontenc} % modern encoding
@@ -77,7 +77,8 @@
 % End of choices for fonts
 % \usepackage{graphicx}  % standard package for importing graphics files
 % \usepackage{cite}  % improves format of numerical citations, such as [1-3]
-\usepackage[top=1.8cm, bottom=1.8cm,left=4.0cm,right=1.5cm, includeheadfoot]{geometry}
+\usepackage[top=1.8cm,bottom=1.8cm,left=4.0cm,
+            right=1.5cm,headheight=15pt,includeheadfoot]{geometry}
 % These margins are the university guidelines
 % \usepackage[onehalfspacing]{setspace}  % gives one-and-a-half line spacing
 % doublespacing is another option and can be changed in the text
@@ -153,6 +154,14 @@
 \usepackage{siunitx}
 \sisetup{detect-all}
 \usepackage{parskip}
+\usepackage{pgf}
+\usepackage{pythontex}
+% NOTE(cmo): Swap to deptythontex if you need to use the `depythontex' utility
+% to see what code has been generated!
+% \usepackage[depythontex]{pythontex}
+\usepackage{import}
+\setpythontexcontext{figurewidth=\the\columnwidth}
+\newcommand{\includepgf}[1]{\IfFileExists{#1}{\input{#1}}{}}
 
 \newcommand*{\Ca}{Ca\textsc{ii}}
 \newcommand*{\CaLine}{Ca\,\textsc{ii} \SI{854.2}{\nano\m}}
@@ -166,7 +175,7 @@
 \DeclareSIUnit\erg{erg}
 
 \begin{document}
-
+\include{PythonTexSetup}
 \begin{titlepage}
 \centering
 \vspace*{1cm}  % Need the * or the space is swallowed at the top of the page
@@ -195,17 +204,16 @@ August 2021
 \tableofcontents
 \listoftables
 \listoffigures
-\include{acknowledgements}
-\include{declaration}
+\include{Acknowledgements}
+\include{Declaration}
 
 \mainmatter % Turn on chapter numbering, reset page numbers, use arabic
-\include{Introduction}
-\include{HeatingSignatures}
-\include{TimeDepRT}
-\include{2DRT}
-\include{Radynversion}
+\include{00Introduction/Introduction}
+\include{01HeatingSignatures/HeatingSignatures}
+\include{02TimeDepRT/TimeDepRT}
+\include{03TwoDRT/2DRT}
+\include{04Radynversion/Radynversion}
 \include{ConcludingRemarks}
-% and the other chapters
 \appendix
 
 {\small
