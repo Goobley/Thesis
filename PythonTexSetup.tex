@@ -6,21 +6,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import texfigure
 texfigure.preamble_setup()
+import seaborn as sns
+from cycler import cycler
 
 rc = {
-      'axes.titlesize': 12,
-      'axes.labelsize': 12,
-      'legend.fontsize': 10,
-      'xtick.labelsize': 10,
-      'ytick.labelsize': 10,
-      'xtick.major.pad': 3,
-      'xtick.minor.pad': 3,
-      'ytick.major.pad': 3,
-      'ytick.minor.pad': 3,
-      'xtick.direction': 'in',
-      'ytick.direction': 'in',
-      'savefig.bbox': 'tight'
-      }
+    'pgf.preamble': [
+        r'\usepackage{siunitx}',
+    ],
+    'axes.titlesize': 12,
+    'axes.labelsize': 12,
+    'legend.fontsize': 10,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'xtick.major.pad': 3,
+    'xtick.minor.pad': 3,
+    'ytick.major.pad': 3,
+    'ytick.minor.pad': 3,
+    'xtick.direction': 'in',
+    'ytick.direction': 'in',
+    'axes.linewidth': 0.5,
+    'axes.prop_cycle': cycler('color', sns.color_palette('colorblind'))
+# 'savefig.bbox': 'tight'
+}
 texfigure.configure_latex_plots(pytex, **rc)
 pytex.formatter = texfigure.repr_latex_formatter
 \end{pythontexcustomcode}

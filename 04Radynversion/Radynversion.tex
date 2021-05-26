@@ -12,23 +12,6 @@ chRad = texfigure.Manager(
 )
 \end{pycode}
 
-\begin{pycode}[Radynversion]
-with open(chRad.data_file('Validation/Schemas.pickle'), 'rb') as f:
-    schemas = pickle.load(f)
-
-forwards = np.load(chRad.data_file('Validation/ForwardsProcess.npz'))
-reverse = np.load(chRad.data_file('Validation/ReverseProcess.npz'))
-fig = plt.figure()
-ax = fig.gca()
-
-ax.imshow(np.random.randn(25, 20))
-ax.set_title('Test')
-latexFig = chRad.save_figure('Rand', fig, fext='.pgf')
-latexFig.caption = 'Here\'s some randomness'
-\end{pycode}
-
-\py[Radynversion]|chRad.get_figure('Rand')|
-
 \begin{itemize}
     \item Introduction to inverse problems
     \item Spectral line inversions
@@ -592,5 +575,143 @@ In this case the best performing model was the one saved after 11,400 epochs of 
 \subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}
 
 \subsection{Validation}
+
+\begin{pycode}[Radynversion]
+def logvel_to_vel(v):
+    vSign = v / np.abs(v)
+    vSign[np.isnan(vSign)] = 0
+    vel = vSign * (10**np.abs(v) - 1.0)
+    return vel
+
+def find_range_in_schema(schema, name):
+    nameIdx = 0
+    for i, s in enumerate(schema):
+        if s[0] == name:
+            nameIdx = i
+            break
+    else:
+        raise ValueError('Name %s not found in schema %s' % (name, repr(schema)))
+
+    startLoc = 0
+    for i in range(nameIdx):
+        startLoc += schema[i][1]
+    endLoc = startLoc + schema[nameIdx][1]
+    return range(startLoc, endLoc)
+
+with open(chRad.data_file('Validation/Schemas.pickle'), 'rb') as f:
+    schemas = pickle.load(f)
+
+forwards = np.load(chRad.data_file('Validation/ForwardsProcess.npz'))
+reverse = np.load(chRad.data_file('Validation/ReverseProcess.npz'))
+z = schemas['z']
+zMm = schemas['z'] / 1e8
+wls = schemas['wls']
+
+fig, ax = plt.subplots(2, 2, #constrained_layout=True,
+                       figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
+ax = ax.ravel()
+ax = [ax[0], ax[0].twinx(), *ax[1:]]
+ax[0].plot(zMm, forwards['xTrue'][0, 0])
+ax[1].plot(zMm, forwards['xTrue'][0, 1], c='C1')
+ax[2].plot(zMm, logvel_to_vel(forwards['xTrue'][0, 2]), c='C2')
+ax[0].set_ylabel(r'$\log{n_e}$ [\si{\cm\tothe{-3}}]', c='C0')
+ax[0].set_xlabel(r'$z$ [\si{\mega\metre}]')
+ax[1].set_ylabel(r'$\log{T}$ [\si{\K}]', c='C1')
+ax[2].set_ylabel(r'$v$ [\si{\kilo\metre\per\second}]', c='C2')
+ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
+
+
+halphaCoords = find_range_in_schema(schemas['outSchema'], 'Halpha')
+caCoords = find_range_in_schema(schemas['outSchema'], 'Ca8542')
+haCentre = 0.5 * (wls[0][0] + wls[0][-1])
+caCentre = 0.5 * (wls[1][0] + wls[1][-1])
+ax[3].plot((wls[0] - haCentre) / 10, forwards['yTrue'][0, 0], c='C2')
+ax[3].plot((wls[0] - haCentre) / 10, forwards['yzPred'][0, halphaCoords], '-.', c='C4')
+ax[4].plot((wls[1] - caCentre) / 10, forwards['yTrue'][0, 1], c='C2', label='Ground Truth')
+ax[4].plot((wls[1] - caCentre) / 10, forwards['yzPred'][0, caCoords], '-.', c='C4', label='Predicted')
+ax[3].xaxis.set_major_locator(plt.MaxNLocator(6))
+ax[4].xaxis.set_major_locator(plt.MaxNLocator(6))
+fig.legend(loc='lower left', frameon=False, bbox_to_anchor=(0.42, 0.45))
+
+ax[3].set_ylabel('Normalised Intensity')
+ax[3].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
+ax[4].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
+ax[3].set_title(r'H$\alpha$')
+ax[4].set_title(r'Ca\,\textsc{ii} \SI{854.2}{\nano\metre}')
+
+fig.tight_layout()
+latexFig = chRad.save_figure('RadynversionValidationForwards', fig, fext='.pgf')
+latexFig.caption = 'Validation of the Radynversion Forwards Process'
+\end{pycode}
+
+
+\py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
+
+\begin{pycode}[Radynversion]
+from matplotlib.colors import LinearSegmentedColormap, PowerNorm
+cmapNe = [(1.0,1.0,1.0,0.0), (51/255, 187/255, 238/255, 1.0)]
+cmapNe = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[0], 1.0)]
+neColors = LinearSegmentedColormap.from_list('ne', cmapNe)
+cmapTemp = [(1.0,1.0,1.0,0.0), (238/255, 119/255, 51/255, 1.0)]
+cmapTemp = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[1], 1.0)]
+tempColors = LinearSegmentedColormap.from_list('temp', cmapTemp)
+cmapVel = [(1.0,1.0,1.0,0.0), (238/255, 51/255, 119/255, 1.0)]
+cmapVel = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[2], 1.0)]
+velColors = LinearSegmentedColormap.from_list('vel', cmapVel)
+powerNormIdx = 0.3
+
+fig, ax = plt.subplots(1, 2, #constrained_layout=True,
+                       figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+ax = ax.ravel()
+ax = [ax[0], ax[0].twinx(), *ax[1:]]
+
+zEdges = [zMm[0] - 0.5 * (zMm[1] - zMm[0])]
+for i in range(zMm.shape[0] - 1):
+    zEdges.append(0.5 * (zMm[i] + zMm[i+1]))
+zEdges.append(zMm[-1] + 0.5 * (zMm[-1] - zMm[-2]))
+
+xPred = reverse['xPred']
+xTrue = reverse['xTrue']
+
+neEdges = np.linspace(8, 15, 101)
+neIdxs = find_range_in_schema(schemas['inSchema'], 'ne')
+tempEdges = np.linspace(3, 8, 101)
+tempIdxs = find_range_in_schema(schemas['inSchema'], 'temperature')
+velIdxs = find_range_in_schema(schemas['inSchema'], 'vel')
+minVel = np.min(np.median(logvel_to_vel(xPred[:, velIdxs]), axis=0))
+minVel = np.sign(minVel) * 2 * np.abs(minVel) if minVel <= 0 else 0.9 * minVel
+maxVel = 2 * np.max(np.median(logvel_to_vel(xPred[:, velIdxs]), axis=0))
+velEdges = np.linspace(minVel, maxVel, num=101)
+
+ax[0].hist2d(np.concatenate([zMm] * xPred.shape[0]),
+             xPred[:, neIdxs].reshape(-1),
+             bins=(zEdges, neEdges), cmap=neColors, norm=PowerNorm(powerNormIdx))
+ax[1].hist2d(np.concatenate([zMm] * xPred.shape[0]),
+             xPred[:, tempIdxs].reshape(-1),
+             bins=(zEdges, tempEdges), cmap=tempColors, norm=PowerNorm(powerNormIdx))
+ax[0].plot(zMm, xTrue[0, 0], 'k--', linewidth=0.5)
+ax[1].plot(zMm, xTrue[0, 1], 'k--', linewidth=0.5)
+ax[0].set_xlim(None, 10.5)
+
+ax[2].hist2d(np.concatenate([zMm] * xPred.shape[0]),
+             logvel_to_vel(xPred[:, velIdxs].reshape(-1)),
+             bins=(zEdges, velEdges), cmap=velColors, norm=PowerNorm(powerNormIdx))
+ax[2].plot(zMm, logvel_to_vel(xTrue[0, 2]), 'k--', linewidth=0.5)
+ax[2].set_xlim(None, 10.5)
+
+
+ax[0].set_ylabel(r'$\log{n_e}$ [\si{\cm\tothe{-3}}]', c=cmapNe[-1])
+ax[0].set_xlabel(r'$z$ [\si{\mega\metre}]')
+ax[1].set_ylabel(r'$\log{T}$ [\si{\K}]', c=cmapTemp[-1])
+ax[2].set_ylabel(r'$v$ [\si{\kilo\metre\per\second}]', c=cmapVel[-1])
+ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
+
+fig.tight_layout()
+latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf')
+latexFig.caption = 'Validation of the Radynversion Reverse Process'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('RadynversionValidationReverse')|
+
 
 \subsection{Proof of Concept Results}
