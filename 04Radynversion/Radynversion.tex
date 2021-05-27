@@ -574,6 +574,59 @@ In this case the best performing model was the one saved after 11,400 epochs of 
 
 \subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}
 
+The content of this section draws primarily from \citet{Sriperumbudur2009}, \citet{2012Gretton}, \citet{Muandet2017}, and Gretton's lecture content, currently available online\footnote{\url{http://www.gatsby.ucl.ac.uk/~gretton/teaching.html}}.
+% e.g. http://www.gatsby.ucl.ac.uk/~gretton/coursefiles/lecture1_whatIsRKHS.pdf
+
+The maximum mean discrepancy (MMD) is a statistic for comparing two distributions, based on samples drawn from these, and computes the difference in expectations over functions in the unit ball of a reporducing kernel Hilbert space (RKHS).
+
+A Hilbert space is a space in which an inner product is defined that is linear, symmetric and the inner product of an element with itself is positive definite.
+From this inner product a norm can be defined $||f|| = \sqrt{\langle f, f \rangle}$.
+These spaces must also be Cauchy complete, implying that every Cauchy sequence (convergent sequence), must converge to a point in the space.
+
+An RKHS $\mathcal{H}$ is then a Hilbert space of functions $f : \mathcal{X} \rightarrow \mathbb{R}$ for which the evaluation functional $\delta_x : f \mapsto f(x)$ is bounded and continuous\footnote{This can be generalised to functions $f : \mathcal{X} \rightarrow \mathbb{C}$.}.
+The RKHS has the property that two functions that are close in norm in $\mathcal{H}$ are then pointwise close when evaluated anywhere over $\mathcal{X}$.
+The kernel associated with this RKHS is a positive definite kernel $k : \mathcal{X} \times \mathcal{X} \rightarrow \mathbb{R}$ if there exists a map $\phi : \mathcal{X} \rightarrow \mathcal{H}$ such that $\forall\, x,y \in \mathcal{H}$
+\begin{equation}
+    k(x,y) = \langle \phi(x), \phi(y) \rangle_\mathcal{H}.
+\end{equation}
+The map $\phi$ is termed the feature map, and $\mathcal{H}$ is known as the feature space.
+
+Let us define two probability distributions $P$ and $Q$ and draw an observation $X$ and $Y$ in an independent and identically distributed fashion from $P$ and $Q$ respectively.
+The MMD is then defined by
+\begin{equation}\label{Eq:MmdDef}
+\begin{aligned}
+    \mathrm{MMD}^2 &= ||\mu_P - \mu_Q ||_\mathcal{H}^2\\
+    &= \langle \mu_P, \mu_P \rangle_\mathcal{H} +
+       \langle \mu_Q, \mu_Q \rangle_\mathcal{H} -
+       2 \langle \mu_P, \mu_Q \rangle_\mathcal{H},
+\end{aligned}
+\end{equation}
+where $\mu_A$ represents the mean embedding of the distribution $A$ in the feature space, which is the expectation vector of the features of $\mathcal{H}$ evaluated for this distribution.
+The kernel associated with $\mathcal{H}$ is \emph{characteristic} if the feature map is injective, and in this case the MMD is zero iff $P = Q$.
+It was shown by \citet{Sriperumbudur2009} that all measurable and bounded strictly positive definite kernels are characteristic, and we therefore limit ourselves to this class.
+
+$\mu_P$ can now be written in terms of the features of $\mathcal{H}$
+\begin{equation}
+    \mu_P = [\ldots \mathbb{E}_P[\phi_i(X)] \ldots],
+\end{equation}
+where $\mathbb{E}_P$ denotes the expected value of its argument with respect to $P$.
+$\phi_i$ is the $i$th feature of the feature map (which may contain infinitely many features).
+We can then write
+% Muandet2017, p51, crossed with Gretton Madrid notes
+\begin{equation}
+    \langle \mu_P, \mu_P \rangle_\mathcal{H} = \langle \mathbb{E}_P [k(\cdot, X)], \mathbb{E}_{P} [k(\cdot,\, X^\prime)] \rangle_\mathcal{H} = \mathbb{E}_{P} [k(X, X^\prime)],
+\end{equation}
+where $X^\prime$ is an independently drawn copy of $X$ from $P$.
+We define $Y^\prime$ analagously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
+\begin{equation}
+    \mathrm{MMD}^2 = ||\mu_P - \mu_Q|| ^2
+                   = \mathbb{E}_P [k(X, X^\prime)] + \mathbb{E}_Q [k(Y, Y^\prime)] - 2 \mathbb{E}_{P,Q}[k(X,Y)].
+\end{equation}
+Here the first two terms compare the distributions for internal similarity, whereas the last compares the intra-distribution similarity.
+
+{\color{Red}Now we can do the unbiased statistic from the RADYNVERSION paper and then explain kernel choice and $\alpha$ scaling.}
+
+
 \subsection{Validation}
 
 \begin{pycode}[Radynversion]
