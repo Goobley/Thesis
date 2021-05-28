@@ -5,6 +5,9 @@ TikzGen/*
 *.npz
 *.pickle
 
+*/__pycache__/*
+*.pyc
+
 ### LaTeX ###
 ## Core latex/pdflatex auxiliary files:
 *.aux
