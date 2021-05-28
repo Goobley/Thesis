@@ -191,7 +191,7 @@ With continuum opacity $\tau_c$ the source function is then defined as
     S(\tau_c) = S_0 + S_1 \tau_c,
 \end{equation}
 where $S0$ and $S1$ are constants.
-In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line core opacity i.e.
+In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line opacity i.e.
 \begin{equation}
     \tau(\nu) = \tau_c (1 + \alpha \phi(\nu)),
 \end{equation}
@@ -208,37 +208,95 @@ This approach works quite well for quiet photospheric lines, such as Fe I 6301 \
 The limitations on the description of source function restrict its applicability to chromospheric lines.
 However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
 
+\subsection{Generalisation}
+
 There are substantial limitations to imposing a chosen source function.
 A far more flexible approach is to attempt to fit a source function.
-From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescirbed functional form over each interval we can write
+From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
 \begin{equation}
     I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau}\, d\tau,
 \end{equation}
 whereby we have once again assumed that $I(\tau=\infty)=0$.
 If the source function is taken to be constant in each slab this becomes
-\begin{equation}
+\begin{equation}\label{Eq:LinearResponse}
     I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
 \end{equation}
 and for each slab, the associated integral represents its contribution to the outgoing intensity. In fact, as the each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
 We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
-This reponse function does not change with the source function due to the linearity of the problem.
+This response function does not change with the source function due to the linearity of the problem.
 In theory we should therefore be able to infer the depth stratified form of the source function, however two primary difficulties arise.
 
 Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
 Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning and cannot be inverted directly.
 An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can tackle both problems at once.
-Nevertheless, this tends to produce oscillatory solutions, as shown in Fig. \NeedRef{}.
+% Nevertheless, this tends to produce oscillatory solutions, as shown in Fig. \NeedRef{}.
+We shall demonstrate this with a numerical example, first defining a function giving the response at each depth as per \eqref{Eq:LinearResponse}:
+
+\begin{pyblock}[Radynversion]
+def linear_response_fn(tau, alpha, phi):
+    dtau = np.gradient(tau)
+    lineDepthIncrease = 1.0 + alpha * phi[None, :]
+
+    responseFn = np.exp(-tau[:, None] * lineDepthIncrease) \
+                  * dtau[:, None] * lineDepthIncrease
+    return responseFn
+\end{pyblock}
+
+Here, we are using an atmosphere defined in terms of optical depth \texttt{tau}, constant line to continuum opacity ratio \texttt{alpha}, and line profile \texttt{phi}.
+This function can then be applied to a source function quadratically varying in $\log \tau$:
+
+\begin{pyblock}[Radynversion]
+import lightweaver as lw
+Ndepth = 101 # Number of depth points in the stratification
+tau = 10**np.linspace(-5, 1, Ndepth) # Optical depth stratification
+alpha = 30 # Line strength relative to continuum
+x = np.linspace(-20, 20, 101) # Line spectral grid in Doppler units
+phi = lw.voigt_H(1.0, x) / np.sqrt(np.pi) # Voigt line profile
+
+# Quadratic Source function peaking at logTau = -1,
+# strictly positive and normalised.
+S = -(np.log10(tau) + 1)**2
+S -= 1.2*S.min()
+S /= S.max()
+
+# Compute response function
+responseFn = linear_response_fn(tau, alpha, phi)
+# Compute outgoing intensity as per equation
+Iout = np.sum(S[:, None] * responseFn, axis=0)
+# Inferred source function from outgoing intensity and
+# response function (via pseudoinverse)
+Sinferred = np.linalg.pinv(responseFn.T) @ Iout
+\end{pyblock}
+
+\begin{pycode}[Radynversion]
+fig = plt.figure()
+ax = plt.gca()
+plt.plot(np.log10(tau), S, label='True source function')
+plt.plot(np.log10(tau), Sinferred, label='Psuedoinverse inferred source function')
+plt.xlabel(r'$\log\tau_c$')
+plt.ylabel(r'S')
+plt.legend(frameon=False, loc='lower right')
+
+lFig = chRad.save_figure('InferredSourceFn', fig, fext='.pgf')
+lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('InferredSourceFn')|
+
+The true and inferred source functions are shown in Fig.~\ref{Fig:InferredSourceFn}.
+The poor quality of the pseudoinverse solution is apparent due to the large oscillations and poor agreement with the true source function, and this example showcases a static atmosphere with constant line strength.
+If these parameters are also allowed to vary then the solution is likely to deteriorate further.
 
 % Therefore, there is a need for \emph{regularisation} of the solution, penalising deviations from smooth solutions.
 % This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
-Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enfore smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
+Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enforce smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
 Ultimately, we seek to learn information about the atmospheric structure, and not simply the source function.
 In LTE, where the source function is set by the local atmospheric parameters, this approach has long been viable.
 The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by Sanchez Almeida \NeedRef{}) to perturbations in different atmospheric parameters at the same time as the formal solution.
 These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
 
 For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations is significantly more arduous.
-The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilbrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
+The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilibrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
 This is incredibly resource intensive, but has reliably been used since the NICOLE code \citep[first distributed 2000]{Socas-Navarro2015}.
 The Stockholm Inversion Code (STiC) also follows this procedure, using a modified form of RH, allowing for the application of PRD \citep{2019dlcr}.
 
@@ -247,15 +305,13 @@ These response functions should significantly reduce the computational cost of N
 
 An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH. \NeedRef{}
 
-{\color{Red} HAZEL?}
-
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
 It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seed as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
 Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
 
 An ``inversion'' technique that has commonly been applied to flares in the last decade is that of forward modelling through the use of RHD codes.
-Where possible the energy input is constrained from observations, via techniques such as X-ray sectroscopy to deduce the non-thermal electron flux and spectral index.
+Where possible the energy input is constrained from observations, via techniques such as X-ray spectroscopy to deduce the non-thermal electron flux and spectral index.
 A challenging manual iteration technique then follows to attempt to obtain an agreement between the time-dependent simulation and the observations.
 This is extremely time-consuming both due to the manual aspect of the inversions and the computational requirements of the RHD simulations.
 Clearly, the human intervention necessary to optimise and analyse these simulations cannot scale to the large volumes of data coming already present and coming from future telescopes.
@@ -609,12 +665,11 @@ $\mu_P$ can now be written in terms of the features of $\mathcal{H}$
 \begin{equation}
     \mu_P = [\ldots \mathbb{E}_P[\phi_i(X)] \ldots],
 \end{equation}
-where $\mathbb{E}_P$ denotes the expected value of its argument with respect to $P$.
-$\phi_i$ is the $i$th feature of the feature map (which may contain infinitely many features).
+where $\mathbb{E}_P$ denotes the expected value of its argument with respect to $P$ and $\phi_i$ is the $i$th feature of the feature map (which may contain infinitely many features).
 We can then write
 % Muandet2017, p51, crossed with Gretton Madrid notes
 \begin{equation}
-    \langle \mu_P, \mu_P \rangle_\mathcal{H} = \langle \mathbb{E}_P [k(\cdot, X)], \mathbb{E}_{P} [k(\cdot,\, X^\prime)] \rangle_\mathcal{H} = \mathbb{E}_{P} [k(X, X^\prime)],
+    \langle \mu_P, \mu_P \rangle_\mathcal{H} = \langle \mathbb{E}_P [k(\cdot\, ,\, X)], \mathbb{E}_{P} [k(\cdot\, ,\, X^\prime)] \rangle_\mathcal{H} = \mathbb{E}_{P} [k(X, X^\prime)],
 \end{equation}
 where $X^\prime$ is an independently drawn copy of $X$ from $P$.
 We define $Y^\prime$ analagously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
@@ -624,8 +679,28 @@ We define $Y^\prime$ analagously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef}
 \end{equation}
 Here the first two terms compare the distributions for internal similarity, whereas the last compares the intra-distribution similarity.
 
-{\color{Red}Now we can do the unbiased statistic from the RADYNVERSION paper and then explain kernel choice and $\alpha$ scaling.}
+For length $n$ finite observations $X$ and $Y$ we can expand this to provide an unbiased sample estimate
+\begin{equation}
+    \widehat{\mathrm{MMD}}_u^2 = \frac{1}{n(n-1)} \sum_{i\neq j} k(x_i, x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i, y_j) - \frac{2}{n^2} \sum_{i, j} k(x_i, y_j).
+\end{equation}
+As this statistic is unbiased and computed from a finite sample size, it can be negative when $P$ and $Q$ are similar distributions, despite being the definition of $\mathrm{MMD}^2$.
+We therefore employ a biased estimate of the MMD which remains positive in all scenarios
+\begin{equation}
+    \widehat{\mathrm{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, x_j) \right).
+\end{equation}
+This biased form of the MMD is also more efficient to compute using the vectorised tensor operations present in machine learning frameworks like pytorch.
 
+The choice of kernel used in the MMD will then determine how this statistic is able to distinguish between distributions.
+We choose to employ the inverse multi-quadric (IMQ) kernel as used by \citet{2017Tolstikhin} and \citet{2018Ardizzone}
+\begin{equation}
+    k_\alpha(x, y) = \frac{\alpha^2}{\alpha^2 + ||x-y||_2^2}.
+\end{equation}
+This kernel meets the strictly positive definite criterion that is necessary for a characterisic kernel of an RKHS, but contains a free parameter $\alpha$.
+We were unable to empirically determine a single value for $\alpha$ for which the MMD could reliably distinguish between the two distributions well enough to optimise over, however it was found that plotting the MMD for different values of $\alpha$ whilst retaining fixed $X$ and $Y$ peaked for a particular value of $\alpha$.
+This approach was used to refine the MMD losses by updating $\alpha$ to the value for which the MMD was maximal every five epochs of training.
+Modifying the MMD loss in this way ensures that it is most sensitive to the scale of differing features between our current distribution samples.
+
+Minimising the forwards MMD loss then ensures the independence of data stored in the latent space and that the latent space takes a normal unit distribution form, whilst minimising the backwards MMD ensures that the distribution of atmospheres generated with different draws of the latent space is a plausible distribution when compared against the training set.
 
 \subsection{Validation}
 
@@ -694,24 +769,18 @@ ax[4].set_title(r'Ca\,\textsc{ii} \SI{854.2}{\nano\metre}')
 
 fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationForwards', fig, fext='.pgf')
-latexFig.caption = 'Validation of the Radynversion Forwards Process'
+latexFig.caption = 'Validation of the RADYNVERSION forwards process on unseen data. The upper row shows the atmospheric input, and the lower row the expected output along with the predicition from the network.'
 \end{pycode}
-
-
-\py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
 
 \begin{pycode}[Radynversion]
 from matplotlib.colors import LinearSegmentedColormap, PowerNorm
-cmapNe = [(1.0,1.0,1.0,0.0), (51/255, 187/255, 238/255, 1.0)]
 cmapNe = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[0], 1.0)]
 neColors = LinearSegmentedColormap.from_list('ne', cmapNe)
-cmapTemp = [(1.0,1.0,1.0,0.0), (238/255, 119/255, 51/255, 1.0)]
 cmapTemp = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[1], 1.0)]
 tempColors = LinearSegmentedColormap.from_list('temp', cmapTemp)
-cmapVel = [(1.0,1.0,1.0,0.0), (238/255, 51/255, 119/255, 1.0)]
 cmapVel = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[2], 1.0)]
 velColors = LinearSegmentedColormap.from_list('vel', cmapVel)
-powerNormIdx = 0.3
+powerNormIdx = 0.2
 
 fig, ax = plt.subplots(1, 2, #constrained_layout=True,
                        figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
@@ -738,17 +807,17 @@ velEdges = np.linspace(minVel, maxVel, num=101)
 
 ax[0].hist2d(np.concatenate([zMm] * xPred.shape[0]),
              xPred[:, neIdxs].reshape(-1),
-             bins=(zEdges, neEdges), cmap=neColors, norm=PowerNorm(powerNormIdx))
+             bins=(zEdges, neEdges), cmap=neColors, norm=PowerNorm(powerNormIdx), rasterized=True)
 ax[1].hist2d(np.concatenate([zMm] * xPred.shape[0]),
              xPred[:, tempIdxs].reshape(-1),
-             bins=(zEdges, tempEdges), cmap=tempColors, norm=PowerNorm(powerNormIdx))
+             bins=(zEdges, tempEdges), cmap=tempColors, norm=PowerNorm(powerNormIdx), rasterized=True)
 ax[0].plot(zMm, xTrue[0, 0], 'k--', linewidth=0.5)
 ax[1].plot(zMm, xTrue[0, 1], 'k--', linewidth=0.5)
 ax[0].set_xlim(None, 10.5)
 
 ax[2].hist2d(np.concatenate([zMm] * xPred.shape[0]),
              logvel_to_vel(xPred[:, velIdxs].reshape(-1)),
-             bins=(zEdges, velEdges), cmap=velColors, norm=PowerNorm(powerNormIdx))
+             bins=(zEdges, velEdges), cmap=velColors, norm=PowerNorm(powerNormIdx), rasterized=True)
 ax[2].plot(zMm, logvel_to_vel(xTrue[0, 2]), 'k--', linewidth=0.5)
 ax[2].set_xlim(None, 10.5)
 
@@ -760,11 +829,162 @@ ax[2].set_ylabel(r'$v$ [\si{\kilo\metre\per\second}]', c=cmapVel[-1])
 ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
 
 fig.tight_layout()
-latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf')
-latexFig.caption = 'Validation of the Radynversion Reverse Process'
+latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf', dpi=500)
+latexFig.caption = r'Validation of the Radynversion reverse process from the ground truth line profiles shown in Fig.~\ref{Fig:RadynversionValidationForwards}. The two-dimensional histograms show the probability density of the solution in each altitude node, and the black dashed lines the expected solution.'
 \end{pycode}
+
+\py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
+During and after training, the RADYNVERSION model is validated against the unseed validation data separated from the training set.
+An example taken from the validation set showing the forwards process is presented in Fig.~\ref{Fig:RadynversionValidationForwards}.
+The mean squared error in the scaled intensity at each wavelength point for the validation set is $5.74\times10^{-5}$ showing that the model can very accurately predict the scaled line profiles based on the atmospheric parameters for unseen atmospheres.
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationReverse')|
 
+Due to possible degeneracies it is harder to numerically evaluate the performance of the model's reverse process.
+For each pair of line profiles we draw a large number of samples from the latent space and infer the predicted line profile from each latent space draw combined with the pair of line profiles.
+This gives a large number of possible sets of atmospheric parameters which we plot on a two dimensional histogram to show the probability density of the solution in each altitude node.
+This method then allows us to gauge possible degeneracies and establish the relative probabilities of different solutions.
+An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process.
+These histograms were generated from 10,000 draws latent space draws, and their values were gamma corrected (with $\gamma=\,$\py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
+The overplotted black dashed lines show the ground truth solution for each of the atmospheric parameters, and overlap the peak density of the histogram extremely well.
+The histogram remains very narrow in the lower atmosphere, but starts to expand above \SI{3}{\mega\metre}, where the solution is poorly constrained by the chromospheric lines in use here.
+This effect is most visible on the velocity plot, but despite the increase in uncertaintly, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.
 
 \subsection{Proof of Concept Results}
+
+\begin{pycode}[Radynversion]
+from astropy.io import fits
+ca_file = chRad.data_file('crisp_l2_20140906_152724_8542_r00459.fits')
+ha_file = chRad.data_file('crisp_l2_20140906_152724_6563_r00459.fits')
+
+ha_central_idx = 7
+ca_central_idx = 12
+ha_hw = 1.4
+ca_hw = 1.0 #1.0 because RADYN has a 1A half-width for calcium
+
+# crisp = CRISP(ca_file=ca_file,ha_file=ha_file,rotate=True)
+ca = fits.open(ca_file)
+ha = fits.open(ha_file)
+
+im_centre_ca = ca[0].data[12]
+im_centre_ha = ha[0].data[7]
+im_bwing_ca =  ca[0].data[4]
+im_bwing_ha =  ha[0].data[0]
+im_rwing_ca =  ca[0].data[20]
+im_rwing_ha =  ha[0].data[14]
+px_width = ca[0].header['CDELT1']
+point_1_ha = np.array([30.72,37.47])
+point_2_ha = np.array([50.37,3.73])
+point_1_ca = np.array([30.22,36.47])
+point_2_ca = np.array([49.87,2.73])
+point_2_ca = np.array([35, 5])
+point_2_ha = point_2_ca
+# point_1_ha = np.array([53.5, 39.5])
+# point_1_ha = np.array([49.9, 42.3]) #broken
+point_1_ha = np.array([50.27, 41.50]) # not too bad
+# point_1_ha = np.array([49.85, 41.41]) # nah
+point_1_ca = point_1_ha
+
+fig, ax = plt.subplots(ncols=3,nrows=2,
+figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8),
+constrained_layout=True, sharex=True, sharey=True)
+sol_cm = 'Greys_r'
+ax[0,0].imshow(im_bwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,0].set_title(r"$\lambda=854.2-0.08$ nm")
+ax[0,0].set_ylabel("y [\"]")
+ax[0,0].plot(point_1_ca[0],point_1_ca[1],"wo")
+ax[0,0].plot(point_2_ca[0],point_2_ca[1],"ws")
+ax[0,1].imshow(im_centre_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,1].set_title(r"$\lambda=854.2$ nm")
+ax[0,1].plot(point_1_ca[0],point_1_ca[1],"wo")
+ax[0,1].plot(point_2_ca[0],point_2_ca[1],"ws")
+ax[0,2].imshow(im_rwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,2].set_title(r"$\lambda=854.2+0.08$ nm")
+ax[0,2].plot(point_1_ca[0],point_1_ca[1],"wo")
+ax[0,2].plot(point_2_ca[0],point_2_ca[1],"ws")
+ax[1,0].imshow(im_bwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,0].set_title(r"$\lambda=656.3-0.14$ nm")
+ax[1,0].set_ylabel("y [\"]")
+ax[1,0].set_xlabel("x [\"]")
+ax[1,0].plot(point_1_ha[0],point_1_ha[1],"wo")
+ax[1,0].plot(point_2_ha[0],point_2_ha[1],"ws")
+ax[1,1].imshow(im_centre_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,1].set_title(r"$\lambda=656.3$ nm")
+ax[1,1].set_xlabel("x [\"]")
+ax[1,1].plot(point_1_ha[0],point_1_ha[1],"wo")
+ax[1,1].plot(point_2_ha[0],point_2_ha[1],"ws")
+ax[1,2].imshow(im_rwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,2].set_title(r"$\lambda=656.3+0.14$ nm")
+ax[1,2].set_xlabel("x [\"]")
+ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
+ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
+
+lFig = chRad.save_figure('CrispPlot', fig, fext='.pgf', dpi=600)
+lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off ribbon) and circle (on ribbon).'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('CrispPlot')|
+
+\begin{pycode}[Radynversion]
+from utils import intensity_vector, interp_to_radyn_grid, normalise
+ca_1 = intensity_vector(ca, point_1_ca,coord_type="arcsec")
+ha_1 = intensity_vector(ha, point_1_ha,coord_type="arcsec")
+ca_2 = intensity_vector(ca, point_2_ca,coord_type="arcsec")
+ha_2 = intensity_vector(ha, point_2_ha,coord_type="arcsec")
+
+ca_centre_wvl = ca[0].header["TWAVE1"]
+ca_wvls = ca[1].data
+ha_centre_wvl = ha[0].header["TWAVE1"]
+ha_wvls = ha[1].data
+
+new_ca_1 = interp_to_radyn_grid(ca_1,ca_centre_wvl,ca_hw,ca_wvls)
+new_ha_1 = interp_to_radyn_grid(ha_1,ha_centre_wvl,ha_hw,ha_wvls)
+new_ca_2 = interp_to_radyn_grid(ca_2,ca_centre_wvl,ca_hw,ca_wvls)
+new_ha_2 = interp_to_radyn_grid(ha_2,ha_centre_wvl,ha_hw,ha_wvls)
+
+new_ca_1, new_ha_1 = normalise(new_ca_1,new_ha_1)
+new_ca_2, new_ha_2 = normalise(new_ca_2,new_ha_2)
+
+fig, ax = plt.subplots(2,2,
+figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7),
+constrained_layout=True)
+ax[0,0].plot(new_ca_1[0]/10 - ca_centre_wvl/10,new_ca_1[1])
+ax[0,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the circlular point")
+ax[0,0].set_ylabel("Normalised Intensity")
+ax[0,1].plot(new_ha_1[0]/10 - ha_centre_wvl/10,new_ha_1[1])
+ax[0,1].set_title(r"H$\alpha$ for the circular point")
+ax[1,0].plot(new_ca_2[0]/10 - ca_centre_wvl/10,new_ca_2[1])
+ax[1,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the square point")
+ax[1,0].set_ylabel("Normalised Intensity")
+ax[1,0].set_xlabel(r"$\Delta\lambda$ [nm]")
+ax[1,1].plot(new_ha_2[0]/10 - ha_centre_wvl/10,new_ha_2[1])
+ax[1,1].set_title(r"H$\alpha$ for the square point")
+ax[1,1].set_xlabel(r"$\Delta\lambda$ [nm]")
+for axi in ax.flat:
+    axi.xaxis.set_major_locator(plt.MaxNLocator(5))
+    axi.yaxis.set_major_locator(plt.MaxNLocator(5))
+lFig = chRad.save_figure('LineProfilesToInvert', fig, fext='.pgf')
+lFig.caption = r'The spectral line profiles of \CaLine{} and \Ha{} for the two pixels marked in Fig.~\ref{Fig:CrispPlot}.'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
+
+\begin{pycode}[Radynversion]
+import utils
+with open(chRad.data_file('InversionResults.pickle'), 'rb') as f:
+    res = pickle.load(f)
+
+fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+lFig = chRad.save_figure('InversionResultsFlare', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Inversion results for the on ribbon pixel.'
+
+fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+lFig = chRad.save_figure('InversionResultsQuiet', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Inversion results for the off ribbon pixel.'
+\end{pycode}
+
+\py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
+\py[Radynversion]|chRad.get_figure('InversionResultsQuiet')|
+
+
+\subsection{Discussion}

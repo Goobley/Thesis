@@ -127,5 +127,9 @@
         "*/data/*_counts.h5",
     ],
     "python.pythonPath": "/home/goobley/miniconda3/envs/LightweaverDev/bin/python",
-    "workbench.colorTheme": "Default Dark+"
+    "workbench.colorTheme": "Default Dark+",
+    "cSpell.words": [
+        "Centeno",
+        "Hinode"
+    ]
 }
