@@ -141,25 +141,18 @@ def inversion_plots(results,z,ca_data,ha_data, rasterizeHists=True, figsize=None
     vel_min = np.min(np.median(results["vel"],axis=0))
     vel_min = np.sign(vel_min)*np.abs(vel_min)*2
     vel_edges = np.linspace(vel_min,vel_max,num=101)
-    ca_max = 1.1*np.max(np.max(results["Ca8542"],axis=0))
-    ca_min = 0.9*np.min(np.min(results["Ca8542"],axis=0))
-    ca_edges_int = np.linspace(ca_min,ca_max,num=101)
-    ha_max = 1.1*np.max(np.max(results["Halpha"],axis=0))
-    ha_min = 0.9*np.min(np.min(results["Halpha"],axis=0))
-    ha_edges_int = np.linspace(ha_min,ha_max,num=201)
-
 
     # TODO(cmo): There is some not very tidy  code in here that could do with a good tidy.
-    cmap_ne = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[0], 1.0)]
+    cmap_ne = [(1.0,1.0,1.0,0.1), (*sns.color_palette()[0], 1.0)]
     colors_ne = LinearSegmentedColormap.from_list('ne', cmap_ne)
-    cmap_temp = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[1], 1.0)]
+    cmap_temp = [(1.0,1.0,1.0,0.1), (*sns.color_palette()[1], 1.0)]
     colors_temp = LinearSegmentedColormap.from_list('temp', cmap_temp)
-    cmap_vel = [(1.0,1.0,1.0,0.0), (*sns.color_palette()[2], 1.0)]
+    cmap_vel = [(1.0,1.0,1.0,0.1), (*sns.color_palette()[2], 1.0)]
     colors_vel = LinearSegmentedColormap.from_list('vel', cmap_vel)
 
 
     ax[0].hist2d(np.concatenate([z_local]*results["ne"].shape[0]),results["ne"].reshape((-1,)),bins=(z_edges,ne_edges),cmap=colors_ne,norm=PowerNorm(powerNormIdx), rasterized=rasterizeHists)
-    ax[0].plot(z_local,np.median(results["ne"],axis=0), "--",c="k")
+    ax[0].plot(z_local,np.median(results["ne"],axis=0), "--",c="k", zorder=3)
     ax[0].set_ylabel(r"$\log{n_e}$ [\si{\centi\metre\tothe{-3}}]",color=cmap_ne[-1])
     ax[0].set_xlabel(r"$z$ [\si{\mega\metre}]")
     ax2.hist2d(np.concatenate([z_local]*results["temperature"].shape[0]),results["temperature"].reshape((-1,)),bins=(z_edges,temp_edges),cmap=colors_temp,norm=PowerNorm(powerNormIdx), rasterized=rasterizeHists)

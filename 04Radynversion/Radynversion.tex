@@ -12,14 +12,14 @@ chRad = texfigure.Manager(
 )
 \end{pycode}
 
-\begin{itemize}
-    \item Introduction to inverse problems
-    \item Spectral line inversions
-    \item Introduction to machine learning
-    \item Model description
-    \item Model validation
-    \item 2014-09-06 flar results
-\end{itemize}
+% \begin{itemize}
+%     \item Introduction to inverse problems
+%     \item Spectral line inversions
+%     \item Introduction to machine learning
+%     \item Model description
+%     \item Model validation
+%     \item 2014-09-06 flar results
+% \end{itemize}
 
 \emph{The contents of this chapter are based on my contributions to the research presented in \citet{Osborne2019}.}
 
@@ -32,47 +32,6 @@ The inverse of this problem is not well-posed; there is no guarantee of uniquene
 The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forwards process that is needed for the inverse process.
 
 It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this that the field of inversions seeks to achieve, by solving this inverse problem. As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations. We therefore use inversions to learn as much about the structure of the atmosphere that produced the observed radiation as possible.
-
-% \begin{figure}
-% \begin{tikzpicture}[
-%     % >=stealth,
-%     % bullet/.style={
-%     %     fill=black,
-%     %     circle,
-%     %     minimum width=1pt,
-%     %     inner sep=1pt
-%     % },
-%     % projection/.style={
-%     %     ->,
-%     %     thick,
-%     %     shorten <=2pt,
-%     %     shorten >=2pt
-%     % },
-%     % every fit/.style={
-%     %     ellipse,
-%     %     draw,
-%     %     inner sep=0pt
-%     % }
-%     % ]
-%     \node at (2,4.7) {$f$};
-%     % \draw[projection] (1,4.5) -- (3,4.5);
-%     \node at (0,5) {$X$};
-%     \node[bullet,label=below:$x$]    at (0,2.5){};
-%     \node at (4,5) {$Y$};
-%     \node[bullet,label=below:$f(x)$] at (4,2.5){};
-%     \node at (6,4.7) {$g$};
-%     % \draw[projection] (5,4.5) -- (7,4.5);
-%     \node at (8,5) {$Z$};
-%     \node[bullet,label=below:$g\big(f(x)\big)$] at (8,2.5){};
-
-%     \draw (0,2.5) ellipse (1.02cm and 2.2cm);
-%     \draw (4,2.5) ellipse (1.02cm and 2.2cm);
-%     \draw (8,2.5) ellipse (1.02cm and 2.2cm);
-
-%     \draw[projection] (0.3,2.5) -- (3.7,2.5);
-%     \draw[projection] (4.3,2.5) -- (7.7,2.5);
-%     \end{tikzpicture}
-% \end{figure}
 
 \begin{figure}
 \centering
@@ -612,7 +571,7 @@ It is parameterised as
 where $n$ is the current epoch, and $N_fade$ is the number of epochs needed for this term to become unity.
 To ensure that the output in the zero-padded sections remains close to zero we use $xi$ to initialise these to a small amount of random noise, decaying over this same period.
 This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
-Empirically we found that for the fade-in period of 800 epochs (over which $\xi$ increases to 1), a good choice for the loss weights was $w_\mathrm{pred}=$4000, $w_\mathrm{latent}=$900, and $w_\mathrm{rev}=$1000.
+Empirically we found that for the fade-in period of 800 epochs (over which $\xi$ increases to 1), a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
 After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each block of these.
 From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ being increased by the same amount.
 These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forwards process would not reliably converge.
@@ -881,8 +840,9 @@ point_2_ca = np.array([35, 5])
 point_2_ha = point_2_ca
 # point_1_ha = np.array([53.5, 39.5])
 # point_1_ha = np.array([49.9, 42.3]) #broken
-point_1_ha = np.array([50.27, 41.50]) # not too bad
-# point_1_ha = np.array([49.85, 41.41]) # nah
+# point_1_ha = np.array([50.27, 41.50]) # not too bad
+# point_1_ha = np.array([49.191, 42.294]) # True one for Ha from paper.
+point_1_ha = np.array([49.05, 42.19]) # Close.
 point_1_ca = point_1_ha
 
 fig, ax = plt.subplots(ncols=3,nrows=2,
@@ -920,10 +880,8 @@ ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
 
 lFig = chRad.save_figure('CrispPlot', fig, fext='.pgf', dpi=600)
-lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off ribbon) and circle (on ribbon).'
+lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off ribbon) and circle (on ribbon). Wavelengths in this figure use their values in air.'
 \end{pycode}
-
-\py[Radynversion]|chRad.get_figure('CrispPlot')|
 
 \begin{pycode}[Radynversion]
 from utils import intensity_vector, interp_to_radyn_grid, normalise
@@ -967,24 +925,63 @@ lFig = chRad.save_figure('LineProfilesToInvert', fig, fext='.pgf')
 lFig.caption = r'The spectral line profiles of \CaLine{} and \Ha{} for the two pixels marked in Fig.~\ref{Fig:CrispPlot}.'
 \end{pycode}
 
-\py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
 
+% NOTE(cmo): To further adjust these in future go back to hephaistos and use the single_pixel_inversions notebook in ~/RadynversionRef.
 \begin{pycode}[Radynversion]
 import utils
 with open(chRad.data_file('InversionResults.pickle'), 'rb') as f:
     res = pickle.load(f)
 
-fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsFlare', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Inversion results for the on ribbon pixel.'
+lFig.caption = r'Inversion results for the on ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 
-fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsQuiet', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Inversion results for the off ribbon pixel.'
+lFig.caption = r'Inversion results for the off ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 \end{pycode}
 
+As a proof of concept the RADYNVERSION model was applied to the two-ribbon M1.1 flare SOL 20140906T17:09 observed with the CRISP instrument in \Ha{} and \CaLine{}.
+This event ocurred in NOAA AR 12157 with heliocentric coordinates (-732", -302").
+This data was preprocessed using the CRISPRED pipeline \citep{2015dlcr} and is publicly available in the F-CHROMA database.
+
+\py[Radynversion]|chRad.get_figure('CrispPlot')|
+
+Due to the formation heights of these spectral lines, our interest is primarily focused on the region below $\sim$\SI{2}{\mega\metre}.
+Fig.~\ref{Fig:CrispPlot} shows CRISP images in the blue wing, line core, and red wing for both of the spectral lines respectively.
+These images were taken just after flare onset.
+Two pixels are marked, a circle on the flare ribbon, and a square far from the flare, in a much quieter region.
+The spectral line profiles from these two pixels are shown in Fig.~\ref{Fig:LineProfilesToInvert}.
+For the circular point both lines are strongly in emssion whereas they are broad absorption lines for the square point.
+These lines from these pixels have then been inverted using RADYNVERSION, with 20,000 latent space draws each.
+The results of these inversions are shown in Figs~\ref{Fig:InversionResultsFlare}~and~
+\ref{Fig:InversionResultsQuiet} for the circular and square points respectively.
+Performing these inversions with 20,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU.
+As there is no ground truth solution for this data we instead overplot the median solution at each altitude node.
+
+\py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
 \py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
 \py[Radynversion]|chRad.get_figure('InversionResultsQuiet')|
 
+Substantial analysis, detailed in the original paper was undertaken by my co-authors, which I will briefly summarise here.
+The inverted pixels were found to be consistent with previous analyses.
+For example, forward modelling by \citet{Kuridze2015} suggests that the \Ha{} line profile forms below \SI{1.2}{\mega\metre}, with the core forming towards the top of this region, and the line wings forming below \SI{0.95}{\mega\metre}.
+In this observation the \Ha{} line profile is asymmetric in favour of the red wing, and from the inversions we see that there is a slight upflow in the region where the wings are formed.
+This is likely chromospheric evaporation in this region causing an increase in the opacity of the blue wing, leading in turn to more intensity in the red wing.
+For the off-ribbon pixel we note that both line profiles are very broad.
+The inverted velocity field contains a significant number of small magnitude oscillations which we believe are due to RADYN's conservative assumption of a \SI{2}{\kilo\metre\per\second} microturbulent velocity throughout the atmosphere.
+If the network has learnt that bulk plasma flows can shift the position of the line core (i.e. the majority of the opacity in a line), then it is reasonable to suggest that these represent our model's attempt to broaden th line profiles.
+Recent studies have shown that significantly higher microturbulent velocities are needed to explain the nonthermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
 
 \subsection{Discussion}
+
+The RADYNVERSION invertible neural network presented in this chapter represents a novel method for investigating the atmospheric properties of observed events and lifts many of the restrictions that previously made inversions of flaring line profiles infeasible.
+This is achieved by the union of machine learning and a large body of RHD simulations.
+The implementation is currently a proof of concept but shows much promise, agreeing with previous investigations, and can easily be extended to other spectral lines and atmospheric parameters.
+With the addition of more advanced forwards models this technique could be applied to inference of the chromospheric magnetic field from full Stokes observations.
+Inversions using this method are fast and robust; the effort of ``exploring'' the latent space that is common in regression based codes has effectively been replaced with an up-front cost in the training process.
+Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due the previous training effort, which is then shared between every application of the model (in the traditional 1.5D inversion technique, where every column is treated independently, a lot of this work is replicated).
+These latent draws additionally serve to provide an estimate of the uncertainty on the inferred parameters.
+Potential future extensions to this model include incorporating the concept of time-dependence in a robust fashion so as to condition the solution from previous observations, and increasing the number of atmospheric parameters inferred.
+
+The RADYNVERSION approach has the potential to provide new insight into the structure of the flaring chromosphere and allow investigation of complete observation fields of view in a timely fashion, allowing researchers to leverage the full capabilities of next-generation solar telescopes such as DKIST.
