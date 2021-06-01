@@ -1,8 +1,44 @@
 \chapter{Two-Dimensional Radiative Transfer}
 
-\begin{itemize}
-    \item Adding a dimension to RT, formal solver etc.
-    \item Simulation setup.
-    \item Analysis.
-    \item Suggestions on visibility of this chromospheric glow with DKIST.
-\end{itemize}
+% \begin{itemize}
+%     \item Adding a dimension to RT, formal solver etc.
+%     \item Simulation setup.
+%     \item Analysis.
+%     \item Suggestions on visibility of this chromospheric glow with DKIST.
+% \end{itemize}
+
+All of the theory of radiative transfer discussed in previous chapters remains valid when applied to higher dimensional systems, with the exception of the formal solver.
+This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes.
+Once the radiation field has been computed it is then used as a local parameter in the rest of the iteration.
+In fact, if the storage for the atmosphere is ``flattened'' into a one-dimensional form, the code from the plane-parallel case can be used to implement the iteration scheme.
+
+In this chapter we shall first describe the extension of the \Lw{} framework to two dimensions (with the possibility of further extension), and then describe its application to the simulation of a flaring atmosphere illuminating an adjacent slab of quiet sun, along with potential implications for future observations at high resolution.
+
+\section{The Formal Solver in Two-Dimensions}
+
+Similarly to the plane-parallel formal solver used in \Lw{}, described in the previous chapter, we use the short-characteristics method to compute the radiation field throughout the atmosphere.
+We assume the following basis: the $z$-axis is oriented as in the plane-parallel case, oriented vertically from photosphere to corona, the $x$-axis is perpendicular and co-planar to the $z$-axis (in the plane of the page for the following diagrams), and by the right-hand rule the $y$-axis is oriented into the plane of the page.
+In the two-dimensional case it is assumed that the atmospheric parameters are homogenous along the $y$-axis, but vary along the $x$- and $z$-axes.
+We assume that the atmosphere has a fixed stratification in $x$ and $z$, and that the atmospheric parameters are known at each intersection of these grids.
+
+The mean intensity at each point will be computed similarly to the plane-parallel case; by integration of the intensity over a weighted angular quadrature.
+The Gauss-Legendre nodes used in the plane-parallel case are poorly suited to anisotropy that occurs in the two- and three-dimensional cases, and so we therefore employ the optimised quadratures of \citet{Stepan2020} in \Lw{}.
+
+For each ray prescribed by the angular quadrature the formal solver must perform one sweep through the grid.
+
+{\color{TolBlue} do the explanation/diagrams; boundary conditions!}
+
+{\color{Red} Need to cite linear, parabolic (Auer 94?), BESSER (stepan2013) Ibgui substepping}
+
+\subsection{Implementation Details}
+
+From this description of the process, it is clear that there is a more complex ordering in which the atmospheric points must be visited than in the plane-parallel case (which can only be top--bottom or vice-versa).
+In the case of a single-threaded program, it is sufficient to obey this order, however, when distributing work across threads or multiple computing nodes it is essential that the necessary information be present to avoid computation stalls, or the use of uninitialsed data.
+There is an in-depth discussion of an advanced parallelisation algorithm for multi-dimensional radiative transfer in \citet{Stepan2013}, however in \Lw{} we assume that the entire simulation domain can be held in memory and the formal solver is parallelised in frequency, equivalently to the plane-parallel case.
+
+The data structures for storing the atmospheric and population information in \Lw{} were also updated to support two dimensional atmospheres, storing the data contiguously so as to be able to reuse the core iteration machinery from the plane-parallel case (as inspired by the RH code).
+Two-dimensional formal solvers can be loaded from external libraries via the same interface as used for their one-dimensional counterparts, and through these interfaces we ensure the modularity of \Lw{}.
+An equivalent interface is also defined for the iteration function to be used in two-dimensions, giving flexibility in the interpolation order and any form of limiting used (which may need to be adapted to specific grids).
+\Lw{} provides default implementations of the two-dimensional linear and BESSER short-characteristics formal solvers, along with linear and WENO4 interpolation schemes.
+
+{\color{Red} Do we want a validation test here; can do in place.}
