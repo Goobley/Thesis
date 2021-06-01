@@ -152,14 +152,16 @@ def inversion_plots(results,z,ca_data,ha_data, rasterizeHists=True, figsize=None
 
 
     ax[0].hist2d(np.concatenate([z_local]*results["ne"].shape[0]),results["ne"].reshape((-1,)),bins=(z_edges,ne_edges),cmap=colors_ne,norm=PowerNorm(powerNormIdx), rasterized=rasterizeHists)
-    ax[0].plot(z_local,np.median(results["ne"],axis=0), "--",c="k", zorder=3)
+    ax[0].plot(z_local,np.median(results["ne"],axis=0), "--",c="k", zorder=3, linewidth=0.5)
     ax[0].set_ylabel(r"$\log{n_e}$ [\si{\centi\metre\tothe{-3}}]",color=cmap_ne[-1])
     ax[0].set_xlabel(r"$z$ [\si{\mega\metre}]")
     ax2.hist2d(np.concatenate([z_local]*results["temperature"].shape[0]),results["temperature"].reshape((-1,)),bins=(z_edges,temp_edges),cmap=colors_temp,norm=PowerNorm(powerNormIdx), rasterized=rasterizeHists)
-    ax2.plot(z_local,np.median(results["temperature"],axis=0),"--",c="k")
+    ax2.plot(z_local,np.median(results["temperature"],axis=0),"--",c="k", linewidth=0.5)
     ax2.set_ylabel(r"$\log{T}$ [\si{\kelvin}]",color=cmap_temp[-1])
     ax[1].hist2d(np.concatenate([z_local]*results["vel"].shape[0]),results["vel"].reshape((-1,)),bins=(z_edges,vel_edges),cmap=colors_vel,norm=PowerNorm(powerNormIdx), rasterized=rasterizeHists)
-    ax[1].plot(z_local,np.median(results["vel"],axis=0),"--",c="k")
+    ax[1].plot(z_local,np.median(results["vel"],axis=0),"--",c="k", linewidth=0.5)
+    ax[0].set_xlim(None, 10.5)
+    ax[1].set_xlim(None, 10.5)
     ax[1].set_ylabel(r"$v$ [\si{\kilo\metre\per\second}]",color=cmap_vel[-1])
     ax[1].set_xlabel(r"$z$ [\si{\mega\metre}]")
 

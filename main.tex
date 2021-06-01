@@ -34,11 +34,20 @@
 
 %% Fonts and dummy text
 \usepackage[utf8]{inputenc}
+% \usepackage{mathpple}
+\usepackage{sourcesanspro}
 \usepackage[default,regular,semibold]{sourceserifpro}
 % \usepackage[default,regular,black]{sourceserifpro}
-\usepackage[scaled=0.85]{beramono}
+\usepackage[scale=0.8, semibold]{sourcecodepro}
+% \usepackage[scaled=0.85]{beramono}
 \usepackage[small, T1]{eulervm}
 \usepackage{amsfonts,amsmath}
+% \usepackage[italic]{mathastext}
+\makeatletter
+\DeclareSymbolFont{SSFLetters}{OT1}{\sfdefault}{m}{n}
+\DeclareMathSymbol{v}{\mathord}{SSFLetters}{`v}
+\makeatother
+% \usepackage{concmath}
 
 \usepackage[T1]{fontenc} % modern encoding
 \usepackage{lipsum}
@@ -180,15 +189,16 @@
 \centering
 \vspace*{1cm}  % Need the * or the space is swallowed at the top of the page
 \bfseries\Large
-Solar Chromospheric Response to Impulsive Heating\\
+Casting a New Light on Radiative Transfer in\\Solar Flare Models:
+Synthesis and Inversion\\
 \vspace{2cm}
 \normalfont\large{\bfseries{
 Christopher M. J. Osborne\\
 }}
-\vspace{2cm}
-Submitted in fulfilment of the requirements for the\\
+\vspace{1.5cm}
+Submitted in fulfillment of the requirements for the\\
 degree of Doctor of Philosophy\\
-\vspace{2cm}
+\vspace{1.5cm}
 Astronomy and Astrophysics Group\\
 School of Physics and Astronomy\\
 University of Glasgow\\
