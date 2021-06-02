@@ -129,7 +129,9 @@
     "python.pythonPath": "/home/goobley/miniconda3/envs/LightweaverDev/bin/python",
     "workbench.colorTheme": "Default Dark+",
     "cSpell.words": [
+        "BESSER",
         "Centeno",
-        "Hinode"
+        "Hinode",
+        "interpolant"
     ]
 }
