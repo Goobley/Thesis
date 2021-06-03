@@ -66,7 +66,7 @@ In the case of this ray the formal solver must sweep first along $x$ and then al
 The points $U$ and $D$ refer to them being ``upwind'' and ``downwind'' of the point $O$ for which we are currently computing the intensity.
 This can be explained by looking at the intersections of ray with the grid.
 To compute the intensity in the direction of this ray at point $O$ using the short characteristics formulation we have
-\begin{equation}
+\begin{equation}\label{Eq:MiniScDefinition}
    I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)}\, dt,
 \end{equation}
 where these terms have their usual meanings, $I_O$ is the intensity in this direction at $O$, $I_U$ is the intensity in this direction at $U$ and we have dropped the angular and frequency dependencies for clarity.
@@ -79,9 +79,242 @@ A higher order parametrisation of $S$ is likely to require the values of the sou
 Similarly to the cubic Bézier spline method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
 The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the large computational demands of the method.
 Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2013}, which will be briefly summarised here for the scalar case of the RTE.
-The BESSER method differs from other quadratic Bézier spline methods by ensuring the continuity of the first derivative of the interpolant at $O$.
-Due to the large differences in optical depth between adjacent regions (e.g. $\tau_{UO}$ and $\tau_{OD}$) that are likely to occur in multi-dimensional cases with irregular grids, this method is designed so as to guarantee that if values over $[UOD]$ are monotonic then the spline interpolant will remain monotonic.
 
+\subsection{The BESSER method}
+
+The BESSER method differs from other quadratic Bézier spline methods by ensuring the continuity of the first derivative of the interpolant at $O$.
+Due to the large differences in optical depth between adjacent regions (e.g. $\tau_{UO}$ and $\tau_{OD}$) that are likely to occur in multi-dimensional cases with irregular grids, this method is designed so as to guarantee that if the values over $[UOD]$ are monotonic then the spline interpolant will remain monotonic.
+
+The spline interpolant over the $[UO]$ interval is described by
+\begin{equation}
+    f(u) = (1-u)^2f_U + 2u(1-u)c_U + u^2f_O,\hspace{3em}u\in[0,1],
+\end{equation}
+
+where $f$ is the value of the parameter to be interpolated, $c_U$ is the functional value of the spline's control point, and $u$ is the normalised coordinate for the distance along $[UO]$.
+The control points are points half way along an interval, defining the tangent to the spline at each end of the range i.e. $c_U O$ defines the tangent to the spline at $O$ and $U c_U$ defines the tangent to the spline at $U$.
+If we denote the coordinates of our points along the ray $s_U$, $s_O$, and $s_D$ then we have $u = (s - s_U) / h_U$, where $h_U = s_U - s_O$.
+An equivalent interpolation can be defined over the $[OD]$ segment.
+The monotonicity (for monotonic $f_U$, $f_O$, $f_D$) and continuous first derivative of the interpolating functions at $O$ is ensured by
+\begin{enumerate}
+    \item Verify the monotonicity of $f_U$, $f_O$, $f_D$, and if $f_O$ is a local extremum then the control points $c_U$ and $c_D$ are set to $f_O$, giving a derivative of zero at $O$. As this is is the only possible solution for this case, the process stops here.
+
+    \item Compute an estimate of the derivative at $O$, by using the derivative of the standard parabolic interpolation of $UOD$.
+
+    \item Use this derivative to compute the initial values at the control points, by direct projection of the first derivative to their coordinates (as this defines a tangent to function at $O$).
+
+    \item Check $c_U \in [f_U, f_O]$. If not, set $c_U$ to $f_U$ to correct for any new extremum and halt the process, as $c_D$ is not needed for the integration of the source function.
+
+    \item Check $c_D \in [f_O, f_D]$. If not, set $c_D$ to $f_D$, and use this to compute a new value for the derivative at $O$, and follow the projection of this tangent to determine $c_U$ (due to the enforced continuity of the derivative at $O$).
+\end{enumerate}
+This process is described in more detail in \citet{Stepan2013}, but this covers the most important elements of the process.
+
+\TODO{Do we modify to use the full value for $\tau_{OD}$?}
+\TODO{Is this the correct what of expressing the difference between the control point, and the \emph{value} of the control point?}
+
+Similarly to the plane-parallel case, we will solve the RTE in optical depth, due to its increased stability.
+This interpolation method can be used to compute $\tau_{UO}$ and $\tau_{OD}$ by
+\begin{align}
+    \tau_{UO} &= \frac{1}{3}(\chi_U + \chi_O + \chi_{c_U}) (s_O - s_U),\\
+    \tau_{OD} &= \frac{1}{2}(\chi_O + \chi_D) (s_D - s_O).
+\end{align}
+Note that a linear approximation was used for $\tau_{OD}$, as the previous process does not guarantee the calculation of $c_D$.
+This could be modified to also use the quadratic spline method, which may be more robust, however the value of $\tau_{OD}$ rarely affects the final solution dramatically.
+
+This method can now be applied to the source function but parametrised along $\tau$ rather that $s$.
+The BESSER quadratic spline method is then used to compute the value of the source function control point $S_{c_U}$.
+The integral in \eqref{Eq:MiniScDefinition} can now be evaluated, by using the prescribed quadratic spline variation of $S$ over the interval $[\tau_{U}, \tau_{O}]$.
+Working through the maths we arrive at
+\begin{equation}
+    I_D = I_Ue^{-\tau_{UO}} + \omega_U S_U + \omega_O S_O + \omega_{c_U} S_{c_U},
+\end{equation}
+where,
+{
+\def\edt{e^{-\tau_{UO}}}
+\def\tsq{\tau_{UO}^2}
+\begin{align}
+    \omega_U &= \frac{2 - (\tsq + 2\tau_{UO} + 2)\edt}{\tsq},\\
+    \omega_O &= 2\frac{\tau_{UO} - 2 + \edt (\tau_{UO} + 2)}{\tsq},\\
+    \omega_{c_U} &= 1 - 2 \frac{\edt + \tau_{UO} - 1}{\tsq}.
+\end{align}
+}
+
+For small values of $\tau_{UO}$ the numerical precision of the exponential function becomes unreliable (in floating point arithmetic), so for this reason these are replaced with Taylor expansions for $\tau_{UO}\lesssim 0.1$.
+
+An expression for the $\Lambda^*$ operator can then be devised equivalently to the process used previously.
+The source function is locally set to unity, and zero elsewhere.
+This implies that $c_U$ is also set to 1.
+Thus the local contribution to the radiation field is given by
+\begin{equation}
+    \Lambda^*(\nu, \vec{d}) = \omega_{c_U} + \omega_O,
+\end{equation}
+and remains related to $\Psi^*$ by the local opacity.
+
+The equivalent integration and $\Lambda$ operator coefficients for a linear short characteristics approach can be computed similarly and are analagous to those computed in the one-dimensional case.
+
+\TODO{Discuss with Ivan on the exact form of $\Psi^*$ when the contributions to $\Lambda^*$ are not strictly local.}
+
+\subsection{Evaluation Order and Boundary Conditions}
+
+Looking more closely at the order in which the formal solver needs to sweep the grid, we can see that $O$ for the ray discussed in the previous section and shown in Fig.~\ref{Fig:Sc2d} would be the 10th node to be solved, and this ordering is shown in Fig.~\ref{Fig:2DSweep}.
+Most of the nodes on this figure are solved equivalently to this one, with all necessary quantities known provided the sweep order is preserved, but there are several question marks which require explanation.
+
+The {\color{TolBlue} blue} question marks along the $x$ axis all require values that must be computed from the boundary conditions.
+The upper and lower boundary conditions in $z$ are typically taken to be described by a defined radiation field (possibly based on a black body).
+The upper and lower boundaries in $x$ can be described by fixed boundary conditions, but it is also common to describe these with periodic boundary conditions where the ray wraps from one side of the grid to the other.
+The {\color{TolTeal} teal} question marks along the upper $x$ boundary can be interpreted in multiple ways; in the case of periodic boundary conditions they can be prolonged along the {\color{TolTeal} teal} arrows, and used in the same way as the previously described case.
+If fixed boundary conditions are used then the intensity at these points must be computed by a linear formal solver indicated by the black arrows ending at the nodes labelled 4 and 8.
+
+\TODO{Explain orange question mark.}
+
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[scale=1.5, line width=1pt, >=latex]
+    \def\xcoords{1,2,3.5,4,5}
+    \def\xmax{5}
+    \def\ycoords{1,2,2.5,3.5,5,6}
+    \def\ymax{6}
+    \def\raym{4/3}
+    \pgfmathsetmacro\rayc{3.5 - \raym * 3.5}
+
+    \draw [help lines]
+    \foreach \y in \ycoords {
+        (1, \y) -- (\xmax, \y)
+    }
+    \foreach \x in \xcoords {
+        (\x, 1) -- (\x, \ymax)
+    };
+
+    \draw [<->] ({\xmax+0.5}, 1) node[below] {$x$} -- (1,1) -- (1, {\ymax+0.5}) node[left] {$z$};
+    \coordinate (O) at (3.5, 3.5);
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 10}] at (O) {};
+    \coordinate (D) at (4, {\raym * 4 + \rayc});
+    % \node[circle, fill=black, inner sep=0 pt, minimum size=3pt] at (D) {};
+    \coordinate (U) at ({(2.5 - \rayc) / (\raym)}, 2.5);
+    \pgfmathsetmacro{\raystartx}{(2.5 - \rayc) / (\raym)}
+    \pgfmathsetmacro{\rayendx}{4}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=10, thin] plot(\x, {\raym * (\x) + \rayc});
+    % \node[circle, fill=black, inner sep=0 pt, minimum size=3pt] at (U) {};
+
+    % (1,2) teal
+    \pgfmathsetmacro\rayc{2 - \raym * 1}
+    \def\raystarty{2}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin, color=TolTeal] plot(\x, {\raym * (\x) + \rayc});
+
+    % (1,2.5) teal
+    \pgfmathsetmacro\rayc{2.5 - \raym * 1}
+    \def\raystarty{2.5}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{3.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin, color=TolTeal] plot(\x, {\raym * (\x) + \rayc});
+
+    % (2,2)
+    \pgfmathsetmacro\rayc{2 - \raym * 2}
+    \def\raystarty{1}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 1}] at (2,2) {};
+    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+
+    % (3.5,2)
+    \pgfmathsetmacro\rayc{2 - \raym * 3.5}
+    \def\raystarty{1}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 2}] at (3.5,2) {};
+    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+
+    % (4,2)
+    \pgfmathsetmacro\rayc{2 - \raym * 4}
+    \def\raystarty{1}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 3}] at (4,2) {};
+    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+
+    % (5,2)
+    \pgfmathsetmacro\rayc{2 - \raym * 5}
+    \def\raystarty{1}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 4}] at (5,2) {};
+    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+    \node at (\rayendx, \rayendy) [right] {\color{TolTeal} ?};
+
+    % (2,2.5)
+    \pgfmathsetmacro\rayc{2.5 - \raym * 2}
+    \def\raystarty{2}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{3.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 5}] at (2,2.5) {};
+
+    % (3.5,2.5)
+    \pgfmathsetmacro\rayc{2.5 - \raym * 3.5}
+    \def\raystarty{2}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    % \def\rayendy{3.5}
+    % \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \def\rayendx{4}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 6}] at (3.5,2.5) {};
+
+    % (4,2.5)
+    \pgfmathsetmacro\rayc{2.5 - \raym * 4}
+    \def\raystarty{2}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{3.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 7}] at (4,2.5) {};
+
+    % (5,2.5)
+    \pgfmathsetmacro\rayc{2.5 - \raym * 5}
+    \def\raystarty{2}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{2.5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 8}] at (5,2.5) {};
+    \node at (\rayendx, \rayendy) [right] {\color{TolTeal} ?};
+
+    % (2,3.5)
+    \pgfmathsetmacro\rayc{3.5 - \raym * 2}
+    \def\raystarty{2.5}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    \def\rayendy{5}
+    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 9}] at (2,3.5) {};
+
+    % (4,3.5)
+    \pgfmathsetmacro\rayc{3.5 - \raym * 4}
+    \def\raystarty{2.5}
+    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
+    % \def\rayendy{4}
+    \pgfmathsetmacro{\rayendx}{5}
+    \pgfmathsetmacro{\rayendy}{\raym * \rayendx + \rayc}
+    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
+    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 11}] at (4,3.5) {};
+    \node at (\raystartx, \raystarty) [above] {\color{TolOrange} ?};
+
+\end{tikzpicture}
+\caption{Diagram of sweep order in 2D}
+\label{Fig:2DSweep}
+\end{figure}
 
 % \begin{figure}
 % \centering
@@ -121,6 +354,8 @@ Due to the large differences in optical depth between adjacent regions (e.g. $\t
 {\color{TolBlue} do the explanation/diagrams; boundary conditions!, vertical case}
 
 {\color{Red} Need to cite linear, parabolic (Auer 94?), BESSER (stepan2013) Ibgui substepping}
+
+\subsection{Substepping}
 
 \subsection{Implementation Details}
 
