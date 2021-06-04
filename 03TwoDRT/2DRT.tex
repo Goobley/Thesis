@@ -1,4 +1,15 @@
 \chapter{Two-Dimensional Radiative Transfer}
+\begin{pycode}[2DRT]
+name = '2DRT'
+ch2DRT = texfigure.Manager(
+    pytex,
+    './03TwoDRT',
+    number=3,
+    python_dir='./03TwoDRT/python',
+    fig_dir=   './03TwoDRT/Figs',
+    data_dir=  './03TwoDRT/Data'
+)
+\end{pycode}
 
 % \begin{itemize}
 %     \item Adding a dimension to RT, formal solver etc.
@@ -7,10 +18,12 @@
 %     \item Suggestions on visibility of this chromospheric glow with DKIST.
 % \end{itemize}
 
-All of the theory of radiative transfer discussed in previous chapters remains valid when applied to higher dimensional systems, with the exception of the formal solver.
-This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes.
+It is clear that the world around us is multi-dimensional, but until this point, we have only considered radiative transfer in one-dimensional atmospheres.
+
+All of the theory of radiative transfer discussed in previous chapters remains valid when applied to higher dimensional systems, with the exception of the description of the formal solver.
+This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes to each other.
 Once the radiation field has been computed it is then used as a local parameter in the rest of the iteration.
-In fact, if the storage for the atmosphere is ``flattened'' into a one-dimensional form, the code from the plane-parallel case can be used to implement the iteration scheme.
+In fact, if the storage for the atmosphere is ``flattened'' into a one-dimensional form, the code from the plane-parallel case can (and should) be used to implement the iteration scheme.
 
 In this chapter we shall first describe the extension of the \Lw{} framework to two dimensions (with the possibility of further extension), and then describe its application to the simulation of a flaring atmosphere illuminating an adjacent slab of quiet sun, along with potential implications for future observations at high resolution.
 
@@ -22,7 +35,7 @@ We assume the following basis: the $z$-axis is oriented as in the plane-parallel
 In the two-dimensional case it is assumed that the atmospheric parameters are homogenous along the $y$-axis, but vary along the $x$- and $z$-axes.
 We assume that the atmosphere has a fixed stratification in $x$ and $z$, and that the atmospheric parameters are known at each intersection of these grids.
 
-The mean intensity at each point will be computed similarly to the plane-parallel case; by integration of the intensity over a weighted angular quadrature.
+The mean intensity at each point will be computed similarly to the plane-parallel case; by integration of the local intensity over a weighted angular quadrature.
 The Gauss-Legendre nodes used in the plane-parallel case are poorly suited to anisotropy that occurs in the two- and three-dimensional cases, and so we therefore employ the optimised quadratures of \citet{Stepan2020} in \Lw{}.
 
 \begin{figure}
@@ -62,10 +75,10 @@ The Gauss-Legendre nodes used in the plane-parallel case are poorly suited to an
 
 For each ray prescribed by the angular quadrature the formal solver must perform one sweep through the grid.
 The general case, that of an inclined ray ray travelling through the atmosphere is shown in, Fig.~\ref{Fig:Sc2d}.
-In the case of this ray the formal solver must sweep first along $x$ and then along $z$.
+In the case of this ray the formal solver must sweep first along $x$ and then along $z$, and the difficulties which can arise from this will be discussed in Sec.~\ref{Sec:2dEvalOrder}.
 The points $U$ and $D$ refer to them being ``upwind'' and ``downwind'' of the point $O$ for which we are currently computing the intensity.
 This can be explained by looking at the intersections of ray with the grid.
-To compute the intensity in the direction of this ray at point $O$ using the short characteristics formulation we have
+To compute the intensity in the direction of this ray at point $O$ using the short characteristics formulation we have, as in one-dimension,
 \begin{equation}\label{Eq:MiniScDefinition}
    I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)}\, dt,
 \end{equation}
@@ -74,7 +87,7 @@ Thus, to compute the intensity at $O$, the intensity at $U$ must first be known.
 As $U$ does not typically lie on a point of our discrete two-dimensional grid, the value of $I_U$ (and other quantities) are not computed directly by the formal solver, and must instead be interpolated from the values of grid points along the line $\alpha\beta$.
 
 Following the short characteristic method, a functional form must be assigned to the variation of $S$ over the the line segment $[UO]$.
-In the simplest case, this can again be a linear functional form, but due to the additional axis for inhomogeneities that can be present in the two-dimensional case, unless the grid is very fine or the atmosphere very slowly varying, this may be a poor choice.
+In the simplest case, this can again be a linear functional form, but due to the additional dimension for inhomogeneities in the two-dimensional case, unless the grid is very fine or the atmosphere very slowly varying, this may be a poor choice.
 A higher order parametrisation of $S$ is likely to require the values of the source function at both $U$ and $D$, and possibly other points along this path.
 Similarly to the cubic Bézier spline method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
 The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the large computational demands of the method.
@@ -140,7 +153,7 @@ where,
 
 For small values of $\tau_{UO}$ the numerical precision of the exponential function becomes unreliable (in floating point arithmetic), so for this reason these are replaced with Taylor expansions for $\tau_{UO}\lesssim 0.1$.
 
-An expression for the $\Lambda^*$ operator can then be devised equivalently to the process used previously.
+An expression for the $\Lambda^*$ operator can then be devised equivalently to the process used previously for the plane-parallel case.
 The source function is locally set to unity, and zero elsewhere.
 This implies that $c_U$ is also set to 1.
 Thus the local contribution to the radiation field is given by
@@ -151,221 +164,240 @@ and remains related to $\Psi^*$ by the local opacity.
 
 The equivalent integration and $\Lambda$ operator coefficients for a linear short characteristics approach can be computed similarly and are analagous to those computed in the one-dimensional case.
 
-\TODO{Discuss with Ivan on the exact form of $\Psi^*$ when the contributions to $\Lambda^*$ are not strictly local.}
-
-\subsection{Evaluation Order and Boundary Conditions}
+\subsection{Evaluation Order and Boundary Conditions}\label{Sec:2dEvalOrder}
 
 Looking more closely at the order in which the formal solver needs to sweep the grid, we can see that $O$ for the ray discussed in the previous section and shown in Fig.~\ref{Fig:Sc2d} would be the 10th node to be solved, and this ordering is shown in Fig.~\ref{Fig:2DSweep}.
-Most of the nodes on this figure are solved equivalently to this one, with all necessary quantities known provided the sweep order is preserved, but there are several question marks which require explanation.
-
-The {\color{TolBlue} blue} question marks along the $x$ axis all require values that must be computed from the boundary conditions.
-The upper and lower boundary conditions in $z$ are typically taken to be described by a defined radiation field (possibly based on a black body).
-The upper and lower boundaries in $x$ can be described by fixed boundary conditions, but it is also common to describe these with periodic boundary conditions where the ray wraps from one side of the grid to the other.
-The {\color{TolTeal} teal} question marks along the upper $x$ boundary can be interpreted in multiple ways; in the case of periodic boundary conditions they can be prolonged along the {\color{TolTeal} teal} arrows, and used in the same way as the previously described case.
-If fixed boundary conditions are used then the intensity at these points must be computed by a linear formal solver indicated by the black arrows ending at the nodes labelled 4 and 8.
-
-\TODO{Explain orange question mark.}
-
+Most of the nodes on this figure are solved equivalently to this one, with all necessary quantities known at evaluation time provided the sweep order is preserved, but there are several question marks which require explanation.
 
 \begin{figure}
 \centering
-\begin{tikzpicture}[scale=1.5, line width=1pt, >=latex]
-    \def\xcoords{1,2,3.5,4,5}
-    \def\xmax{5}
-    \def\ycoords{1,2,2.5,3.5,5,6}
-    \def\ymax{6}
-    \def\raym{4/3}
-    \pgfmathsetmacro\rayc{3.5 - \raym * 3.5}
-
-    \draw [help lines]
-    \foreach \y in \ycoords {
-        (1, \y) -- (\xmax, \y)
-    }
-    \foreach \x in \xcoords {
-        (\x, 1) -- (\x, \ymax)
-    };
-
-    \draw [<->] ({\xmax+0.5}, 1) node[below] {$x$} -- (1,1) -- (1, {\ymax+0.5}) node[left] {$z$};
-    \coordinate (O) at (3.5, 3.5);
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 10}] at (O) {};
-    \coordinate (D) at (4, {\raym * 4 + \rayc});
-    % \node[circle, fill=black, inner sep=0 pt, minimum size=3pt] at (D) {};
-    \coordinate (U) at ({(2.5 - \rayc) / (\raym)}, 2.5);
-    \pgfmathsetmacro{\raystartx}{(2.5 - \rayc) / (\raym)}
-    \pgfmathsetmacro{\rayendx}{4}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=10, thin] plot(\x, {\raym * (\x) + \rayc});
-    % \node[circle, fill=black, inner sep=0 pt, minimum size=3pt] at (U) {};
-
-    % (1,2) teal
-    \pgfmathsetmacro\rayc{2 - \raym * 1}
-    \def\raystarty{2}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin, color=TolTeal] plot(\x, {\raym * (\x) + \rayc});
-
-    % (1,2.5) teal
-    \pgfmathsetmacro\rayc{2.5 - \raym * 1}
-    \def\raystarty{2.5}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{3.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin, color=TolTeal] plot(\x, {\raym * (\x) + \rayc});
-
-    % (2,2)
-    \pgfmathsetmacro\rayc{2 - \raym * 2}
-    \def\raystarty{1}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 1}] at (2,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
-
-    % (3.5,2)
-    \pgfmathsetmacro\rayc{2 - \raym * 3.5}
-    \def\raystarty{1}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 2}] at (3.5,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
-
-    % (4,2)
-    \pgfmathsetmacro\rayc{2 - \raym * 4}
-    \def\raystarty{1}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 3}] at (4,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
-
-    % (5,2)
-    \pgfmathsetmacro\rayc{2 - \raym * 5}
-    \def\raystarty{1}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 4}] at (5,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
-    \node at (\rayendx, \rayendy) [right] {\color{TolTeal} ?};
-
-    % (2,2.5)
-    \pgfmathsetmacro\rayc{2.5 - \raym * 2}
-    \def\raystarty{2}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{3.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 5}] at (2,2.5) {};
-
-    % (3.5,2.5)
-    \pgfmathsetmacro\rayc{2.5 - \raym * 3.5}
-    \def\raystarty{2}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    % \def\rayendy{3.5}
-    % \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \def\rayendx{4}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 6}] at (3.5,2.5) {};
-
-    % (4,2.5)
-    \pgfmathsetmacro\rayc{2.5 - \raym * 4}
-    \def\raystarty{2}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{3.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 7}] at (4,2.5) {};
-
-    % (5,2.5)
-    \pgfmathsetmacro\rayc{2.5 - \raym * 5}
-    \def\raystarty{2}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{2.5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 8}] at (5,2.5) {};
-    \node at (\rayendx, \rayendy) [right] {\color{TolTeal} ?};
-
-    % (2,3.5)
-    \pgfmathsetmacro\rayc{3.5 - \raym * 2}
-    \def\raystarty{2.5}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    \def\rayendy{5}
-    \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 9}] at (2,3.5) {};
-
-    % (4,3.5)
-    \pgfmathsetmacro\rayc{3.5 - \raym * 4}
-    \def\raystarty{2.5}
-    \pgfmathsetmacro{\raystartx}{divide(\raystarty - \rayc, \raym)}
-    % \def\rayendy{4}
-    \pgfmathsetmacro{\rayendx}{5}
-    \pgfmathsetmacro{\rayendy}{\raym * \rayendx + \rayc}
-    \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
-    \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 11}] at (4,3.5) {};
-    \node at (\raystartx, \raystarty) [above] {\color{TolOrange} ?};
-
-\end{tikzpicture}
+\subimport{03TwoDRT/}{SweepOrder}
 \caption{Diagram of sweep order in 2D}
 \label{Fig:2DSweep}
 \end{figure}
 
-% \begin{figure}
-% \centering
-% \begin{tikzpicture}[scale=1.5, line width=1pt, >=latex]
-%     \def\xcoords{1,2,3.5,4,5}
-%     \def\xmax{5}
-%     \def\ycoords{1,2,2.5,3.5,5,6}
-%     \def\ymax{6}
-%     \def\raym{0.6}
-%     \pgfmathsetmacro\rayc{3.5 - \raym * 3.5}
+The {\color{TolBlue} blue} question marks along the $x$ axis all require values that must be computed from the boundary conditions.
+The upper and lower boundary conditions in $z$ are typically taken to be described by a defined in-going radiation field (possibly zero or based on a black body).
+The upper and lower boundaries in $x$ can be described by fixed boundary conditions, but it is also common to describe these with periodic boundary conditions where the ray wraps from one side of the grid to the other.
+The {\color{TolTeal} teal} question marks along the upper $x$ boundary can then be interpreted in multiple ways; in the case of periodic boundary conditions they can be prolonged along the {\color{TolTeal} teal} arrows, and used in the same way as the previously described case.
+If fixed boundary conditions are used then the intensity at these points must be computed by a linear formal solver indicated by the black arrows ending at the nodes labelled 4 and 8.
 
-%     \draw [help lines]
-%     \foreach \y in \ycoords {
-%         (1, \y) -- (\xmax, \y)
-%     }
-%     \foreach \x in \xcoords {
-%         (\x, 1) -- (\x, \ymax)
-%     };
-%     \draw [<->] ({\xmax+0.5}, 1) node[below] {$x$} -- (1,1) -- (1, {\ymax+0.5}) node[left] {$z$};
-%     \coordinate (O) at (3.5, 3.5);
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=above left:{$O$}] at (O) {};
-%     \draw[->, domain=1.2:4.8, samples=10, thin] plot(\x, {\raym * (\x) + \rayc});
-%     \coordinate (D) at (4, {\raym * 4 + \rayc});
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{$D$}] at (D) {};
-%     \coordinate (U) at ({(2.5 - \rayc) / (\raym)}, 2.5);
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=above left:{$U$}] at (U) {};
+Finally, the region around the {\color{TolOrange} orange} question mark, the tail end of the arrow passing through node 11, requires some additional explanation.
+In the configuration shown here, the arrow can stop at its intersection with the vertical line on which nodes 6 and 10 lie as the intensity information has been computed at both of these.
+If an equivalent situation occurs at a periodic $x$ boundary, then a long characteristics approach will need to be applied to this ray.
+This implies that the ray will need to be prolonged back to the previous intersection with a horizontal grid line, where the necessary intensity values can be interpolated, as is shown on this figure.
+There are multiple options for treating the integration over the segment between this upwind point and the node.
+Whilst it is possible to take this segment as a singular integration term, very inclined rays may cross multiple vertical grid lines and regions with dramatically varying parameters.
+For this reason it is common to sub-step along this ray, performing an accumulated short-characteristics integration along each subinterval.
 
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=2pt, label={[label distance=0.5mm]above left:{\small $\alpha$}}] at (2, 2.5) {};
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=2pt, label={[label distance=0.5mm]above right:{\small $\beta$}}] at (3.5, 2.5) {};
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=2pt, label={[label distance=0.5mm]below right:{\small $\gamma$}}] at (4, 3.5) {};
-%     \node[circle, fill=black, inner sep=0 pt, minimum size=2pt, label={[label distance=0.5mm]above right:{\small $\delta$}}] at (4, 5) {};
-% \end{tikzpicture}
-% \caption{Diagram of Short Characteristics Scheme in 2D}
-% \label{Fig:Sc2d}
-% \end{figure}
-
-{\color{TolBlue} do the explanation/diagrams; boundary conditions!, vertical case}
-
-{\color{Red} Need to cite linear, parabolic (Auer 94?), BESSER (stepan2013) Ibgui substepping}
-
-\subsection{Substepping}
+Another problem that may arise, closely related to choosing the correct upwind point, is that of velocity shifts in the medium.
+\citet{VanNoort2002} discussed the possibility of the opacity over an integration integral being underestimated due to differing Doppler shifts at each end of the segment affecting the local opacity by a large margin (say from the core to the wing of the line).
+As commented by \citet{Ibgui2013}, it is also possible for this effect to overestimate the opacity along this segment, in a similar manner.
+The most common solution to this, proposed by \citet{VanNoort2002}, and explained in detail in \citet{Ibgui2013} is to subgrid along the ray.
+The ray is then divided into subintervals along which the velocity may only change by a small (implementation defined) amount relative to the thermal velocity.
+This approach can be very expensive when large Doppler shifts are present, due to the work involved in computing these segments, interpolating the necessary parameters to each start/end point (this will now require interpolation on both axes, rather than simply one as in the previous cases), and the extra numerical integration steps.
+This subgridding technique is not currently supported in \Lw{} but the code was designed with this method in mind, and a sensible location has been left for its implementation.
 
 \subsection{Implementation Details}
 
-From this description of the process, it is clear that there is a more complex ordering in which the atmospheric points must be visited than in the plane-parallel case (which can only be top--bottom or vice-versa).
-In the case of a single-threaded program, it is sufficient to obey this order, however, when distributing work across threads or multiple computing nodes it is essential that the necessary information be present to avoid computation stalls, or the use of uninitialsed data.
-There is an in-depth discussion of an advanced parallelisation algorithm for multi-dimensional radiative transfer in \citet{Stepan2013}, however in \Lw{} we assume that the entire simulation domain can be held in memory and the formal solver is parallelised in frequency, equivalently to the plane-parallel case.
+The restrictive ordering of a formal solver sweep discussed in the previous section imposes constraints on the parallelisation of this algorithm.
+% In the case of a single-threaded program, it is sufficient to obey this order, however, when distributing work across threads or multiple computing nodes it is essential that the necessary information be present to avoid computation stalls, or the use of uninitialsed data.
+There is an in-depth discussion of an advanced spatial and frequency parallelisation algorithm for multi-dimensional radiative transfer in \citet{Stepan2013}, however in \Lw{} we assume that the entire simulation domain can be held in memory and the formal solver is parallelised in frequency, equivalently to the plane-parallel case.
 
-The data structures for storing the atmospheric and population information in \Lw{} were also updated to support two dimensional atmospheres, storing the data contiguously so as to be able to reuse the core iteration machinery from the plane-parallel case (as inspired by the RH code).
+The data structures for storing the atmospheric and population information in \Lw{} were updated to support two dimensional atmospheres, storing the data contiguously so as to be able to reuse the core iteration machinery from the plane-parallel case (as inspired by the RH code).
 Two-dimensional formal solvers can be loaded from external libraries via the same interface as used for their one-dimensional counterparts, and through these interfaces we ensure the modularity of \Lw{}.
-An equivalent interface is also defined for the iteration function to be used in two-dimensions, giving flexibility in the interpolation order and any form of limiting used (which may need to be adapted to specific grids).
-\Lw{} provides default implementations of the two-dimensional linear and BESSER short-characteristics formal solvers, along with linear and WENO4 interpolation schemes.
+An equivalent interface is also defined for the interpolation function to be used in two-dimensions, giving flexibility in the interpolation order and any form of limiting used (which may need to be adapted to specific grids).
+\Lw{} provides default implementations of the two-dimensional linear and BESSER short-characteristics formal solvers, along with linear and BESSER interpolation schemes for the necessary parameters.
+The framework defaults to the BESSER formal solver with linear interpolation for the parameters.
 
-{\color{Red} Do we want a validation test here; can do in place.}
+For efficiency, the calculation of the ray-grid intersections is performed in a separate pre-pass to the formal solution, as this information can be reused for each formal solution using the same angular quadrature.
+Whilst it is possible to compute the necessary parameter interpolation weights at this stage, we choose not to do this, as it would render the interpolation interface either more limited, or substantially more complex, due to the need to utilise different numbers of interpolation weights for different schemes.
+We instead opt to store fractional indices which can be used in conjunction with the grid information in any interpolation procedure.
+Using 64-bit arithmetic these are a concise and robust method for storing these locations.
+By design, the intersection calculation is only performed for one upwind and downwind point
+(excluding long characteristics that cross grid boundaries), as the second order method is considered to be a sufficient trade-off in terms of computational cost against accuracy, but this could easily be updated in the future, and we acknowledge that this is a limitation in terms of the two-dimensional formal solvers that can be loaded via the external interface.
+
+
+\subsection{Validation}
+
+\setpythontexautoprint{false}
+\begin{pycode}[2DValidation]
+# NOTE(cmo): Hack to minimise the number of times this session needs to be run
+ch2DRT = texfigure.Manager(
+    pytex,
+    './03TwoDRT',
+    number=3,
+    python_dir='./03TwoDRT/python',
+    fig_dir=   './03TwoDRT/Figs',
+    data_dir=  './03TwoDRT/Data'
+)
+
+# def data_file_path(manager, fileName):
+#     return os.path.join(manager.data_dir, fileName)
+
+# twoDFilename = '2DPlotData.pickle'
+# try:
+#     with pickle.open(ch2DRT.data_file(twoDFilename), 'rb') as f:
+#         data2d = pickle.load(f)
+# except:
+from lightweaver.fal import Falc82
+from lightweaver.rh_atoms import H_6_atom, H_6_CRD_atom, H_3_atom, C_atom, O_atom, OI_ord_atom, Si_atom, Al_atom, CaII_atom, Fe_atom, FeI_atom, He_9_atom, He_atom, He_large_atom, MgII_atom, Mg_atom, N_atom, Na_atom, S_atom
+import lightweaver as lw
+import matplotlib.pyplot as plt
+import time
+import pickle
+import numpy as np
+from lightweaver.utils import NgOptions, get_default_molecule_path
+from lightweaver.LwCompiled import FastBackground
+
+atmos1d = Falc82()
+atmos1d.quadrature(5)
+x = (np.arange(5) * 5_000).astype(np.float64)
+Nx = x.shape[0]
+z = np.copy(atmos1d.height)
+Nz = z.shape[0]
+temperature = np.zeros((Nz, Nx))
+temperature[...] = atmos1d.temperature[:, None]
+vx = np.zeros((Nz, Nx))
+vz = np.zeros((Nz, Nx))
+vturb = np.zeros((Nz, Nx))
+vturb[...] = atmos1d.vturb[:, None]
+ne = np.zeros((Nz, Nx))
+ne[...] = atmos1d.ne[:, None]
+nHTot = np.zeros((Nz, Nx))
+nHTot[...] = atmos1d.nHTot[:, None]
+atmos = lw.Atmosphere.make_2d(height=z, x=x, temperature=temperature, vx=vx, vz=vz, vturb=vturb, ne=ne, nHTot=nHTot)
+atmos.quadrature(6)
+
+wave = np.linspace(853.9444, 854.9444, 501)
+rayDir = 0.9
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(), Fe_atom(), He_atom(), Mg_atom(), N_atom(), Na_atom(), S_atom()])
+aSet.set_active('Ca')
+spect = aSet.compute_wavelength_grid()
+
+eqPops1d = aSet.compute_eq_pops(atmos1d)
+ctx1d = lw.Context(atmos1d, spect, eqPops1d, Nthreads=16, conserveCharge=False)
+
+# dPopsStop = [1e-1, 1e-2, 1e-3, 1e-4]
+dPopsStop = np.logspace(-1, -4, 10)
+Iwave1ds = []
+Iwaves = []
+
+start1d = time.time()
+for i in range(2):
+    ctx1d.formal_sol_gamma_matrices()
+dPops = [1.0]
+currentStop = 0
+for i in range(2000):
+    ctx1d.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx1d.stat_equil())
+    if dPops[-1] < dPopsStop[currentStop]:
+        Iwave1d = ctx1d.compute_rays(wave, rayDir)
+        Iwave1ds.append(Iwave1d)
+        currentStop += 1
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+end1d = time.time()
+time1d = end1d - start1d
+Niter1d = i
+
+eqPops = aSet.compute_eq_pops(atmos)
+start = time.time()
+bgProvider = lambda *args: FastBackground(*args, Nthreads=16)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=16, conserveCharge=False, backgroundProvider=bgProvider)
+
+start = time.time()
+for i in range(2):
+    ctx.formal_sol_gamma_matrices()
+dPops = [1.0]
+currentStop = 0
+for i in range(2000):
+    ctx.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx.stat_equil())
+    if dPops[-1] < dPopsStop[currentStop]:
+        Iwave = ctx.compute_rays(wave, rayDir)
+        Iwaves.append(Iwave)
+        currentStop += 1
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+end = time.time()
+time2d = end - start
+Niter2d = i
+
+wave = np.linspace(853.9444, 854.9444, 501)
+wave -= CaII_atom().lines[-1].lambda0
+\end{pycode}
+\setpythontexautoprint{true}
+
+\begin{pycode}[2DValidation]
+fig, ax = plt.subplots(2, 1, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
+ax[0].plot(wave, Iwave1d, label=r'1D Reference')
+ax[0].set_xlim(wave[0], wave[-1])
+for j in range(ctx.spect.I.shape[-1]):
+    ax[0].plot(wave, Iwave[:, j], '--', label=('2D, $x=%d$\,\si{\kilo\metre}' % (atmos.x[j] / 1e3)))
+ax[0].legend()
+ax[0].set_ylabel(r'Specific Intensity [SI]')
+
+ax[1].plot(wave, (Iwave[:, 2] - Iwave1d) / Iwave[:, 2])
+ax[1].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
+ax[1].set_ylabel(r'Relative Error')
+lFig = ch2DRT.save_figure('2DValidation', fig, fext='.pgf')
+lFig.caption = r'Validation of 2D formal solver.'
+\end{pycode}
+
+\begin{pycode}[2DValidation]
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+ax = plt.gca()
+
+maxChanges = []
+l2s = []
+
+def l2_norm(x, y):
+    return np.mean((x - y)**2)
+
+for i in range(len(Iwaves)):
+    maxChanges.append(np.max(np.abs(Iwaves[i][:, 2] - Iwave1ds[i])))
+    l2s.append(l2_norm(Iwaves[i][:, 2], Iwave1ds[i]))
+
+ax.plot(dPopsStop, maxChanges, '+-', label='Max Difference')
+ax.invert_xaxis()
+ax1 = ax.twinx()
+ax1.plot(dPopsStop, l2s, '+-', label='L2 Norm', c='C1')
+# ax.legend()
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax1.set_yscale('log')
+ax.set_xlabel(r'$\mathrm{max}(\Delta n / n)$')
+ax.set_ylabel(r'Absolute Maximum Difference', c='C0')
+ax1.set_ylabel(r'L2 Norm', c='C1')
+
+lFig = ch2DRT.save_figure('2DErrChange', fig, fext='.pgf')
+lFig.caption = r'Differences between the 1 and 2D Formal Solvers (including ALI iteration procedure).'
+\end{pycode}
+
+\py[2DValidation]|ch2DRT.get_figure('2DValidation')|
+\py[2DValidation]|ch2DRT.get_figure('2DErrChange')|
+
+It is necessary to validate both the two-dimensional formal solver and its integration into the \Lw{} framework.
+Here, we present a basic validation case, a linearly homogenous FALC atmosphere, using five points in $x$, spaced \SI{5}{\kilo\metre} apart.
+The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no incoming radiation at the top of the atmosphere.
+The standard configuration of \Lw{} in two-dimensions is used, i.e. BESSER formal solver and linear interpolation.
+In Fig.~\ref{Fig:2DValidation} we show the comparison of a \CaLine{} computed using this two-dimensional method against the same model atom and atmosphere in a plane-parallel configuration.
+Both of these are iterated until the maximum relative change in the \Caii{} populations is less than $10^{-4}$.
+The outgoing radiation shown in the upper panel of this figure was synthesised for rays in the $x-z$ plane at $\mu_z = 0.9$.
+Visually, the dashed lines, showing the solution using the two-dimensional formal solver overlie each other perfectly, showing that the output is homogenous across the $x$ axis, as is to be expected from this horizontally homogenous atmosphere with periodic boundary conditions.
+There is a slight visible offset between the solutions generated from the plane-parallel and two-dimensional simulations, the relative difference between these is shown in the lower panel of this figure.
+We see that the relative difference is greatest in the line core, peaking at around 1.5\%.
+Overall, this is very good agreement considering the different underlying methods used in the formal solvers.
+
+In Fig.~\ref{Fig:2DErrChange} we show how the difference between the plane-parallel and two-dimensional models changes as the maximum relative population change decreases (i.e. as we approach convergence).
+Further iterations beyond a maximum relative population change of $10^{-3}$ do not substantially improve the agreement between the two methods.
+Thus, the situation shown in Fig.~\ref{Fig:2DValidation} is sufficiently converged to compare the final solutions of the two methods.
+
+We find that the two-dimensional formal solver performs well, both in terms of accuracy and computational performance. For the example presented here the plane-parallel solution takes \py[2DValidation]|(r'\SI{%.3f}{\second}'%time1d)| and the two-dimensional solution takes \py[2DValidation]|(r'\SI{%.3f}{\second}'%time2d)| after \py[2DValidation]|Niter1d| and \py[2DValidation]|Niter2d| iterations respectively (this timing includes configuring the additional contexts and the formal solutions used for the convergence analysis shown in Fig.~\ref{Fig:2DErrChange}).
+Both of these simulations were run with 16 threads on \TODO{machine name}.
+
+Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
