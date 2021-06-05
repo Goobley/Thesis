@@ -166,7 +166,7 @@ The equivalent integration and $\Lambda$ operator coefficients for a linear shor
 
 \subsection{Evaluation Order and Boundary Conditions}\label{Sec:2dEvalOrder}
 
-Looking more closely at the order in which the formal solver needs to sweep the grid, we can see that $O$ for the ray discussed in the previous section and shown in Fig.~\ref{Fig:Sc2d} would be the 10th node to be solved, and this ordering is shown in Fig.~\ref{Fig:2DSweep}.
+Looking more closely at the order in which the formal solver needs to sweep the grid, we can see that the point $O$ for the ray discussed in the previous section (and shown in Fig.~\ref{Fig:Sc2d}) would be the 10th node to be solved, and this ordering is shown in Fig.~\ref{Fig:2DSweep}.
 Most of the nodes on this figure are solved equivalently to this one, with all necessary quantities known at evaluation time provided the sweep order is preserved, but there are several question marks which require explanation.
 
 \begin{figure}
@@ -195,7 +195,7 @@ Another problem that may arise, closely related to choosing the correct upwind p
 As commented by \citet{Ibgui2013}, it is also possible for this effect to overestimate the opacity along this segment, in a similar manner.
 The most common solution to this, proposed by \citet{VanNoort2002}, and explained in detail in \citet{Ibgui2013} is to subgrid along the ray.
 The ray is then divided into subintervals along which the velocity may only change by a small (implementation defined) amount relative to the thermal velocity.
-This approach can be very expensive when large Doppler shifts are present, due to the work involved in computing these segments, interpolating the necessary parameters to each start/end point (this will now require interpolation on both axes, rather than simply one as in the previous cases), and the extra numerical integration steps.
+This approach can be very expensive when large Doppler shifts are present, due to the work involved in computing these segments, interpolating the necessary parameters to each start/end point (this will now require interpolation on both axes, rather than simply one as in the basic case discussed thus far), and the extra numerical integration steps.
 This subgridding technique is not currently supported in \Lw{} but the code was designed with this method in mind, and a sensible location has been left for its implementation.
 
 \subsection{Implementation Details}
@@ -215,7 +215,8 @@ Whilst it is possible to compute the necessary parameter interpolation weights a
 We instead opt to store fractional indices which can be used in conjunction with the grid information in any interpolation procedure.
 Using 64-bit arithmetic these are a concise and robust method for storing these locations.
 By design, the intersection calculation is only performed for one upwind and downwind point
-(excluding long characteristics that cross grid boundaries), as the second order method is considered to be a sufficient trade-off in terms of computational cost against accuracy, but this could easily be updated in the future, and we acknowledge that this is a limitation in terms of the two-dimensional formal solvers that can be loaded via the external interface.
+(excluding long characteristics that cross grid boundaries), as the second order method is considered to be a sufficient trade-off in terms of computational cost against accuracy.
+This could easily be updated in the future, and we acknowledge that this is a limitation in terms of the two-dimensional formal solvers that can be loaded via the external interface.
 
 
 \subsection{Validation}
@@ -382,14 +383,14 @@ lFig.caption = r'Differences between the 1 and 2D Formal Solvers (including ALI 
 \py[2DValidation]|ch2DRT.get_figure('2DErrChange')|
 
 It is necessary to validate both the two-dimensional formal solver and its integration into the \Lw{} framework.
-Here, we present a basic validation case, a linearly homogenous FALC atmosphere, using five points in $x$, spaced \SI{5}{\kilo\metre} apart.
+Here, we present a basic validation case, a horizontally homogenous FALC atmosphere, using five points in $x$, spaced \SI{5}{\kilo\metre} apart.
 The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no incoming radiation at the top of the atmosphere.
 The standard configuration of \Lw{} in two-dimensions is used, i.e. BESSER formal solver and linear interpolation.
 In Fig.~\ref{Fig:2DValidation} we show the comparison of a \CaLine{} computed using this two-dimensional method against the same model atom and atmosphere in a plane-parallel configuration.
 Both of these are iterated until the maximum relative change in the \Caii{} populations is less than $10^{-4}$.
 The outgoing radiation shown in the upper panel of this figure was synthesised for rays in the $x-z$ plane at $\mu_z = 0.9$.
-Visually, the dashed lines, showing the solution using the two-dimensional formal solver overlie each other perfectly, showing that the output is homogenous across the $x$ axis, as is to be expected from this horizontally homogenous atmosphere with periodic boundary conditions.
-There is a slight visible offset between the solutions generated from the plane-parallel and two-dimensional simulations, the relative difference between these is shown in the lower panel of this figure.
+Visually, the dashed lines, showing the solution from different $x$ locations using the two-dimensional formal solver overlie each other perfectly, showing that the output is homogenous across the $x$ axis, as is to be expected from this horizontally homogenous atmosphere with periodic boundary conditions.
+There is a slight visible offset between the solutions generated from the plane-parallel and two-dimensional simulations, and the relative difference between these is shown in the lower panel of this figure.
 We see that the relative difference is greatest in the line core, peaking at around 1.5\%.
 Overall, this is very good agreement considering the different underlying methods used in the formal solvers.
 
