@@ -402,3 +402,26 @@ We find that the two-dimensional formal solver performs well, both in terms of a
 Both of these simulations were run with 16 threads on \TODO{machine name}.
 
 Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
+
+\section{2D Simulation Configuration}
+
+\begin{figure}
+\centering
+\subimport{03TwoDRT/}{SimConfig}
+\caption{Sim Config}
+\label{Fig:2DSimConfig}
+\end{figure}
+
+Flare models produce huge changes in the radiation field, in both lines and continua.
+These flares are typically modelled in a plane-parallel context and we analyse the radiation leaving the top of this plane-parallel atmosphere.
+In reality, the flaring kernels that we are simulating with RHD models are small; on the scale of 10s to 100s of \si{\kilo\metre} \NeedRef{} and represent an estimate of the conditions in the core of a heated flux-tube.
+As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
+The lack of horizontal atmospheric homogeneity, that is not currently accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges and interacts with neighbouring plasma.
+
+It is likely that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field, however the radiation is not affected by these limitations.
+Thus, we will investigate the effects of illumination from a neighbouring plane-parallel flare model on a two-dimensional slab of plasma representing the chromosphere, with a time-dependent radiative treatment of both of these.
+This model can then be used to investigate the outgoing radiation from the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
+
+Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}; the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
+
+\TODO{Check how we're cutting the top of the sim now, and explain rest of setup.}
