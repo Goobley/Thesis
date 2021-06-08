@@ -338,7 +338,7 @@ fig, ax = plt.subplots(2, 1, figsize=texfigure.figsize(pytex, scale=1, height_ra
 ax[0].plot(wave, Iwave1d, label=r'1D Reference')
 ax[0].set_xlim(wave[0], wave[-1])
 for j in range(ctx.spect.I.shape[-1]):
-    ax[0].plot(wave, Iwave[:, j], '--', label=('2D, $x=%d$\,\si{\kilo\metre}' % (atmos.x[j] / 1e3)))
+    ax[0].plot(wave, Iwave[:, j], '--', label=('2D, $x={:.0f}$\,\si{{\kilo\metre}}'.format(atmos.x[j] / 1e3)))
 ax[0].legend()
 ax[0].set_ylabel(r'Specific Intensity [SI]')
 
@@ -398,7 +398,7 @@ In Fig.~\ref{Fig:2DErrChange} we show how the difference between the plane-paral
 Further iterations beyond a maximum relative population change of $10^{-3}$ do not substantially improve the agreement between the two methods.
 Thus, the situation shown in Fig.~\ref{Fig:2DValidation} is sufficiently converged to compare the final solutions of the two methods.
 
-We find that the two-dimensional formal solver performs well, both in terms of accuracy and computational performance. For the example presented here the plane-parallel solution takes \py[2DValidation]|(r'\SI{%.3f}{\second}'%time1d)| and the two-dimensional solution takes \py[2DValidation]|(r'\SI{%.3f}{\second}'%time2d)| after \py[2DValidation]|Niter1d| and \py[2DValidation]|Niter2d| iterations respectively (this timing includes configuring the additional contexts and the formal solutions used for the convergence analysis shown in Fig.~\ref{Fig:2DErrChange}).
+We find that the two-dimensional formal solver performs well, both in terms of accuracy and computational performance. For the example presented here the plane-parallel solution takes \py[2DValidation]|(r'\SI{{{:.3f}}}{{\second}}'.format(time1d))| and the two-dimensional solution takes \py[2DValidation]|(r'\SI{{{:.3f}}}{{\second}}'.format(time2d))| after \py[2DValidation]|Niter1d| and \py[2DValidation]|Niter2d| iterations respectively (this timing includes configuring the additional contexts and the formal solutions used for the convergence analysis shown in Fig.~\ref{Fig:2DErrChange}).
 Both of these simulations were run with 16 threads on \TODO{machine name}.
 
 Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
@@ -414,14 +414,60 @@ Similar validation tests have been run for fixed boundary conditions and Doppler
 
 Flare models produce huge changes in the radiation field, in both lines and continua.
 These flares are typically modelled in a plane-parallel context and we analyse the radiation leaving the top of this plane-parallel atmosphere.
-In reality, the flaring kernels that we are simulating with RHD models are small; on the scale of 10s to 100s of \si{\kilo\metre} \NeedRef{} and represent an estimate of the conditions in the core of a heated flux-tube.
+In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} \NeedRef{} and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not currently accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges and interacts with neighbouring plasma.
 
-It is likely that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field, however the radiation is not affected by these limitations.
+It is reasonable to suggest that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field, however the radiation is not affected by these limitations.
 Thus, we will investigate the effects of illumination from a neighbouring plane-parallel flare model on a two-dimensional slab of plasma representing the chromosphere, with a time-dependent radiative treatment of both of these.
-This model can then be used to investigate the outgoing radiation from the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
+This model can then serve as an approximate investigation of the outgoing radiation from the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
 
 Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}; the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
+On one side of this slab we place the RADYN simulation, and compute the intensity along each ray of the angular quadrature used for the 2D slab, at each depth in the simulation.
+The other $x$ boundary is treated equivalently, but using the fixed initial quiet sun atmosphere from the RADYN simulation and the 2D slab.
 
-\TODO{Check how we're cutting the top of the sim now, and explain rest of setup.}
+Similarly to the process described in the previous chapter a time-dependent simulation is run, again reprocessing the theormdynamic atmospheric properties using RADYN's internal timestep.
+The separate simulation components of this model share a $z$ stratification based on a combination of RADYN's grids used for both the initial quiet sun atmosphere and the current timestep.
+This method ensures that 450 points are spaced across the atmosphere in $z$ and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
+The populations are interpolated between the $z$ grids from one step to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
+The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed previously.
+The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
+In addition to the 450 points in $z$, we use $40$ linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
+As these 40 points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart \TODO{FIXME}.
+Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square.
+This does not appear to have affected the results, as a temporally shortened version of one of the simulations was run with the $x$ grid spacing halved, and no substantial change in outgoing intensity was found.
+
+The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in RT simulations that will be discussed here.
+The incoming radiation from the flare model is specified for each ray and depth in the first column of the atmosphere.
+As the intensity is specified for all incoming (rightgoing) rays here, it cannot be calculated taking into account the local parameters, meanwhile the outgoing (leftgoing) rays \emph{do} take into account the local parameters, and then inform the local operator acting on these populations.
+Thus, if this column has its thermodynamic properties fixed to those of the initial quiet sun model, it behaves as if it is only receiving radiation from the right, and only being affected by the flare in a ``second-hand'' sense.
+This leads to a dark first column in the two-dimensional synthesis.
+To minimise these effects we copy the flare atmosphere into this first column, and hold the populations fixed over each timestep.
+These populations are then consistent with the adjacent plane-parallel atmosphere and the radiation emerging from it which is used as a fixed boundary condition.
+There should not be any need to perform the same process at the quiet sun boundary, as it is placed \SI{2}{\mega\metre} away and should change very little over the course of the simulation, remaining consistent on both sides of the boundary.
+
+In this simulation we use the same model atoms as the previous chapter, with both hydrogen and calcium being set as active species.
+This simulation is carried out for two different flare models illuminating the 2D slab; the same F9 and F10 models of Chapter~\ref{Chap:TimeDepRt} (including the Lyman line photoionisation effects!).
+We will now showcase the results of these simulations, looking at both the observable effects and the population changes internal to the slab, focusing on the \Ha{} and \CaLine{} spectral lines, before comparing these to observations taken with the CRISP instrument on the SST.
+
+
+\section{Simulation Results}
+
+Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive to compute, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
+The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,500 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$10,000 CPU hours on the hercules machine \TODO{machines}.
+{\color{Red} The code for these simulations is present in the MsLightweaver repository on the RefinedGrid2d branch.} \TODO{DOI - when sims have rerun}.
+
+\subsection{Observed Radiation}
+
+Looking first at the F9 simulation in Fig. \TODO{} we show the variation in intensity against the background, as a function of time from the onset of heating and the horizontal distance from the flaring boundary, at the three wavelengths indicated by vertical lines in the right-hand panel.
+The outgoing radiation in the right-hand panel is taken taken from a viewing angle of \TODO{}, at a horizontal distance of \SI{100}{\kilo\metre} from the flare boundary.
+
+\TODO{Preprocess data to make these plots}
+
+\subsection{Population Changes}
+
+\section{Observational Comparison}
+
+\section{Discussions}
+
+Failure of multi-grid?
