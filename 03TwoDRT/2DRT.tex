@@ -454,7 +454,7 @@ We will now showcase the results of these simulations, looking at both the obser
 \section{Simulation Results}
 
 Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive to compute, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
-The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,500 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$10,000 CPU hours on the hercules machine \TODO{machines}.
+The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$10,000 CPU hours on the hercules machine \TODO{machines}.
 {\color{Red} The code for these simulations is present in the MsLightweaver repository on the RefinedGrid2d branch.} \TODO{DOI - when sims have rerun}.
 
 \subsection{Observed Radiation}
@@ -463,6 +463,113 @@ Looking first at the F9 simulation in Fig. \TODO{} we show the variation in inte
 The outgoing radiation in the right-hand panel is taken taken from a viewing angle of \TODO{}, at a horizontal distance of \SI{100}{\kilo\metre} from the flare boundary.
 
 \TODO{Preprocess data to make these plots}
+
+\begin{pycode}[2DRT]
+import zarr
+import matplotlib.gridspec as gridspec
+
+data = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_radiation_thesis.zip'))
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.1, height_ratio=0.7))
+enhancementLine = 0.4
+angularIdx = 1
+timeEdges = np.concatenate(([0],
+                            0.5 * (data.time[1:] + data.time[:-1]),
+                            [data.time[-1]]))
+d = data
+xEdges = (np.arange(d['xAxis'].shape[0]+1) - 0.5) * d['xAxis'][1]
+xEdges /= 1e6
+spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75,1], figure=fig)
+xAxis = d['xAxis'][...] / 1e6
+wavelength = d['wavelength']
+
+Idata = d['I'][:, :, angularIdx, :][...]
+IChangeArr = (Idata - Idata[:, :, -1][:, :, None]) / Idata[:, :, -1][:, :, None]
+
+def plot_rel_change_2d(wl, wlOffset, position):
+    fig.clf()
+    offset = wlOffset
+
+    change1 = IChangeArr[:, wl-offset, :]
+    line1 = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change1[t, k] > enhancementLine:
+                line1[t] = xAxis[k]
+                break
+    change2 = IChangeArr[:, wl, :]
+    line2 = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change2[t, k] > enhancementLine:
+                line2[t] = xAxis[k]
+                break
+    change3 = IChangeArr[:, wl+offset, :]
+    line3 = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change3[t, k] > enhancementLine:
+                line3[t] = xAxis[k]
+                break
+
+    ax = fig.add_subplot(spec[0, 0])
+    change = IChangeArr[:, wl-offset, :]
+    mesh = ax.pcolormesh(timeEdges, xEdges, change1.T, cmap='Greys_r', rasterized=True)
+    ax.plot(data['time'], line1)
+    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl-offset], fontdict={'fontsize': 11})
+    ax.tick_params(axis='x', labelbottom=False)
+    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
+    ax.set_ylim(None, 1.5)
+    cax = fig.colorbar(mesh, ax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[1, 0])
+    change = IChangeArr[:, wl, :]
+    mesh = ax.pcolormesh(timeEdges, xEdges, change2.T, cmap='Greys_r', rasterized=True)
+    ax.plot(data['time'], line2)
+    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl], fontdict={'fontsize': 11})
+    ax.tick_params(axis='x', labelbottom=False)
+    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
+    ax.set_ylim(None, 1.5)
+    cax = fig.colorbar(mesh, ax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[2, 0])
+    change = IChangeArr[:, wl+offset, :]
+    mesh = ax.pcolormesh(timeEdges, xEdges, change3.T, cmap='Greys_r', rasterized=True)
+    ax.plot(data['time'], line3)
+    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl+offset], fontdict={'fontsize': 11})
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
+    ax.set_ylim(None, 1.5)
+    cax = fig.colorbar(mesh, ax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[:, 1])
+    lineTimes = np.array([0, 4, 8, 10, 12, 16, 20, 25, 30])
+    timeIndices = np.array([np.where(data['time'][...] == t)[0].squeeze() for t in lineTimes])
+    print(timeIndices)
+    for timeIdx in timeIndices:
+        ax.plot(wavelength, Idata[timeIdx, :, position], label='%.0f s' % data['time'][timeIdx])
+    localScale = wavelength[wl+1] - wavelength[wl]
+    ax.set_xlim(wavelength[wl] - localScale*100, wavelength[wl] + localScale*100)
+    ax.axvline(wavelength[wl])
+    ax.axvline(wavelength[wl-offset], c='C1', ls='--')
+    ax.axvline(wavelength[wl+offset], c='C1', ls='--')
+    ax.legend(loc=(0.65, 0.01), frameon=False, handlelength=1.0, handletextpad=0.6, labelspacing=0.35)
+    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_ylabel('Specific Intensity [SI]')
+
+#         fig.suptitle('F9 into RADYN')
+#         fig.suptitle(r'Ca ɪɪ 8542 $\AA$ F9 Heating')
+    # fig.suptitle(r'H$-\alpha$ F9 Heating Flare atmosphere')
+
+plot_rel_change_2d(743, 15, 2)
+lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\Ha{} for 2D F9 Case.'
+
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2DHaF9')|
 
 \subsection{Population Changes}
 
