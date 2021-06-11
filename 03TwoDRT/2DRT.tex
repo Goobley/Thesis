@@ -468,25 +468,23 @@ The outgoing radiation in the right-hand panel is taken taken from a viewing ang
 import zarr
 import matplotlib.gridspec as gridspec
 
-data = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_radiation_thesis.zip'))
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.1, height_ratio=0.7))
-enhancementLine = 0.4
-angularIdx = 1
-timeEdges = np.concatenate(([0],
-                            0.5 * (data.time[1:] + data.time[:-1]),
-                            [data.time[-1]]))
-d = data
-xEdges = (np.arange(d['xAxis'].shape[0]+1) - 0.5) * d['xAxis'][1]
-xEdges /= 1e6
-spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75,1], figure=fig)
-xAxis = d['xAxis'][...] / 1e6
-wavelength = d['wavelength']
 
-Idata = d['I'][:, :, angularIdx, :][...]
-IChangeArr = (Idata - Idata[:, :, -1][:, :, None]) / Idata[:, :, -1][:, :, None]
-
-def plot_rel_change_2d(wl, wlOffset, position):
+def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLine=0.4):
     fig.clf()
+
+    xEdges = (np.arange(d['xAxis'].shape[0]+1) - 0.5) * d['xAxis'][1]
+    xEdges /= 1e6
+    spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75,1], figure=fig)
+    xAxis = d['xAxis'][...] / 1e6
+    wavelength = d['wavelength']
+
+    timeEdges = np.concatenate(([0],
+                                0.5 * (d.time[1:] + d.time[:-1]),
+                                [d.time[-1]]))
+
+    Idata = d['I'][:, :, angularIdx, :][...]
+    IChangeArr = (Idata - Idata[:, :, -2][:, :, None]) / Idata[:, :, -2][:, :, None]
+
     offset = wlOffset
 
     change1 = IChangeArr[:, wl-offset, :]
@@ -547,7 +545,6 @@ def plot_rel_change_2d(wl, wlOffset, position):
     ax = fig.add_subplot(spec[:, 1])
     lineTimes = np.array([0, 4, 8, 10, 12, 16, 20, 25, 30])
     timeIndices = np.array([np.where(data['time'][...] == t)[0].squeeze() for t in lineTimes])
-    print(timeIndices)
     for timeIdx in timeIndices:
         ax.plot(wavelength, Idata[timeIdx, :, position], label='%.0f s' % data['time'][timeIdx])
     localScale = wavelength[wl+1] - wavelength[wl]
@@ -562,8 +559,13 @@ def plot_rel_change_2d(wl, wlOffset, position):
 #         fig.suptitle('F9 into RADYN')
 #         fig.suptitle(r'Ca ɪɪ 8542 $\AA$ F9 Heating')
     # fig.suptitle(r'H$-\alpha$ F9 Heating Flare atmosphere')
+    fig.tight_layout()
 
-plot_rel_change_2d(743, 15, 2)
+data = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_radiation_thesis.zip'))
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+angularIdx = 1
+plot_rel_change_2d(fig, data, 743, 15, 2, angularIdx)
+fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F9 Case.'
 
@@ -571,9 +573,143 @@ lFig.caption = r'\Ha{} for 2D F9 Case.'
 
 \py[2DRT]|ch2DRT.get_figure('2DHaF9')|
 
+\begin{pycode}[2DRT]
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+angularIdx = 1
+plot_rel_change_2d(fig, data, 927, 7, 2, angularIdx)
+fig.tight_layout()
+lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\CaLine{} for 2D F9 Case.'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
+
 \subsection{Population Changes}
 
+\begin{pycode}[2DRT]
+from weno4 import weno4
+def vmax_amp(a):
+    aMin = a.min()
+    aMax = a.max()
+    return max(abs(aMin), abs(aMax))
+
+def plot_rel_change_pops(fig, data, time, hIdxU, hIdxL, caIdxU, caIdxL):
+    tIdx = np.searchsorted(data['time'][...], time)
+    Nx = data['xAxis'].shape[0]
+    Nz = data['zAxis'].shape[1]
+
+    xAxis = data['xAxis'][...]
+    z0 = data['zAxis'][0]
+    zN = np.copy(data['zAxis'][...][tIdx])
+
+    zEdges = np.concatenate(([zN[0]], 0.5 * (zN[1:] + zN[:-1]), [zN[-1]])) / 1e6
+    xEdges = np.concatenate(([xAxis[0]], 0.5 * (xAxis[1:] + xAxis[:-1]), [xAxis[-1]])) / 1e6
+
+    ca0 = data['Ca'][0].reshape((data['Ca'].shape[1], Nz, Nx))
+    caN = data['Ca'][tIdx].reshape((data['Ca'].shape[1], Nz, Nx))#[:, ::-1].copy()
+    ca0Interp = np.zeros_like(ca0)
+    for i in range(ca0.shape[0]):
+        for x in range(Nx):
+            ca0Interp[i, :, x] = weno4(zN, z0, ca0[i, :, x])
+#     ca0Interp[...] = caN[:, :, -2][:, :, None]
+
+    h0 = data['H'][0].reshape((data['H'].shape[1], Nz, Nx))
+    hN = data['H'][tIdx].reshape((data['H'].shape[1], Nz, Nx))#[:, ::-1].copy()
+    h0Interp = np.zeros_like(h0)
+    for i in range(h0.shape[0]):
+        for x in range(Nx):
+            h0Interp[i, :, x] = weno4(zN, z0, h0[i, :, x])
+#     h0Interp[...] = hN[:, :, -2][:, :, None]
+
+    zMax = 2e6
+    hChangeU = (hN[hIdxU] - h0Interp[hIdxU]) / hN[hIdxU]
+    caChangeU = (caN[caIdxU] - ca0Interp[caIdxU]) / caN[caIdxU]
+    hChangeL = (hN[hIdxL] - h0Interp[hIdxL]) / hN[hIdxL]
+    caChangeL = (caN[caIdxL] - ca0Interp[caIdxL]) / caN[caIdxL]
+#     vmin = min(hChange[:, 1:-1].min(), caChange[:, 1:-1].min())
+#     vmax = max(hChange[:, 1:-1].max(), caChange[:, 1:-1].max())
+#     vmaxAmp = max(abs(vmin), abs(vmax))
+#     vmaxAmp = max(vmaxAmp, 0.1)
+
+    vmaxAmpHU = vmax_amp(hChangeU[:, 1:-1])
+    vmaxAmpCaU = vmax_amp(caChangeU[:, 1:-1])
+    vmaxAmpHL = vmax_amp(hChangeL[:, 1:-1])
+    vmaxAmpCaL = vmax_amp(caChangeL[:, 1:-1])
+
+    spec = gridspec.GridSpec(nrows=2, ncols=5, width_ratios=[15, 1, 2, 15, 1])
+
+    ax = fig.add_subplot(spec[0, 0])
+    mesh = ax.pcolormesh(xEdges, zEdges, hChangeU, vmin=-vmaxAmpHU, vmax=vmaxAmpHU,
+                         cmap='RdBu_r', rasterized=True)
+    ax.set_ylim(None, zMax / 1e6)
+    # ax.set_xlabel('$x$ [Mm]')
+    ax.set_ylabel('$z$ [Mm]')
+    ax.text(1.85, -0.00, 'H n={}'.format(hIdxU), va='bottom', ha='right')
+    ax.set_xlim(None, 1.9)
+
+    ax = fig.add_subplot(spec[0, 1])
+    cax = fig.colorbar(mesh, cax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[0, 3])
+    mesh = ax.pcolormesh(xEdges, zEdges, hChangeL, vmin=-vmaxAmpHL, vmax=vmaxAmpHL,
+                         cmap='RdBu_r', rasterized=True)
+    ax.set_ylim(None, zMax / 1e6)
+    # ax.set_xlabel('$x$ [Mm]')
+    # ax.set_ylabel('$z$ [Mm]')
+    ax.set_yticklabels([])
+    ax.text(1.85, -0.00, 'H n={}'.format(hIdxL), va='bottom', ha='right')
+    ax.set_xlim(None, 1.9)
+
+    ax = fig.add_subplot(spec[0, 4])
+    cax = fig.colorbar(mesh, cax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[1, 0])
+    mesh = ax.pcolormesh(xEdges, zEdges, caChangeU, vmin=-vmaxAmpCaU, vmax=vmaxAmpCaU,
+                         cmap='RdBu_r', rasterized=True)
+    ax.set_ylim(None, zMax / 1e6)
+    # ax.set_yticklabels([])
+    ax.set_ylabel('$z$ [Mm]')
+    ax.set_xlabel('$x$ [Mm]')
+    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxU), va='bottom', ha='right')
+    ax.set_xlim(None, 1.9)
+
+    ax = fig.add_subplot(spec[1, 1])
+    cax = fig.colorbar(mesh, cax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+    ax = fig.add_subplot(spec[1, 3])
+    mesh = ax.pcolormesh(xEdges, zEdges, caChangeL, vmin=-vmaxAmpCaL, vmax=vmaxAmpCaL,
+                         cmap='RdBu_r', rasterized=True)
+    ax.set_ylim(None, zMax / 1e6)
+    ax.set_yticklabels([])
+    ax.set_xlabel('$x$ [Mm]')
+    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxL), va='bottom', ha='right')
+    ax.set_xlim(None, 1.9)
+
+    ax = fig.add_subplot(spec[1, 4])
+    cax = fig.colorbar(mesh, cax=ax)
+    cax.ax.tick_params(axis='y', direction='out')
+
+
+dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_pops_thesis.zip'))
+fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
+plot_rel_change_pops(fig, dataPops, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+
+lFig = ch2DRT.save_figure('UpperLevelsT10', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Relative Changes in the atomic populations from the initial solution at t=\SI{10}{\second} for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing.'
+
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('UpperLevelsT10')|
+
+Would it be good to compare these against the contribution function of these lines in the quiet atmosphere? Changes in core formation region, hence why no continuum or far wing changes. So yes, probably.
+
+
 \section{Observational Comparison}
+
+\TODO{Go over Investigation2014 notebook, and poster. Shouldn't need tremendous detail.}
 
 \section{Discussions}
 
