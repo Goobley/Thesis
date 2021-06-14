@@ -432,8 +432,8 @@ This method ensures that 450 points are spaced across the atmosphere in $z$ and 
 The populations are interpolated between the $z$ grids from one step to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
 The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed previously.
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
-In addition to the 450 points in $z$, we use $40$ linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
-As these 40 points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart \TODO{FIXME}.
+In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
+As these 40 points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart.
 Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square.
 This does not appear to have affected the results, as a temporally shortened version of one of the simulations was run with the $x$ grid spacing halved, and no substantial change in outgoing intensity was found.
 
@@ -464,6 +464,10 @@ The outgoing radiation in the right-hand panel is taken taken from a viewing ang
 
 \TODO{Preprocess data to make these plots}
 
+Is there a way we can characterise the scattering? Destruction probability?
+
+Flipping viewing angle is the same as observing symmetric point E/W.
+
 \begin{pycode}[2DRT]
 import zarr
 import matplotlib.gridspec as gridspec
@@ -483,7 +487,7 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
                                 [d.time[-1]]))
 
     Idata = d['I'][:, :, angularIdx, :][...]
-    IChangeArr = (Idata - Idata[:, :, -2][:, :, None]) / Idata[:, :, -2][:, :, None]
+    IChangeArr = (Idata - Idata[:, :, -1][:, :, None]) / Idata[:, :, -1][:, :, None]
 
     offset = wlOffset
 
@@ -512,8 +516,8 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
     ax = fig.add_subplot(spec[0, 0])
     change = IChangeArr[:, wl-offset, :]
     mesh = ax.pcolormesh(timeEdges, xEdges, change1.T, cmap='Greys_r', rasterized=True)
-    ax.plot(data['time'], line1)
-    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl-offset], fontdict={'fontsize': 11})
+    ax.plot(d['time'], line1)
+    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl-offset]), fontdict={'fontsize': 11})
     ax.tick_params(axis='x', labelbottom=False)
     ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
     ax.set_ylim(None, 1.5)
@@ -523,8 +527,8 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
     ax = fig.add_subplot(spec[1, 0])
     change = IChangeArr[:, wl, :]
     mesh = ax.pcolormesh(timeEdges, xEdges, change2.T, cmap='Greys_r', rasterized=True)
-    ax.plot(data['time'], line2)
-    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl], fontdict={'fontsize': 11})
+    ax.plot(d['time'], line2)
+    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl]), fontdict={'fontsize': 11})
     ax.tick_params(axis='x', labelbottom=False)
     ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
     ax.set_ylim(None, 1.5)
@@ -534,8 +538,8 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
     ax = fig.add_subplot(spec[2, 0])
     change = IChangeArr[:, wl+offset, :]
     mesh = ax.pcolormesh(timeEdges, xEdges, change3.T, cmap='Greys_r', rasterized=True)
-    ax.plot(data['time'], line3)
-    ax.set_title(r'$\lambda=%.4f$ nm' % wavelength[wl+offset], fontdict={'fontsize': 11})
+    ax.plot(d['time'], line3)
+    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl+offset]), fontdict={'fontsize': 11})
     ax.set_xlabel('Time [s]')
     ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
     ax.set_ylim(None, 1.5)
@@ -544,16 +548,16 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
 
     ax = fig.add_subplot(spec[:, 1])
     lineTimes = np.array([0, 4, 8, 10, 12, 16, 20, 25, 30])
-    timeIndices = np.array([np.where(data['time'][...] == t)[0].squeeze() for t in lineTimes])
+    timeIndices = np.array([np.where(d['time'][...] == t)[0].squeeze() for t in lineTimes])
     for timeIdx in timeIndices:
-        ax.plot(wavelength, Idata[timeIdx, :, position], label='%.0f s' % data['time'][timeIdx])
+        ax.plot(wavelength - wavelength[wl], Idata[timeIdx, :, position], label='{:.0f} s'.format(d['time'][timeIdx]))
     localScale = wavelength[wl+1] - wavelength[wl]
-    ax.set_xlim(wavelength[wl] - localScale*100, wavelength[wl] + localScale*100)
-    ax.axvline(wavelength[wl])
-    ax.axvline(wavelength[wl-offset], c='C1', ls='--')
-    ax.axvline(wavelength[wl+offset], c='C1', ls='--')
+    ax.set_xlim(-localScale*70, localScale*70)
+    ax.axvline(wavelength[wl] - wavelength[wl])
+    ax.axvline(wavelength[wl-offset] - wavelength[wl], c='C1', ls='--')
+    ax.axvline(wavelength[wl+offset] - wavelength[wl], c='C1', ls='--')
     ax.legend(loc=(0.65, 0.01), frameon=False, handlelength=1.0, handletextpad=0.6, labelspacing=0.35)
-    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
     ax.set_ylabel('Specific Intensity [SI]')
 
 #         fig.suptitle('F9 into RADYN')
@@ -561,10 +565,10 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
     # fig.suptitle(r'H$-\alpha$ F9 Heating Flare atmosphere')
     fig.tight_layout()
 
-data = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_radiation_thesis.zip'))
+dataRad = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
 angularIdx = 1
-plot_rel_change_2d(fig, data, 743, 15, 2, angularIdx)
+plot_rel_change_2d(fig, dataRad, 743, 15, 2, angularIdx)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F9 Case.'
@@ -576,7 +580,7 @@ lFig.caption = r'\Ha{} for 2D F9 Case.'
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
 angularIdx = 1
-plot_rel_change_2d(fig, data, 927, 7, 2, angularIdx)
+plot_rel_change_2d(fig, dataRad, 927, 7, 2, angularIdx)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 Case.'
@@ -584,23 +588,119 @@ lFig.caption = r'\CaLine{} for 2D F9 Case.'
 
 \py[2DRT]|ch2DRT.get_figure('2DCaF9')|
 
+\begin{pycode}[2DRT]
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+
+angularIdx = 3
+plot_rel_change_2d(fig, dataRad, 743, 15, 2, angularIdx)
+fig.tight_layout()
+lFig = ch2DRT.save_figure('2DHaF9Away', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\Ha{} for 2D F9 Case. Away from ribbon.'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2DHaF9Away')|
+
+\begin{pycode}[2DRT]
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+angularIdx = 3
+plot_rel_change_2d(fig, dataRad, 927, 7, 2, angularIdx)
+fig.tight_layout()
+lFig = ch2DRT.save_figure('2DCaF9Away', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\CaLine{} for 2D F9 Case. Away from ribbon'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2DCaF9Away')|
+
 \subsection{Population Changes}
 
 \begin{pycode}[2DRT]
 from weno4 import weno4
+from MsLightweaverAtoms import H_6, CaII
+from ReadAtmost import read_atmost
+import lightweaver as lw
+from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, OI_ord_atom, Si_atom, Al_atom, Fe_atom, FeI_atom, MgII_atom, N_atom, Na_atom, S_atom, CaII_atom, He_9_atom
+from matplotlib.colors import SymLogNorm
+import os
+from contextlib import redirect_stdout
+
+
+def compute_tau(ctx, mu):
+    upDown = 1
+    tau = np.zeros_like(ctx.depthData.chi[:, mu, upDown, :])
+    chi = ctx.depthData.chi
+    atmos = ctx.kwargs['atmos']
+
+    # NOTE(cmo): Compute tau for all wavelengths
+    tau[:, 0] = 1e-20
+    for k in range(1, tau.shape[1]):
+        tau[:, k] = tau[:, k-1] + 0.5 * (chi[:, mu, upDown, k] + chi[:, mu, upDown, k-1]) \
+                                      * (atmos.height[k-1] - atmos.height[k]) / atmos.muz[mu]
+    return tau
+
+# Compute the tau=1 line via interpolation
+def tau1_line(tau, z):
+    tau1 = np.zeros(tau.shape[0])
+
+    for la in range(tau.shape[0]):
+        tau1[la] = weno4(1.0, tau[la], z)
+
+    return tau1
+
 def vmax_amp(a):
     aMin = a.min()
     aMax = a.max()
     return max(abs(aMin), abs(aMax))
 
-def plot_rel_change_pops(fig, data, time, hIdxU, hIdxL, caIdxU, caIdxL):
+# Scale a line profile to overlie the contfn
+def compute_scale_factors(wavelengthGrid, profile, wavelengthRange, scaleRange):
+    minIdx = np.searchsorted(wavelengthGrid, wavelengthRange[0])
+    maxIdx = np.searchsorted(wavelengthGrid, wavelengthRange[1]) + 1
+
+    profile = np.copy(profile)
+    sub = profile[minIdx:maxIdx].min()
+    div = profile[minIdx:maxIdx].max()
+    mult = (scaleRange[1] - scaleRange[0])
+    add = scaleRange[0]
+
+    return [sub, div, mult, add]
+
+def min_combine_scale_factors(fact1, fact2):
+    fact = [min(fact1[0], fact2[0]),
+            max(fact1[1], fact2[1]),
+            min(fact1[2], fact2[2]),
+            min(fact1[3], fact2[3])]
+    return fact
+
+def scale_profile_fact(profile, factors):
+    profile = np.copy(profile)
+    profile -= factors[0]
+    profile /= factors[1]
+    profile *= factors[2]
+    profile += factors[3]
+    return profile
+
+def scale_profile(wavelengthGrid, profile, wavelengthRange, scaleRange):
+    minIdx = np.searchsorted(wavelengthGrid, wavelengthRange[0])
+    maxIdx = np.searchsorted(wavelengthGrid, wavelengthRange[1]) + 1
+
+    profile = np.copy(profile)
+    profile -= profile[minIdx:maxIdx].min()
+    profile /= profile[minIdx:maxIdx].max()
+    profile *= (scaleRange[1] - scaleRange[0])
+    profile += scaleRange[0]
+    return profile
+
+
+def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU, caIdxL):
     tIdx = np.searchsorted(data['time'][...], time)
     Nx = data['xAxis'].shape[0]
     Nz = data['zAxis'].shape[1]
+    Ntime = data['zAxis'].shape[0]
 
+    positionIdx = 2
     xAxis = data['xAxis'][...]
     z0 = data['zAxis'][0]
-    zN = np.copy(data['zAxis'][...][tIdx])
+    zN = np.copy(data['zAxis'][tIdx])
 
     zEdges = np.concatenate(([zN[0]], 0.5 * (zN[1:] + zN[:-1]), [zN[-1]])) / 1e6
     xEdges = np.concatenate(([xAxis[0]], 0.5 * (xAxis[1:] + xAxis[:-1]), [xAxis[-1]])) / 1e6
@@ -621,6 +721,7 @@ def plot_rel_change_pops(fig, data, time, hIdxU, hIdxL, caIdxU, caIdxL):
             h0Interp[i, :, x] = weno4(zN, z0, h0[i, :, x])
 #     h0Interp[...] = hN[:, :, -2][:, :, None]
 
+
     zMax = 2e6
     hChangeU = (hN[hIdxU] - h0Interp[hIdxU]) / hN[hIdxU]
     caChangeU = (caN[caIdxU] - ca0Interp[caIdxU]) / caN[caIdxU]
@@ -636,22 +737,97 @@ def plot_rel_change_pops(fig, data, time, hIdxU, hIdxL, caIdxU, caIdxL):
     vmaxAmpHL = vmax_amp(hChangeL[:, 1:-1])
     vmaxAmpCaL = vmax_amp(caChangeL[:, 1:-1])
 
-    spec = gridspec.GridSpec(nrows=2, ncols=5, width_ratios=[15, 1, 2, 15, 1])
+    nHTot = atmost.d1 / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)
+    aIdx = np.searchsorted(atmost.time, time)
+    atmos = lw.Atmosphere.make_1d(scale=lw.ScaleType.Geometric, depthScale=zN,
+                                  temperature=weno4(zN, atmost.z1[aIdx], atmost.tg1[aIdx]),
+                                  vlos=weno4(zN, atmost.z1[aIdx], atmost.vz1[aIdx]),
+                                  vturb=weno4(zN, atmost.z1[aIdx], atmost.vturb),
+                                  ne=weno4(zN, atmost.z1[aIdx], atmost.ne1[aIdx]),
+                                  nHTot=weno4(zN, atmost.z1[aIdx], nHTot[aIdx]))
+    atmos.quadrature(5)
+    FchromaAtoms = [H_6(), CaII(), He_9_atom(), C_atom(), O_atom(), Si_atom(), Fe_atom(),
+                MgII_atom(), N_atom(), Na_atom(), S_atom()]
+
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            # Set up our atoms and Lightweaver context
+            aSet = lw.RadiativeSet(FchromaAtoms)
+            aSet.set_active('H', 'Ca')
+            spect = aSet.compute_wavelength_grid()
+            eqPops = aSet.compute_eq_pops(atmos)
+            ctx = lw.Context(atmos, spect, eqPops, initSol=lw.InitialSolution.Lte, conserveCharge=False,
+                            Nthreads=12)
+            ctx.depthData.fill = True
+
+            for name in ['H', 'Ca']:
+                pops = data[name]
+                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 0]
+            eqPops.update_lte_atoms_Hmin_pops(atmos)
+
+            # Add the extra information expected by our Atoms with Fang non-thermal beam collisional rates
+            atmos.bHeat = np.ones_like(atmos.z) * 1e-20
+            atmos.hPops = eqPops['H']
+            ctx.update_deps()
+
+            for i in range(20):
+                dJ = ctx.formal_sol_gamma_matrices()
+                if dJ < 1e-3:
+                    break
+
+    fullTau = compute_tau(ctx, mu=-1)
+    fullCfn = lw.compute_contribution_fn(ctx, mu=-1)
+    wlEdges = lw.compute_wavelength_edges(ctx)
+    wavelength = ctx.spect.wavelength
+    ca = CaII()
+    h = H_6()
+
+    spec = gridspec.GridSpec(nrows=2, ncols=7, width_ratios=[15, 1, 15, 1, 2, 15, 1])
 
     ax = fig.add_subplot(spec[0, 0])
+    line = h.lines[4]
+    waveRange = (-0.2, 0.2)
+    lambda0 = line.lambda0
+    lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
+    higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
+    maxVal = np.max(fullCfn)
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
+                  cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+    xlim = ax.get_xlim()
+    ax.set_ylim(None, 2)
+    haRange = (655, 657)
+    ax.plot(wavelength - lambda0, tau1_line(fullTau, zN / 1e6), 'r', alpha=0.5)
+    factQs = compute_scale_factors(wavelength, dataRad['I'][0, :, 1, positionIdx],
+                                   haRange, ax.get_ylim())
+    fact1 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 1, positionIdx],
+                                   haRange, ax.get_ylim())
+    fact2 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 3, positionIdx],
+                                   haRange, ax.get_ylim())
+    fact = min_combine_scale_factors(min_combine_scale_factors(factQs, fact1), fact2)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][0, :, 1, positionIdx], fact), '--', c='k', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx], fact), c='C1', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
+    ax.set_xlim(xlim)
+    ax.set_ylabel('$z$ [Mm]')
+    ax.text(-0.19, 1.96, r'H$\alpha$', va='top', ha='left')
+
+    ax = fig.add_subplot(spec[0, 2])
     mesh = ax.pcolormesh(xEdges, zEdges, hChangeU, vmin=-vmaxAmpHU, vmax=vmaxAmpHU,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     # ax.set_xlabel('$x$ [Mm]')
-    ax.set_ylabel('$z$ [Mm]')
+    ax.set_yticklabels([])
     ax.text(1.85, -0.00, 'H n={}'.format(hIdxU), va='bottom', ha='right')
-    ax.set_xlim(None, 1.9)
+    # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[0, 1])
+    ax = fig.add_subplot(spec[0, 3])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
-    ax = fig.add_subplot(spec[0, 3])
+    ax = fig.add_subplot(spec[0, 5])
     mesh = ax.pcolormesh(xEdges, zEdges, hChangeL, vmin=-vmaxAmpHL, vmax=vmaxAmpHL,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
@@ -659,43 +835,72 @@ def plot_rel_change_pops(fig, data, time, hIdxU, hIdxL, caIdxU, caIdxL):
     # ax.set_ylabel('$z$ [Mm]')
     ax.set_yticklabels([])
     ax.text(1.85, -0.00, 'H n={}'.format(hIdxL), va='bottom', ha='right')
-    ax.set_xlim(None, 1.9)
+    # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[0, 4])
+    ax = fig.add_subplot(spec[0, 6])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[1, 0])
+    line = ca.lines[-1]
+    waveRange = (-0.1, 0.1)
+    lambda0 = line.lambda0
+    lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
+    higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
+    maxVal = np.max(fullCfn)
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
+                  cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+    xlim = ax.get_xlim()
+    caRange = (854.2444, 854.6444)
+    ax.set_ylim(None, 2)
+    factQs = compute_scale_factors(wavelength, dataRad['I'][0, :, 1, positionIdx], caRange, ax.get_ylim())
+    fact1 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 1, positionIdx], caRange, ax.get_ylim())
+    fact2 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 3, positionIdx], caRange, ax.get_ylim())
+    fact = min_combine_scale_factors(min_combine_scale_factors(factQs, fact1), fact2)
+    ax.plot(wavelength - lambda0, tau1_line(fullTau, zN / 1e6), 'r', alpha=0.5)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][0, :, 1, positionIdx], fact), '--', c='k', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx], fact), c='C1', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
+    ax.set_xlim(xlim)
+    ax.text(-0.095, 1.96, r'Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre}', va='top', ha='left')
+    ax.set_ylabel('$z$ [Mm]')
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
+
+    ax = fig.add_subplot(spec[1, 2])
     mesh = ax.pcolormesh(xEdges, zEdges, caChangeU, vmin=-vmaxAmpCaU, vmax=vmaxAmpCaU,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
-    # ax.set_yticklabels([])
-    ax.set_ylabel('$z$ [Mm]')
+    ax.set_yticklabels([])
     ax.set_xlabel('$x$ [Mm]')
     ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxU), va='bottom', ha='right')
-    ax.set_xlim(None, 1.9)
+    # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[1, 1])
+    ax = fig.add_subplot(spec[1, 3])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
-    ax = fig.add_subplot(spec[1, 3])
+    ax = fig.add_subplot(spec[1, 5])
     mesh = ax.pcolormesh(xEdges, zEdges, caChangeL, vmin=-vmaxAmpCaL, vmax=vmaxAmpCaL,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     ax.set_yticklabels([])
     ax.set_xlabel('$x$ [Mm]')
     ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxL), va='bottom', ha='right')
-    ax.set_xlim(None, 1.9)
+    # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[1, 4])
+    ax = fig.add_subplot(spec[1, 6])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
 
-dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_40_nr_1stColCopy_besser_pops_thesis.zip'))
+atmost = read_atmost(ch2DRT.data_file('atmost_F9.dat'))
+atmost.to_SI()
+dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-plot_rel_change_pops(fig, dataPops, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('UpperLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Relative Changes in the atomic populations from the initial solution at t=\SI{10}{\second} for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing.'
