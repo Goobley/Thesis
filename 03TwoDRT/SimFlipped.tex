@@ -1,0 +1,52 @@
+
+% \tikzset{IntensitySemi/.pic={
+%         code={
+%             \draw[->] (0,0) -- (22.5:1cm);
+%             \draw[->] (0,0) -- (67.5:1cm);
+%             \draw[->] (0,0) -- (112.5:1cm);
+%             \draw[->] (0,0) -- (157.5:1cm);
+%             \draw[draw opacity=0.4] (0.7,0) arc(0:180:0.7);
+%   }}
+% }
+
+\begin{tikzpicture}[line width=1pt, >=latex]
+
+% \path (1.667,10) pic[color=TolBlue] {IntensitySemi};
+% \path (5,10) pic[color=TolBlue] {IntensitySemi};
+% \path (8.333,10) pic[color=TolBlue] {IntensitySemi};
+
+\node[draw=black, rectangle, fill=TolRed!70, minimum width=2cm, minimum height=5cm, anchor=south] (RadynBox) at (-1, 0) {};
+\node[draw, rectangle, bottom color=yellow!60, top color=TolRed, anchor=south west, minimum width=5cm, minimum height=5cm] (Atmosphere) at (0,0) {Simulated Atmosphere};
+\node[draw, rectangle, bottom color=yellow!60, top color=TolRed, anchor=south east, minimum width=5cm, minimum height=5cm] (AtmosphereFlipped) at (-2,0) {Reflected Atmosphere};
+
+\draw[->, color=TolBlue] (2, 5) -- ++(72:1);
+\draw[->, color=TolBlue] (-4, 5) -- ++(72:2.75);
+\draw[->, color=TolMagenta] (2, 5) -- ++(108:1.25);
+
+\draw[color=TolGrey, dashed] (-1, -1) -- (-1, 6);
+\draw[color=TolGrey, dashed] (2, 4.5) -- (2, 6);
+
+\draw (3, 6) -- ++(162:7);
+\node[rotate=-18, anchor=center] (InstrumentLabel) at (0,7.4) {Instrument Observing Plane};
+
+% \draw [<->] (11cm, 0) node[below] {$x$} -- (0,0) -- (0, 11cm) node[left] {$z$};
+% \node[rotate=90, opacity=0.7] at (-0.25, 5) {Boundary imposed from flare model};
+% \node[rotate=90, opacity=0.7] at (10.4, 5) {Boundary imposed from quiet sun model};
+% \draw [<->] (0, -0.2) -- (10, -0.2);
+% \node at (5, -0.5) {\SI{2}{\mega\metre}};
+% \node at (5, 11.2) {\color{TolBlue} Outgoing Radiation};
+
+% \path (1.667,0) pic[] {IntensitySemi};
+% \path (5,0) pic[] {IntensitySemi};
+% \path (8.333,0) pic[] {IntensitySemi};
+
+% \path (0, 1.667) pic[rotate=270] {IntensitySemi};
+% \path (0, 5) pic[rotate=270] {IntensitySemi};
+% \path (0, 8.333) pic[rotate=270] {IntensitySemi};
+
+% \path (10, 1.667) pic[rotate=90] {IntensitySemi};
+% \path (10, 5) pic[rotate=90] {IntensitySemi};
+% \path (10, 8.333) pic[rotate=90] {IntensitySemi};
+
+
+\end{tikzpicture}

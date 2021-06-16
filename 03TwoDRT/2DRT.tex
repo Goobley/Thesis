@@ -446,6 +446,22 @@ To minimise these effects we copy the flare atmosphere into this first column, a
 These populations are then consistent with the adjacent plane-parallel atmosphere and the radiation emerging from it which is used as a fixed boundary condition.
 There should not be any need to perform the same process at the quiet sun boundary, as it is placed \SI{2}{\mega\metre} away and should change very little over the course of the simulation, remaining consistent on both sides of the boundary.
 
+This configuration produces the outgoing intensity at 12 different angles from each of the 41 cells in $x$.
+We can use the symmetric definition of these to produce the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
+This is shown in Fig.~\ref{Fig:2DSimFlipped}; for an observation inclined as shown we are observing the radiation along the blue arrows.
+For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.
+
+\begin{figure}
+\centering
+\subimport{03TwoDRT/}{SimFlipped}
+\caption{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the blue arrow from the reflected atmosphere is the same as that from the magenta arrow in the simulated atmosphere.}
+\label{Fig:2DSimFlipped}
+\end{figure}
+
+We will focus primarily on these inclined observations as flares are extremely unlikely to occur at disc centre and the effects of inclination are therefore important.
+Even a slight inclination can have a large effect, and in the following we will focus primarily on the most vertical ray present in our quadrature, with an angle of \SI{18}{\degree} to the surface normal.
+Only 1/25 of the visible solar disc has a viewing angle smaller than this, so inclination effects will be at least this significant for the majority of observed flares.
+
 In this simulation we use the same model atoms as the previous chapter, with both hydrogen and calcium being set as active species.
 This simulation is carried out for two different flare models illuminating the 2D slab; the same F9 and F10 models of Chapter~\ref{Chap:TimeDepRt} (including the Lyman line photoionisation effects!).
 We will now showcase the results of these simulations, looking at both the observable effects and the population changes internal to the slab, focusing on the \Ha{} and \CaLine{} spectral lines, before comparing these to observations taken with the CRISP instrument on the SST.
@@ -459,14 +475,10 @@ The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU h
 
 \subsection{Observed Radiation}
 
-Looking first at the F9 simulation in Fig. \TODO{} we show the variation in intensity against the background, as a function of time from the onset of heating and the horizontal distance from the flaring boundary, at the three wavelengths indicated by vertical lines in the right-hand panel.
-The outgoing radiation in the right-hand panel is taken taken from a viewing angle of \TODO{}, at a horizontal distance of \SI{100}{\kilo\metre} from the flare boundary.
 
-\TODO{Preprocess data to make these plots}
+% Is there a way we can characterise the scattering? Destruction probability?
 
-Is there a way we can characterise the scattering? Destruction probability?
-
-Flipping viewing angle is the same as observing symmetric point E/W.
+% Flipping viewing angle is the same as observing symmetric point E/W. Make viewing angle diagram and discuss.
 
 \begin{pycode}[2DRT]
 import zarr
@@ -575,7 +587,7 @@ lFig.caption = r'\Ha{} for 2D F9 Case.'
 
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2DHaF9')|
+% \py[2DRT]|ch2DRT.get_figure('2DHaF9')|
 
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
@@ -586,7 +598,7 @@ lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 Case.'
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
+% \py[2DRT]|ch2DRT.get_figure('2DCaF9')|
 
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
@@ -598,7 +610,7 @@ lFig = ch2DRT.save_figure('2DHaF9Away', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F9 Case. Away from ribbon.'
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2DHaF9Away')|
+% \py[2DRT]|ch2DRT.get_figure('2DHaF9Away')|
 
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
@@ -609,7 +621,111 @@ lFig = ch2DRT.save_figure('2DCaF9Away', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 Case. Away from ribbon'
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2DCaF9Away')|
+% \py[2DRT]|ch2DRT.get_figure('2DCaF9Away')|
+
+\begin{pycode}[2DRT]
+def plot_2d_rad(ax, dataRad, time, waveRange):
+    wavelength = dataRad['wavelength']
+    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
+    x = dataRad['xAxis'][...] / 1e6
+    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
+
+    timeIdx = np.searchsorted(dataRad['time'][...], time)
+    waveCentre = 0.5 * (waveRange[0] + waveRange[1])
+
+    Itowards = dataRad['I'][timeIdx, :, 1, :]
+    Iaway = dataRad['I'][timeIdx, :, 3, :]
+    Imax = max(dataRad['I'][:, :, 1, :].max(), dataRad['I'][:, :, 3, :].max())
+    Imin = min(dataRad['I'][:, :, 1, :].min(), dataRad['I'][:, :, 3, :].min())
+    ax.pcolormesh(wavelengthEdges - waveCentre, xEdges, Itowards.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentre, -xEdges, Iaway.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlim(waveRange[0] - waveCentre, waveRange[1] - waveCentre)
+
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+waveRangeHa = (656.376, 656.576)
+plot_2d_rad(ax[0,0], dataRad, 5, waveRangeHa)
+ax[0,0].set_ylabel('$x$ [Mm]')
+ax[0,0].set_title('5 s')
+ax[0,0].set_xticklabels([])
+plot_2d_rad(ax[0,1], dataRad, 10, waveRangeHa)
+ax[0,1].set_title('10 s')
+ax[0,1].set_xticklabels([])
+ax[0,1].set_yticklabels([])
+plot_2d_rad(ax[1,0], dataRad, 15, waveRangeHa)
+ax[1,0].set_title('15 s')
+ax[1,0].set_ylabel('$x$ [Mm]')
+ax[1,0].set_xlabel('$\Delta\lambda$ [nm]')
+plot_2d_rad(ax[1,1], dataRad, 25, waveRangeHa)
+ax[1,1].set_title('25 s')
+ax[1,1].set_xlabel('$\Delta\lambda$ [nm]')
+ax[1,1].set_yticklabels([])
+
+lFig = ch2DRT.save_figure('HaFull2dPlot', fig, fext='.pgf', dpi=500)
+lFig.caption = r"\Ha{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
+
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+waveRangeCa = (854.3444, 854.5444)
+plot_2d_rad(ax[0,0], dataRad, 5, waveRangeCa)
+ax[0,0].set_ylabel('$x$ [Mm]')
+ax[0,0].set_title('5 s')
+ax[0,0].set_xticklabels([])
+plot_2d_rad(ax[0,1], dataRad, 10, waveRangeCa)
+ax[0,1].set_title('10 s')
+ax[0,1].set_xticklabels([])
+ax[0,1].set_yticklabels([])
+plot_2d_rad(ax[1,0], dataRad, 15, waveRangeCa)
+ax[1,0].set_title('15 s')
+ax[1,0].set_ylabel('$x$ [Mm]')
+ax[1,0].set_xlabel('$\Delta\lambda$ [nm]')
+plot_2d_rad(ax[1,1], dataRad, 25, waveRangeCa)
+ax[1,1].set_title('25 s')
+ax[1,1].set_xlabel('$\Delta\lambda$ [nm]')
+ax[1,1].set_yticklabels([])
+
+lFig = ch2DRT.save_figure('CaFull2dPlot', fig, fext='.pgf', dpi=500)
+lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('HaFull2dPlot')|
+
+The emergent radiation from the F9 simulation is shown for \Ha{} and \CaLine{} in Figs.~\ref{Fig:HaFull2dPlot} and \ref{Fig:CaFull2dPlot} respectively.
+These are presented as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$.
+Here we assume that the flaring atmosphere has infinitesimal width and is shown with the horizontal red line.
+The intensity scale is constant for all timesteps for each line.
+Immediately in both of these figures we see a large asymmetry between the observation of each side of the flare.
+This is likely due to the rays observed from positive $x$ both scattering light from the flare and directly intersecting the flaring atmosphere.
+There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
+Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
+
+We note that for both spectral lines the far wings and continuum remain constant throughout the simulation.
+This will be discussed more later, when the effects on the populations are investigated.
+
+\def\regiona{$0-\SI{0.5}{\mega\metre}$}
+
+\py[2DRT]|ch2DRT.get_figure('CaFull2dPlot')|
+
+Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remained of the simulation.
+In the negative $x$ region we see that the line core is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
+The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is driven into emission in the $0-\SI{0.5}{\mega\metre}$ region and remains in absorption, although enhanced through the rest of this region as it smoothly transitions back to its quiet sun shape.
+A slight asymmetry of the red wing starts to appear here in the $0-\SI{0.5}{\mega\metre}$ region.
+The negative $x$ region remains similar to $t=\SI{5}{\second}$ although the line core is less enhanced immediately adjacent to the flare.
+Some time after the heating has ended ($t=\SI{15}{\second}$ and $t=\SI{25}{\second}$), the brightening in the blue wing over the \regiona{} region is now a dimming, but there remains an enhancement in the red wing.
+The remainder of these timesteps remain similer to the $t=\SI{10}{\second}$ line profile, presenting an enhanced core (remaining in absorption) that slowly returns to its quiet sun form as distance from the flare illumination increases.
+
+The \CaLine{} line profiles in the F9 simulation shown in Fig.~\ref{Fig:CaFull2dPlot} tell a similar story to the \Ha{} line profiles, although the line width does not vary noticeably throughout the simulation.
+The line is strongly enhanced in emission over the \regiona{} region for $t=\SI{5}{\second}$ and $t=\SI{10}{\second}$, with a slight red asymmetry.
+At later times this line remains in emission with a significant red asymmetry.
+Throughout the simulation the line smoothly transitions back from its enhanced shape to its quiet sun profile at the $x=\SI{2}{\mega\metre}$ boundary.
+The negative $x$ region presents slight core enhancement, stronger during heating, before decaying slowly after heating.
+
+\TODO{F10 results.}
+\TODO{Where do the ``wings'' start?}
+
+We see that these optical line profiles can present significant enhancement up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
+There are only modest changes for viewing angles where this is not the case (the negative $x$ region).
+In both cases the line wings do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
+
 
 \subsection{Population Changes}
 
@@ -903,7 +1019,7 @@ fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale
 plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('UpperLevelsT10', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Relative Changes in the atomic populations from the initial solution at t=\SI{10}{\second} for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing.'
+lFig.caption = r"Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
 
 \end{pycode}
 
