@@ -722,9 +722,151 @@ The negative $x$ region presents slight core enhancement, stronger during heatin
 \TODO{F10 results.}
 \TODO{Where do the ``wings'' start?}
 
-We see that these optical line profiles can present significant enhancement up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
+We see that these optical line profiles can present significant core enhancements up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
 There are only modest changes for viewing angles where this is not the case (the negative $x$ region).
 In both cases the line wings do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
+
+\subsubsection{Importance of time-dependence}
+
+Due to the need to solve the radiative transfer problem at every timestep in the \Radyn{} simulation, the full time-dependent treatment is extremely computationally intensive.
+If these effects are not important then the style of simulation presented here can be accelerated dramatically by performing a statistical equilibrium solution for the slab illuminated by the flaring boundary at each timestep of interest (which is likely to be many fewer than the total number of timesteps needed for the time-dependent solution).
+
+\begin{pycode}[2DRT]
+# NOTE(cmo): This is just the direct MsLw2d.zarr that came out of our
+# simulation doing 0 and then jumping to 10s. Needs special handling, compared
+# to other preprocessed ones.
+statEq2d = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t10_1stColCopy_besser_MsLw2d_thesis.zip'))
+
+def plot_stat_eq_comparison(fig, dataRadTd, dataRad, waveRange):
+    wavelength = dataRad['SimParams/wavelength']
+    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
+    x = dataRad['SimParams/xAxis'][...] / 1e6
+    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
+
+    xTd = dataRadTd['xAxis'][...] / 1e6
+    xEdgesTd = np.concatenate(([xTd[0]], 0.5 * (xTd[1:] + xTd[:-1]), [xTd[-1]]))
+
+    timeIdx = 1
+    timeTd = 10.0
+    timeIdxTd = np.searchsorted(dataRadTd['time'][...], timeTd)
+
+    Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
+    ItowardsTd = dataRadTd['I'][timeIdxTd, :, 1, :]
+    Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
+    IawayTd = dataRadTd['I'][timeIdxTd, :, 3, :]
+
+    minWlIdx = np.searchsorted(wavelength, waveRange[0]) - 1
+    maxWlIdx = np.searchsorted(wavelength, waveRange[1]) + 1
+    Imax = max(Itowards[minWlIdx:maxWlIdx].max(), Iaway[minWlIdx:maxWlIdx].max())
+    Imin = min(Itowards[minWlIdx:maxWlIdx].min(), Iaway[minWlIdx:maxWlIdx].min())
+    spec = gridspec.GridSpec(nrows=1, ncols=2)
+    ax = fig.add_subplot(spec[0])
+
+    ax.pcolormesh(wavelengthEdges, xEdges, Itowards.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges, -xEdges, Iaway.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlim(*waveRange)
+    ax.set_title('Statistical Equilibrium')
+    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_ylabel('$x$ [Mm]')
+
+    ax = fig.add_subplot(spec[1])
+    ax.pcolormesh(wavelengthEdges, xEdgesTd, ItowardsTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges, -xEdgesTd, IawayTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlim(*waveRange)
+    ax.set_title('Time-Dependent')
+    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_yticklabels([])
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_stat_eq_comparison(fig, dataRad, statEq2d, (656.376, 656.576))
+
+lFig = ch2DRT.save_figure('2dCompareStatEqTimeDep', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for two-dimensional slab case.'
+
+from scipy.integrate import trapezoid
+import astropy.units as u
+def plot_integrated_line_intensity(fig, dataRadTd, dataRad, centralWavelength, halfWidth):
+    wavelength = dataRad['SimParams/wavelength']
+    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
+    x = dataRad['SimParams/xAxis'][...] / 1e6
+    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
+
+    xTd = dataRadTd['xAxis'][...] / 1e6
+    xEdgesTd = np.concatenate(([xTd[0]], 0.5 * (xTd[1:] + xTd[:-1]), [xTd[-1]]))
+
+    timeIdx = 1
+    timeTd = 10.0
+    timeIdxTd = np.searchsorted(dataRadTd['time'][...], timeTd)
+
+    Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
+    ItowardsTd = dataRadTd['I'][timeIdxTd, :, 1, :]
+    Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
+    IawayTd = dataRadTd['I'][timeIdxTd, :, 3, :]
+
+    waveRange = (centralWavelength - halfWidth, centralWavelength + halfWidth)
+    minWlIdx = np.searchsorted(wavelength, waveRange[0]) - 1
+    maxWlIdx = np.searchsorted(wavelength, waveRange[1]) + 1
+
+    intItowards = []
+    for xi in range(Itowards.shape[1]):
+        intItowards.append(-trapezoid(Itowards[minWlIdx:maxWlIdx, xi],
+                           (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                      equivalencies=u.spectral())).value)
+    intIaway = []
+    for xi in range(Iaway.shape[1]):
+        intIaway.append(-trapezoid(Iaway[minWlIdx:maxWlIdx, xi],
+                        (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                   equivalencies=u.spectral())).value)
+    intItowardsTd = []
+    for xi in range(ItowardsTd.shape[1]):
+        intItowardsTd.append(-trapezoid(ItowardsTd[minWlIdx:maxWlIdx, xi],
+                             (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                        equivalencies=u.spectral())).value)
+    intIawayTd = []
+    for xi in range(IawayTd.shape[1]):
+        intIawayTd.append(-trapezoid(IawayTd[minWlIdx:maxWlIdx, xi],
+                          (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                     equivalencies=u.spectral())).value)
+
+    ax = fig.gca()
+    ax.plot(x, intItowards, c='C0', label='Statistical Equilibrium')
+    ax.plot(-x, intIaway, c='C0')
+    ax.plot(x, intItowardsTd, c='C1', label='Time-Dependent')
+    ax.plot(-x, intIawayTd, c='C1')
+    ax.set_ylabel(r'Intensity [\si{\joule\per\second\per\square\metre\per\steradian}]')
+    ax.set_xlabel('$x$ [Mm]')
+    ax.legend(frameon=False)
+
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5))
+plot_integrated_line_intensity(fig, dataRad, statEq2d, 656.476, 0.2)
+lFig = ch2DRT.save_figure('2dCompareIntegratedHa', fig, fext='.pgf')
+lFig.caption = r'Integrated intensity of H$\alpha$ lines shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep} as a function of $x$ position.'
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5))
+plot_integrated_line_intensity(fig, dataRad, statEq2d, 854.4444, 0.1)
+lFig = ch2DRT.save_figure('2dCompareIntegratedCa', fig, fext='.pgf')
+lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre} lines treated with time dependence and statistical equilibrium as a function of $x$ position, analagous to Fig.~\ref{Fig:2dCompareIntegratedHa}.'
+
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDep')|
+\py[2DRT]|ch2DRT.get_figure('2dCompareIntegratedHa')|
+\py[2DRT]|ch2DRT.get_figure('2dCompareIntegratedCa')|
+
+Statistical equilibrium and time-dependent solutions for the \Ha{} line at $t=\SI{10}{\second}$ in the F9 simulation are shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep}.
+The \regiona{} region appears similar in both cases, but there are significant differences in the line width and core depth outside of these regions.
+It is difficult to directly compare these plots, however the effect is clear when the intensity in this line is integrated and plotted as a function of $x$ position.
+This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa}.
+The enhancment of \Ha{} and the region over which it is enhanced varies substantially between the two treatments, showing that for this line there is a clear need to perform this time-dependent treatment.
+There is significantly more intensity present in the line in the $0.5-\SI{2}{\mega\metre}$ region, as well as in the $-1.5-\SI{0}{\mega\metre}$ region.
+An equivalent comparison is shown for the \CaLine{} line in Fig.~\ref{Fig:2dCompareIntegratedCa}.
+The effect is less significant here, but nevertheless easily visually resolvable, and interestingly is the inverse of what is seen for the \Ha{} line, as there is less intensity in the time-dependent case than in the statistical equilibrium.
+
+In the wave-heated simulation of \citet{Carlsson2002} the settling time for Hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
+The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
 
 
 \subsection{Population Changes}
