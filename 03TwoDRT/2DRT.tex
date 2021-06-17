@@ -840,12 +840,12 @@ def plot_integrated_line_intensity(fig, dataRadTd, dataRad, centralWavelength, h
     ax.legend(frameon=False)
 
 
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5))
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_integrated_line_intensity(fig, dataRad, statEq2d, 656.476, 0.2)
 lFig = ch2DRT.save_figure('2dCompareIntegratedHa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of H$\alpha$ lines shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep} as a function of $x$ position.'
 
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5))
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_integrated_line_intensity(fig, dataRad, statEq2d, 854.4444, 0.1)
 lFig = ch2DRT.save_figure('2dCompareIntegratedCa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre} lines treated with time dependence and statistical equilibrium as a function of $x$ position, analagous to Fig.~\ref{Fig:2dCompareIntegratedHa}.'
@@ -865,7 +865,7 @@ There is significantly more intensity present in the line in the $0.5-\SI{2}{\me
 An equivalent comparison is shown for the \CaLine{} line in Fig.~\ref{Fig:2dCompareIntegratedCa}.
 The effect is less significant here, but nevertheless easily visually resolvable, and interestingly is the inverse of what is seen for the \Ha{} line, as there is less intensity in the time-dependent case than in the statistical equilibrium.
 
-In the wave-heated simulation of \citet{Carlsson2002} the settling time for Hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
+In the wave-heated \Radyn{} simulation of \citet{Carlsson2002} the settling time for Hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
 The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
 
 
