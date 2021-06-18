@@ -787,7 +787,7 @@ lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatm
 
 from scipy.integrate import trapezoid
 import astropy.units as u
-def plot_integrated_line_intensity(fig, dataRadTd, dataRad, centralWavelength, halfWidth):
+def plot_integrated_line_intensity(fig, dataRadTd, dataRad, dataRad15, centralWavelength, halfWidth):
     wavelength = dataRad['SimParams/wavelength']
     wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
     x = dataRad['SimParams/xAxis'][...] / 1e6
@@ -799,54 +799,80 @@ def plot_integrated_line_intensity(fig, dataRadTd, dataRad, centralWavelength, h
     timeIdx = 1
     timeTd = 10.0
     timeIdxTd = np.searchsorted(dataRadTd['time'][...], timeTd)
+    timeIdxTd15 = np.searchsorted(dataRadTd['time'][...], 15)
 
     Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
+    Itowards15 = dataRad15['SimOutput/Radiation/I'][timeIdx, :, 5, :]
     ItowardsTd = dataRadTd['I'][timeIdxTd, :, 1, :]
+    ItowardsTd15 = dataRadTd['I'][timeIdxTd15, :, 1, :]
     Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
+    Iaway15 = dataRad15['SimOutput/Radiation/I'][timeIdx, :, 11, :]
     IawayTd = dataRadTd['I'][timeIdxTd, :, 3, :]
+    IawayTd15 = dataRadTd['I'][timeIdxTd15, :, 3, :]
 
     waveRange = (centralWavelength - halfWidth, centralWavelength + halfWidth)
     minWlIdx = np.searchsorted(wavelength, waveRange[0]) - 1
     maxWlIdx = np.searchsorted(wavelength, waveRange[1]) + 1
 
     intItowards = []
+    intItowards15 = []
     for xi in range(Itowards.shape[1]):
         intItowards.append(-trapezoid(Itowards[minWlIdx:maxWlIdx, xi],
                            (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
                                       equivalencies=u.spectral())).value)
+        intItowards15.append(-trapezoid(Itowards15[minWlIdx:maxWlIdx, xi],
+                           (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                      equivalencies=u.spectral())).value)
     intIaway = []
+    intIaway15 = []
     for xi in range(Iaway.shape[1]):
         intIaway.append(-trapezoid(Iaway[minWlIdx:maxWlIdx, xi],
                         (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
                                    equivalencies=u.spectral())).value)
+        intIaway15.append(-trapezoid(Iaway15[minWlIdx:maxWlIdx, xi],
+                        (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                   equivalencies=u.spectral())).value)
     intItowardsTd = []
+    intItowardsTd15 = []
     for xi in range(ItowardsTd.shape[1]):
         intItowardsTd.append(-trapezoid(ItowardsTd[minWlIdx:maxWlIdx, xi],
                              (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
                                         equivalencies=u.spectral())).value)
+        intItowardsTd15.append(-trapezoid(ItowardsTd15[minWlIdx:maxWlIdx, xi],
+                             (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                        equivalencies=u.spectral())).value)
     intIawayTd = []
+    intIawayTd15 = []
     for xi in range(IawayTd.shape[1]):
         intIawayTd.append(-trapezoid(IawayTd[minWlIdx:maxWlIdx, xi],
                           (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
                                      equivalencies=u.spectral())).value)
+        intIawayTd15.append(-trapezoid(IawayTd15[minWlIdx:maxWlIdx, xi],
+                          (wavelength[minWlIdx:maxWlIdx] << u.nm).to(u.Hz,
+                                     equivalencies=u.spectral())).value)
 
     ax = fig.gca()
-    ax.plot(x, intItowards, c='C0', label='Statistical Equilibrium')
+    ax.plot(x, intItowards, c='C0', label='Statistical Equilibrium ($t=\SI{10}{\second}$)')
     ax.plot(-x, intIaway, c='C0')
-    ax.plot(x, intItowardsTd, c='C1', label='Time-Dependent')
+    ax.plot(x, intItowards15, '--', c='C0', label='Statistical Equilibrium ($t=\SI{15}{\second}$)')
+    ax.plot(-x, intIaway15, '--', c='C0')
+    ax.plot(x, intItowardsTd, c='C1', label='Time-Dependent ($t=\SI{10}{\second}$)')
     ax.plot(-x, intIawayTd, c='C1')
+    ax.plot(x, intItowardsTd15, '--', c='C1', label='Time-Dependent ($t=\SI{15}{\second}$)')
+    ax.plot(-x, intIawayTd15, '--', c='C1')
     ax.set_ylabel(r'Intensity [\si{\joule\per\second\per\square\metre\per\steradian}]')
     ax.set_xlabel('$x$ [Mm]')
     ax.legend(frameon=False)
 
 
+statEq2d15= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-plot_integrated_line_intensity(fig, dataRad, statEq2d, 656.476, 0.2)
+plot_integrated_line_intensity(fig, dataRad, statEq2d, statEq2d15, 656.476, 0.2)
 lFig = ch2DRT.save_figure('2dCompareIntegratedHa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of H$\alpha$ lines shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep} as a function of $x$ position.'
 
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-plot_integrated_line_intensity(fig, dataRad, statEq2d, 854.4444, 0.1)
+plot_integrated_line_intensity(fig, dataRad, statEq2d, statEq2d15, 854.4444, 0.1)
 lFig = ch2DRT.save_figure('2dCompareIntegratedCa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre} lines treated with time dependence and statistical equilibrium as a function of $x$ position, analagous to Fig.~\ref{Fig:2dCompareIntegratedHa}.'
 
@@ -859,14 +885,14 @@ lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre
 Statistical equilibrium and time-dependent solutions for the \Ha{} line at $t=\SI{10}{\second}$ in the F9 simulation are shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep}.
 The \regiona{} region appears similar in both cases, but there are significant differences in the line width and core depth outside of these regions.
 It is difficult to directly compare these plots, however the effect is clear when the intensity in this line is integrated and plotted as a function of $x$ position.
-This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa}.
+This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa} for both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$.
 The enhancment of \Ha{} and the region over which it is enhanced varies substantially between the two treatments, showing that for this line there is a clear need to perform this time-dependent treatment.
 There is significantly more intensity present in the line in the $0.5-\SI{2}{\mega\metre}$ region, as well as in the $-1.5-\SI{0}{\mega\metre}$ region.
 An equivalent comparison is shown for the \CaLine{} line in Fig.~\ref{Fig:2dCompareIntegratedCa}.
 The effect is less significant here, but nevertheless easily visually resolvable, and interestingly is the inverse of what is seen for the \Ha{} line, as there is less intensity in the time-dependent case than in the statistical equilibrium.
 
 In the wave-heated \Radyn{} simulation of \citet{Carlsson2002} the settling time for Hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
-The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
+The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but given the large difference between the treatments at both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$ it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
 
 
 \subsection{Population Changes}
@@ -877,7 +903,7 @@ from MsLightweaverAtoms import H_6, CaII
 from ReadAtmost import read_atmost
 import lightweaver as lw
 from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, OI_ord_atom, Si_atom, Al_atom, Fe_atom, FeI_atom, MgII_atom, N_atom, Na_atom, S_atom, CaII_atom, He_9_atom
-from matplotlib.colors import SymLogNorm
+from matplotlib.colors import SymLogNorm, LogNorm
 import os
 from contextlib import redirect_stdout
 
@@ -1040,7 +1066,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ca = CaII()
     h = H_6()
 
-    spec = gridspec.GridSpec(nrows=2, ncols=7, width_ratios=[15, 1, 15, 1, 2, 15, 1])
+    spec = gridspec.GridSpec(nrows=2, ncols=9, width_ratios=[15, 1, 15, 1, 15, 1, 2, 15, 1])
 
     ax = fig.add_subplot(spec[0, 0])
     line = h.lines[4]
@@ -1070,32 +1096,50 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
     ax.set_xlim(xlim)
     ax.set_ylabel('$z$ [Mm]')
-    ax.text(-0.19, 1.96, r'H$\alpha$', va='top', ha='left')
+    ax.text(-0.19, 1.96, r'H$\alpha$', va='top', ha='left', fontsize=10)
+    ax.text(0.19, 1.96, r'C$_\mathrm{I}$', va='top', ha='right', fontsize=10)
 
     ax = fig.add_subplot(spec[0, 2])
+    line = h.lines[4]
+    waveRange = (-0.2, 0.2)
+    lambda0 = line.lambda0
+    lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
+    higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
+    chiTau = np.log10((ctx.depthData.chi[:, -1, 1, :] / fullTau).T[:, lowerIdx:higherIdx])
+    maxVal = np.max(chiTau) - 9
+    minVal = np.min(chiTau)
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges,
+                  chiTau,
+                  cmap='Blues', vmin=minVal, vmax=maxVal, rasterized=True)
+    xlim = ax.get_xlim()
+    ax.set_ylim(None, 2)
+    ax.set_yticklabels([])
+    ax.text(0.19, 1.96, r'$\chi_\nu / \tau_\nu$', va='top', ha='right', fontsize=10)
+
+    ax = fig.add_subplot(spec[0, 4])
     mesh = ax.pcolormesh(xEdges, zEdges, hChangeU, vmin=-vmaxAmpHU, vmax=vmaxAmpHU,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     # ax.set_xlabel('$x$ [Mm]')
     ax.set_yticklabels([])
-    ax.text(1.85, -0.00, 'H n={}'.format(hIdxU), va='bottom', ha='right')
+    ax.text(1.85, -0.00, 'H n={}'.format(hIdxU), va='bottom', ha='right', fontsize=10)
     # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[0, 3])
+    ax = fig.add_subplot(spec[0, 5])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
-    ax = fig.add_subplot(spec[0, 5])
+    ax = fig.add_subplot(spec[0, 7])
     mesh = ax.pcolormesh(xEdges, zEdges, hChangeL, vmin=-vmaxAmpHL, vmax=vmaxAmpHL,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     # ax.set_xlabel('$x$ [Mm]')
     # ax.set_ylabel('$z$ [Mm]')
     ax.set_yticklabels([])
-    ax.text(1.85, -0.00, 'H n={}'.format(hIdxL), va='bottom', ha='right')
+    ax.text(1.85, -0.00, 'H n={}'.format(hIdxL), va='bottom', ha='right', fontsize=10)
     # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[0, 6])
+    ax = fig.add_subplot(spec[0, 8])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
@@ -1123,33 +1167,49 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
     ax.set_xlim(xlim)
-    ax.text(-0.095, 1.96, r'Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre}', va='top', ha='left')
+    ax.text(-0.095, 1.96, r'Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre}', va='top', ha='left', fontsize=10)
     ax.set_ylabel('$z$ [Mm]')
     ax.set_xlabel('$\Delta\lambda$ [nm]')
 
     ax = fig.add_subplot(spec[1, 2])
+    line = ca.lines[-1]
+    waveRange = (-0.1, 0.1)
+    lambda0 = line.lambda0
+    lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
+    higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
+    chiTau = np.log10((ctx.depthData.chi[:, -1, 1, :] / fullTau).T[:, lowerIdx:higherIdx])
+    maxVal = np.max(chiTau) - 9
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges,
+                  chiTau,
+                  cmap='Blues', vmax=maxVal, rasterized=True)
+    xlim = ax.get_xlim()
+    ax.set_ylim(None, 2)
+    ax.set_yticklabels([])
+    ax.set_xlabel(r'$\Delta\lambda$ [nm]')
+
+    ax = fig.add_subplot(spec[1, 4])
     mesh = ax.pcolormesh(xEdges, zEdges, caChangeU, vmin=-vmaxAmpCaU, vmax=vmaxAmpCaU,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     ax.set_yticklabels([])
     ax.set_xlabel('$x$ [Mm]')
-    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxU), va='bottom', ha='right')
+    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxU), va='bottom', ha='right', fontsize=10)
     # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[1, 3])
+    ax = fig.add_subplot(spec[1, 5])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
-    ax = fig.add_subplot(spec[1, 5])
+    ax = fig.add_subplot(spec[1, 7])
     mesh = ax.pcolormesh(xEdges, zEdges, caChangeL, vmin=-vmaxAmpCaL, vmax=vmaxAmpCaL,
                          cmap='RdBu_r', rasterized=True)
     ax.set_ylim(None, zMax / 1e6)
     ax.set_yticklabels([])
     ax.set_xlabel('$x$ [Mm]')
-    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxL), va='bottom', ha='right')
+    ax.text(1.85, -0.00, r'Ca\,\textsc{{ii}} n={}'.format(caIdxL), va='bottom', ha='right', fontsize=10)
     # ax.set_xlim(None, 1.9)
 
-    ax = fig.add_subplot(spec[1, 6])
+    ax = fig.add_subplot(spec[1, 8])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
@@ -1160,15 +1220,27 @@ dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
 plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
-lFig = ch2DRT.save_figure('UpperLevelsT10', fig, fext='.pgf', dpi=500)
+lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
 
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('UpperLevelsT10')|
+\py[2DRT]|ch2DRT.get_figure('2dLevelsT10')|
 
-Would it be good to compare these against the contribution function of these lines in the quiet atmosphere? Changes in core formation region, hence why no continuum or far wing changes. So yes, probably.
+To investigate how the flare's radiation field affects the plasma in our two-dimensional slab we can compare the atomic populations responsible for these spectral lines against their initial statistical equilibrium values.
+Fig.~\ref{Fig:2dLevelsT10} shows the contribution function $\mathrm{C}_\mathrm{I}$ in the first column, the effect of local opacity on the outgoing radiation $\chi_\nu/\tau_\nu$ in the second column, and the relative change of the upper and lower levels of the transitions considered from their initial statistical equilibrium values in the last two columns respectively.
+These properties are all shown at $t=\SI{10}{\second}$.
+The contribution function and local opacity effect are computed using the atmosphere in the plane-parallel flaring boundary condition, due to the difficulty formulating the contribution function in the two-dimensional slab, and representing the three-dimensional output of $\chi_\nu/\tau_\nu$.
+Nevertheless, these inform us of the primary line forming and absorbing regions.
+The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), and those observed from \SI{100}{\kilo\metre} on either side of the flaring kernel.
 
+There is an enhancement in the upper and lower levels of the \Ha{} transition in the upper chromosphere appearing deeper in the atmosphere (down to an altitude of \SI{1}{\mega\metre}) closer to the flaring boundary condtion.
+This enhancement will both reduce local absorption effects on the line and stimulate enhancements.
+The contribution function shows that ``horns'' of the \Ha{} line profile form deeper in the atmosphere than the line core.
+The depth of the enhancement in level populations decreases with distance from the flaring boundary, and corresponds with the disappearance of the ``horns'', especially beyond $x\approx\SI{0.5}{\mega\metre}$ where the line core is enhanced.
+This enhancement does not appear to be sufficient to directly create the ``horns'' in the \Ha{} profiles, as evidenced by the green line profile, but will interact with the light coming from the flaring boundary condition.
+
+\TODO{Effect on \Caii{} populations is much larger. Can't easily disentangle effects of populations from flare, but can easily see that the flaring effects penentrate deep into the slab.}
 
 \section{Observational Comparison}
 
