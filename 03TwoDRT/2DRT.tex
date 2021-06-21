@@ -470,7 +470,7 @@ We will now showcase the results of these simulations, looking at both the obser
 \section{Simulation Results}
 
 Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive to compute, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
-The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$10,000 CPU hours on the hercules machine \TODO{machines}.
+The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$8,000 CPU hours on the hercules machine \TODO{machines}.
 {\color{Red} The code for these simulations is present in the MsLightweaver repository on the RefinedGrid2d branch.} \TODO{DOI - when sims have rerun}.
 
 \subsection{Observed Radiation}
@@ -685,6 +685,51 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('CaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
+
+dataRadF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+waveRangeHa = (656.326, 656.626)
+plot_2d_rad(ax[0,0], dataRadF10, 5, waveRangeHa)
+ax[0,0].set_ylabel('$x$ [Mm]')
+ax[0,0].set_title('5 s')
+ax[0,0].set_xticklabels([])
+plot_2d_rad(ax[0,1], dataRadF10, 10, waveRangeHa)
+ax[0,1].set_title('10 s')
+ax[0,1].set_xticklabels([])
+ax[0,1].set_yticklabels([])
+plot_2d_rad(ax[1,0], dataRadF10, 15, waveRangeHa)
+ax[1,0].set_title('15 s')
+ax[1,0].set_ylabel('$x$ [Mm]')
+ax[1,0].set_xlabel('$\Delta\lambda$ [nm]')
+plot_2d_rad(ax[1,1], dataRadF10, 25, waveRangeHa)
+ax[1,1].set_title('25 s')
+ax[1,1].set_xlabel('$\Delta\lambda$ [nm]')
+ax[1,1].set_yticklabels([])
+
+lFig = ch2DRT.save_figure('HaFull2dPlotF10', fig, fext='.pgf', dpi=500)
+lFig.caption = r"\Ha{} intensity on both sides of the ``flare'' at different points during the F10 simulation."
+
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+waveRangeCa = (854.3444, 854.5444)
+plot_2d_rad(ax[0,0], dataRadF10, 5, waveRangeCa)
+ax[0,0].set_ylabel('$x$ [Mm]')
+ax[0,0].set_title('5 s')
+ax[0,0].set_xticklabels([])
+plot_2d_rad(ax[0,1], dataRadF10, 10, waveRangeCa)
+ax[0,1].set_title('10 s')
+ax[0,1].set_xticklabels([])
+ax[0,1].set_yticklabels([])
+plot_2d_rad(ax[1,0], dataRadF10, 15, waveRangeCa)
+ax[1,0].set_title('15 s')
+ax[1,0].set_ylabel('$x$ [Mm]')
+ax[1,0].set_xlabel('$\Delta\lambda$ [nm]')
+plot_2d_rad(ax[1,1], dataRadF10, 25, waveRangeCa)
+ax[1,1].set_title('25 s')
+ax[1,1].set_xlabel('$\Delta\lambda$ [nm]')
+ax[1,1].set_yticklabels([])
+
+lFig = ch2DRT.save_figure('CaFull2dPlotF10', fig, fext='.pgf', dpi=500)
+lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F10 simulation."
 \end{pycode}
 
 \py[2DRT]|ch2DRT.get_figure('HaFull2dPlot')|
@@ -721,6 +766,8 @@ The negative $x$ region presents slight core enhancement, stronger during heatin
 
 \TODO{F10 results.}
 \TODO{Where do the ``wings'' start?}
+\py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
+\py[2DRT]|ch2DRT.get_figure('CaFull2dPlotF10')|
 
 We see that these optical line profiles can present significant core enhancements up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
 There are only modest changes for viewing angles where this is not the case (the negative $x$ region).
