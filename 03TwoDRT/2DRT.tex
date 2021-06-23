@@ -749,6 +749,7 @@ This will be discussed more later, when the effects on the populations are inves
 \def\regiona{$0-\SI{0.5}{\mega\metre}$}
 
 \py[2DRT]|ch2DRT.get_figure('CaFull2dPlot')|
+\py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
 
 Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remained of the simulation.
 In the negative $x$ region we see that the line core is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
@@ -764,10 +765,15 @@ At later times this line remains in emission with a significant red asymmetry.
 Throughout the simulation the line smoothly transitions back from its enhanced shape to its quiet sun profile at the $x=\SI{2}{\mega\metre}$ boundary.
 The negative $x$ region presents slight core enhancement, stronger during heating, before decaying slowly after heating.
 
-\TODO{F10 results.}
-\TODO{Where do the ``wings'' start?}
-\py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
 \py[2DRT]|ch2DRT.get_figure('CaFull2dPlotF10')|
+
+The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.~\ref{Fig:HaFull2dPlotF10} and \ref{Fig:CaFull2dPlotF10} respectively.
+The results are similar to those from the F9 simulations, but mostly exaggerated.
+The line profiles in the \regiona{} region are substantially broader than those in the F9 simulation, which is not surprising, as much of this radiation comes from the flaring boundary condition, which is heated by a significantly more energetic beam.
+During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model, likely due to the higher velocities present in the flaring boundary.
+Instead of the enhancement seen in the F9 model, a broadening is present in the \Ha{} line profile over the $0.5-\SI{1}{\mega\metre}$ range.
+This is mirrored to some extent in the $-0.5 - \SI{0}{\mega\metre}$ region.
+Outisde of the \regiona{} range \CaLine{} appears to behave very similarly to the F9 case.
 
 We see that these optical line profiles can present significant core enhancements up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
 There are only modest changes for viewing angles where this is not the case (the negative $x$ region).
@@ -1113,7 +1119,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ca = CaII()
     h = H_6()
 
-    spec = gridspec.GridSpec(nrows=2, ncols=9, width_ratios=[15, 1, 15, 1, 15, 1, 2, 15, 1])
+    spec = gridspec.GridSpec(nrows=2, ncols=9, width_ratios=[15, 1, 15, 1, 15, 1, 3, 15, 1])
 
     ax = fig.add_subplot(spec[0, 0])
     line = h.lines[4]
@@ -1268,11 +1274,21 @@ fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale
 plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
-lFig.caption = r"Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
+lFig.caption = r"F9 Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
+
+atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
+atmost.to_SI()
+dataPops = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
+fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
+plot_rel_change_pops(fig, dataPops, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+
+lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
+lFig.caption = r"F10 Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
 
 \end{pycode}
 
 \py[2DRT]|ch2DRT.get_figure('2dLevelsT10')|
+\py[2DRT]|ch2DRT.get_figure('2dLevelsF10T10')|
 
 To investigate how the flare's radiation field affects the plasma in our two-dimensional slab we can compare the atomic populations responsible for these spectral lines against their initial statistical equilibrium values.
 Fig.~\ref{Fig:2dLevelsT10} shows the contribution function $\mathrm{C}_\mathrm{I}$ in the first column, the effect of local opacity on the outgoing radiation $\chi_\nu/\tau_\nu$ in the second column, and the relative change of the upper and lower levels of the transitions considered from their initial statistical equilibrium values in the last two columns respectively.
@@ -1282,12 +1298,32 @@ Nevertheless, these inform us of the primary line forming and absorbing regions.
 The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), and those observed from \SI{100}{\kilo\metre} on either side of the flaring kernel.
 
 There is an enhancement in the upper and lower levels of the \Ha{} transition in the upper chromosphere appearing deeper in the atmosphere (down to an altitude of \SI{1}{\mega\metre}) closer to the flaring boundary condtion.
-This enhancement will both reduce local absorption effects on the line and stimulate enhancements.
 The contribution function shows that ``horns'' of the \Ha{} line profile form deeper in the atmosphere than the line core.
 The depth of the enhancement in level populations decreases with distance from the flaring boundary, and corresponds with the disappearance of the ``horns'', especially beyond $x\approx\SI{0.5}{\mega\metre}$ where the line core is enhanced.
-This enhancement does not appear to be sufficient to directly create the ``horns'' in the \Ha{} profiles, as evidenced by the green line profile, but will interact with the light coming from the flaring boundary condition.
+Where the relative change is roughly similar in both the upper and lower levels of the \Ha{} line there will be both an increase in opacity, and an equivalent increase in emissivity, leading to no net change in the source function, which will contribute more significantly to the outgoing radiation due to the increase in opacity blocking light from deeper in the ray's path.
+This enhancement does not appear to be sufficient to directly create the ``horns'' in the \Ha{} profiles, as evidenced by the green line profile, but the increased source function in the higher temperature region of the upper chromosphere appears sufficient to significantly enhance the core of the line profile.
 
-\TODO{Effect on \Caii{} populations is much larger. Can't easily disentangle effects of populations from flare, but can easily see that the flaring effects penentrate deep into the slab.}
+The \Caii{} populations, shown in the lower row of Fig.~\ref{Fig:2dLevelsT10}, are much more dramatically affected than the hydrogen populations previously discussed.
+Both the upper and lower levels of the \CaLine{} spectral line are affected in the same region $1.25-\SI{1.75}{\mega\metre}$ at the flaring boundary condition, tapering off with increasing distance from this boundary.
+The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of $-20$.
+The lower level of this transition appears to be significantly more reduced than the upper level, which will lead to a dramatic reduction in the local opacity whilst the emissivity remains less affected.
+This will lead to an increase in the local source function as well as a reduction in the opacity affecting the line core radiation formed just below this level.
+
+An equivalent figure for the F10 simulation at $t=\SI{10}{\second}$ is shown in Fig.~\ref{Fig:2dLevelsF10T10}.
+Due to the increased magnitude of the the population changes in the transition region, it is harder to interpret the population change plots for the F10 model.
+The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this will not change the interpretation of the population effects on the line profile, which are corroborated by the line profiles shown in the left-most panel.
+
+\TODO{Check this for \Caii{} in notebook, and adjust scaling.}
+
+Despite the upper level of the \CaLine{} line appearing darker than the lower level, given the differences in scaling the lower level again appears to have reduced in population by a greater amount than the upper level.
+Thus, the same interpretation as that given to the F9 simulation applies to the \CaLine{} line over the $1.25-\SI{1.75}{\mega\metre}$ region.
+There is a secondary feature on these \Caii{} population relative change plots, an additional reduction in the $1-\SI{1.25}{\mega\metre}$ altitude region.
+This feature overlaps the core of the line contribution shown in the left-most panel, and appears to be a relatively similar reduction in both the upper and lower level populations, which would lead to a reduction in local opacity, whilst maintaining the same source funciton, similarly to the \Ha{} interpretation.
+Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick chromospheric layers above the core forming region.
+This reduction in local opacity appears to be well-validated by the extremely shallow core of the green line-profile in the first panel relative to the statistical equilibrium solution.
+
+It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.
+Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
 
 \section{Observational Comparison}
 
