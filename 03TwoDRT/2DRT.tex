@@ -1,4 +1,5 @@
 \chapter{Two-Dimensional Radiative Transfer}
+%TC:group pycode 0 0
 \begin{pycode}[2DRT]
 name = '2DRT'
 ch2DRT = texfigure.Manager(
@@ -467,9 +468,9 @@ This simulation is carried out for two different flare models illuminating the 2
 We will now showcase the results of these simulations, looking at both the observable effects and the population changes internal to the slab, focusing on the \Ha{} and \CaLine{} spectral lines, before comparing these to observations taken with the CRISP instrument on the SST.
 
 
-\section{Simulation Results}
+\section{Simulation Results}\label{Sec:2dSimResults}
 
-Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive to compute, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
+Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive than the plane-parallel models of the previous chapter, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
 The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$8,000 CPU hours on the hercules machine \TODO{machines}.
 {\color{Red} The code for these simulations is present in the MsLightweaver repository on the RefinedGrid2d branch.} \TODO{DOI - when sims have rerun}.
 
@@ -736,10 +737,11 @@ lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different
 
 The emergent radiation from the F9 simulation is shown for \Ha{} and \CaLine{} in Figs.~\ref{Fig:HaFull2dPlot} and \ref{Fig:CaFull2dPlot} respectively.
 These are presented as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$.
-Here we assume that the flaring atmosphere has infinitesimal width and is shown with the horizontal red line.
+The viewing angle to the local surface normal is~$\approx18.1\degree$ ($\mu_z\approx0.951$).
+Here we assume that the flaring atmosphere has infinitesimal width (in $x$) and is shown by the horizontal red line.
 The intensity scale is constant for all timesteps for each line.
 Immediately in both of these figures we see a large asymmetry between the observation of each side of the flare.
-This is likely due to the rays observed from positive $x$ both scattering light from the flare and directly intersecting the flaring atmosphere.
+This is likely due to the rays observed from positive $x$ encountering both scattered light from the flare and directly intersecting the flaring atmosphere.
 There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
 Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
 
@@ -751,17 +753,17 @@ This will be discussed more later, when the effects on the populations are inves
 \py[2DRT]|ch2DRT.get_figure('CaFull2dPlot')|
 \py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
 
-Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remained of the simulation.
+Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remainder of the simulation.
 In the negative $x$ region we see that the line core is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
-The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is driven into emission in the $0-\SI{0.5}{\mega\metre}$ region and remains in absorption, although enhanced through the rest of this region as it smoothly transitions back to its quiet sun shape.
+The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is driven into emission in the $0-\SI{0.5}{\mega\metre}$ region and remains in absorption (although enhanced) through the rest of this region as it smoothly transitions back to its quiet sun shape.
 A slight asymmetry of the red wing starts to appear here in the $0-\SI{0.5}{\mega\metre}$ region.
 The negative $x$ region remains similar to $t=\SI{5}{\second}$ although the line core is less enhanced immediately adjacent to the flare.
 Some time after the heating has ended ($t=\SI{15}{\second}$ and $t=\SI{25}{\second}$), the brightening in the blue wing over the \regiona{} region is now a dimming, but there remains an enhancement in the red wing.
-The remainder of these timesteps remain similer to the $t=\SI{10}{\second}$ line profile, presenting an enhanced core (remaining in absorption) that slowly returns to its quiet sun form as distance from the flare illumination increases.
+The remainder of these timesteps remain similar to the $t=\SI{10}{\second}$ line profile, presenting an enhanced core (remaining in absorption) that slowly returns to its quiet sun form as distance from the flare illumination increases.
 
 The \CaLine{} line profiles in the F9 simulation shown in Fig.~\ref{Fig:CaFull2dPlot} tell a similar story to the \Ha{} line profiles, although the line width does not vary noticeably throughout the simulation.
 The line is strongly enhanced in emission over the \regiona{} region for $t=\SI{5}{\second}$ and $t=\SI{10}{\second}$, with a slight red asymmetry.
-At later times this line remains in emission with a significant red asymmetry.
+At later times this line remains in emission with a more significant red asymmetry.
 Throughout the simulation the line smoothly transitions back from its enhanced shape to its quiet sun profile at the $x=\SI{2}{\mega\metre}$ boundary.
 The negative $x$ region presents slight core enhancement, stronger during heating, before decaying slowly after heating.
 
@@ -771,13 +773,13 @@ The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.
 The results are similar to those from the F9 simulations, but mostly exaggerated.
 The line profiles in the \regiona{} region are substantially broader than those in the F9 simulation, which is not surprising, as much of this radiation comes from the flaring boundary condition, which is heated by a significantly more energetic beam.
 During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model, likely due to the higher velocities present in the flaring boundary.
-Instead of the enhancement seen in the F9 model, a broadening is present in the \Ha{} line profile over the $0.5-\SI{1}{\mega\metre}$ range.
+In addition to the enhancement seen in the F9 model, more significant broadening is present in the \Ha{} line profile over the $0.5-\SI{1}{\mega\metre}$ range.
 This is mirrored to some extent in the $-0.5 - \SI{0}{\mega\metre}$ region.
 Outisde of the \regiona{} range \CaLine{} appears to behave very similarly to the F9 case.
 
-We see that these optical line profiles can present significant core enhancements up to almost \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
-There are only modest changes for viewing angles where this is not the case (the negative $x$ region).
-In both cases the line wings do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
+We see that these optical line profiles can present significant core enhancements up to \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
+There are only modest variations in the outgoing radiation for viewing angles where this is not the case (the negative $x$ region).
+In both cases the line wings and continuum levels do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
 
 \subsubsection{Importance of time-dependence}
 
@@ -940,12 +942,12 @@ The \regiona{} region appears similar in both cases, but there are significant d
 It is difficult to directly compare these plots, however the effect is clear when the intensity in this line is integrated and plotted as a function of $x$ position.
 This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa} for both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$.
 The enhancment of \Ha{} and the region over which it is enhanced varies substantially between the two treatments, showing that for this line there is a clear need to perform this time-dependent treatment.
-There is significantly more intensity present in the line in the $0.5-\SI{2}{\mega\metre}$ region, as well as in the $-1.5-\SI{0}{\mega\metre}$ region.
+There is significantly more intensity present in the line in the $0.5-\SI{2}{\mega\metre}$ region, as well as in the $-1.5-\SI{0}{\mega\metre}$ region when using the time-dependent treatment.
 An equivalent comparison is shown for the \CaLine{} line in Fig.~\ref{Fig:2dCompareIntegratedCa}.
 The effect is less significant here, but nevertheless easily visually resolvable, and interestingly is the inverse of what is seen for the \Ha{} line, as there is less intensity in the time-dependent case than in the statistical equilibrium.
 
 In the wave-heated \Radyn{} simulation of \citet{Carlsson2002} the settling time for Hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
-The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but given the large difference between the treatments at both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$ it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
+The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but given the large difference between these treatments at both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$ it seems prudent to adopt the time-dependent treatment by default when exploring this phenomenon in flares, and this position is supported by the differences shown in Figs.~\ref{Fig:2dCompareIntegratedHa} and \ref{Fig:2dCompareIntegratedCa}.
 
 
 \subsection{Population Changes}
@@ -1275,6 +1277,7 @@ plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdx
 
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"F9 Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
+lFig.placement = 'htbp'
 
 atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
 atmost.to_SI()
@@ -1284,6 +1287,7 @@ plot_rel_change_pops(fig, dataPops, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, ca
 
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"F10 Contribution functions for the \Ha{} and \CaLine{} lines in the first column with the $\tau=1$ line overlaid in red, the initial line profile in dashed, the ``downwind'' profile in green and ``upwind'' in orange. Relative Changes in the atomic populations from the initial solution at $t=\SI{10}{\second}$ for the upper and lower levels of \Ha{} in the upper plots, and \CaLine{} in the lower plots. The indices used for the levels refer to the level in the model atom used in \Lw{} with zero-indexing."
+lFig.placement = 'htbp'
 
 \end{pycode}
 
@@ -1291,7 +1295,7 @@ lFig.caption = r"F10 Contribution functions for the \Ha{} and \CaLine{} lines in
 \py[2DRT]|ch2DRT.get_figure('2dLevelsF10T10')|
 
 To investigate how the flare's radiation field affects the plasma in our two-dimensional slab we can compare the atomic populations responsible for these spectral lines against their initial statistical equilibrium values.
-Fig.~\ref{Fig:2dLevelsT10} shows the contribution function $\mathrm{C}_\mathrm{I}$ in the first column, the effect of local opacity on the outgoing radiation $\chi_\nu/\tau_\nu$ in the second column, and the relative change of the upper and lower levels of the transitions considered from their initial statistical equilibrium values in the last two columns respectively.
+Fig.~\ref{Fig:2dLevelsT10} shows the contribution function $\mathrm{C}_\mathrm{I}$ in the first column, the effect of local opacity on the outgoing radiation ($\chi_\nu/\tau_\nu$) in the second column, and the relative change of the upper and lower levels of the transitions considered from their initial statistical equilibrium values in the last two columns respectively.
 These properties are all shown at $t=\SI{10}{\second}$.
 The contribution function and local opacity effect are computed using the atmosphere in the plane-parallel flaring boundary condition, due to the difficulty formulating the contribution function in the two-dimensional slab, and representing the three-dimensional output of $\chi_\nu/\tau_\nu$.
 Nevertheless, these inform us of the primary line forming and absorbing regions.
@@ -1304,7 +1308,7 @@ Where the relative change is roughly similar in both the upper and lower levels 
 This enhancement does not appear to be sufficient to directly create the ``horns'' in the \Ha{} profiles, as evidenced by the green line profile, but the increased source function in the higher temperature region of the upper chromosphere appears sufficient to significantly enhance the core of the line profile.
 
 The \Caii{} populations, shown in the lower row of Fig.~\ref{Fig:2dLevelsT10}, are much more dramatically affected than the hydrogen populations previously discussed.
-Both the upper and lower levels of the \CaLine{} spectral line are affected in the same region $1.25-\SI{1.75}{\mega\metre}$ at the flaring boundary condition, tapering off with increasing distance from this boundary.
+Both the upper and lower levels of the \CaLine{} spectral line are affected in the same $1.25-\SI{1.75}{\mega\metre}$ region at the flaring boundary condition, tapering off with increasing distance from this boundary.
 The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of $-20$.
 The lower level of this transition appears to be significantly more reduced than the upper level, which will lead to a dramatic reduction in the local opacity whilst the emissivity remains less affected.
 This will lead to an increase in the local source function as well as a reduction in the opacity affecting the line core radiation formed just below this level.
@@ -1313,22 +1317,276 @@ An equivalent figure for the F10 simulation at $t=\SI{10}{\second}$ is shown in 
 Due to the increased magnitude of the the population changes in the transition region, it is harder to interpret the population change plots for the F10 model.
 The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this will not change the interpretation of the population effects on the line profile, which are corroborated by the line profiles shown in the left-most panel.
 
-\TODO{Check this for \Caii{} in notebook, and adjust scaling.}
-
-Despite the upper level of the \CaLine{} line appearing darker than the lower level, given the differences in scaling the lower level again appears to have reduced in population by a greater amount than the upper level.
+Despite the upper level of the \CaLine{} line appearing darker than the lower level, given the differences in scaling, the lower level populations have again been reduced by a greater amount than the upper level.
 Thus, the same interpretation as that given to the F9 simulation applies to the \CaLine{} line over the $1.25-\SI{1.75}{\mega\metre}$ region.
 There is a secondary feature on these \Caii{} population relative change plots, an additional reduction in the $1-\SI{1.25}{\mega\metre}$ altitude region.
-This feature overlaps the core of the line contribution shown in the left-most panel, and appears to be a relatively similar reduction in both the upper and lower level populations, which would lead to a reduction in local opacity, whilst maintaining the same source funciton, similarly to the \Ha{} interpretation.
-Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick chromospheric layers above the core forming region.
+This feature overlaps the core of the line contribution shown in the left-most panel, and appears to be a relatively similar reduction in both the upper and lower level populations (the reduction in the upper level population becomes larger than that of the lower level population approaching $x=\SI{1}{\mega\metre}$).
+This will mostly lead to a reduction in local opacity, with a slight reduction in source function.
+Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick upper-chromospheric layers above the core forming region.
 This reduction in local opacity appears to be well-validated by the extremely shallow core of the green line-profile in the first panel relative to the statistical equilibrium solution.
+
+% \TODO{Do we need to plot the source function ratios etc? This is only qualitative}
 
 It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.
 Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
+From the figures shown in this section it becomes clear that the the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
+It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation, thus without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
 
 \section{Observational Comparison}
 
-\TODO{Go over Investigation2014 notebook, and poster. Shouldn't need tremendous detail.}
+
+\begin{pycode}[2DRT]
+from astropy.io import fits
+ca = fits.open(ch2DRT.data_file('crisp_l2_20140906_152724_8542_r00529.fits'))
+sliceData = zarr.convenience.open(ch2DRT.data_file('2014FlareData2d.zip'), 'r')
+fig, ax = plt.subplots(1, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
+cdelt = ca[0].header['CDELT1']
+ax[0].imshow(ca[0].data[12], cmap='Greys_r', origin='bottom', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
+ax[1].imshow(ca[0].data[12], cmap='Greys_r', origin='bottom', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
+# plt.plot([950, 950, 1050],
+#     [600, 800, 800])
+ax[0].plot([a * cdelt for a in [950, 950, 1050, 1050, 950]],
+    [a * cdelt for a in [650, 660, 660, 650, 650]])
+ax[1].plot([a * cdelt for a in [950, 950, 1050, 1050, 950]],
+    [a * cdelt for a in [650, 660, 660, 650, 650]])
+ax[1].set_ylim(450*cdelt, 850*cdelt)
+ax[1].set_xlim(800*cdelt, 1200*cdelt)
+ax[0].set_ylabel('$y$ ["]')
+ax[0].set_xlabel('$x$ ["]')
+ax[1].set_xlabel('$x$ ["]')
+
+lFig = ch2DRT.save_figure('2dCaContext', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ca \textsc{{ii}} line core observation at time {}'.format(sliceData['times'][529-450][:-4])
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2dCaContext')|
+
+\begin{pycode}[2DRT]
+from astropy.time import Time
+import matplotlib.dates as mdates
+from matplotlib.ticker import MaxNLocator
+def slice_plots(slices, times, wingOffset=1, wingOffsetNm=0.01, sliceY=50):
+    meshCore = np.zeros((slices.shape[0], slices[0].shape[2]))
+    meshWing = np.zeros((slices.shape[0], slices[0].shape[2]))
+    meshBlue = np.zeros((slices.shape[0], slices[0].shape[2]))
+    centreIdx = slices.shape[1] // 2
+    for i, sli in enumerate(slices):
+        meshCore[i] = np.mean(sli[centreIdx, sliceY:sliceY+10], axis=0)
+        meshWing[i] = np.mean(sli[centreIdx + wingOffset, sliceY:sliceY+10], axis=0)
+        meshBlue[i] = np.mean(sli[centreIdx - wingOffset, sliceY:sliceY+10], axis=0)
+    # mesh /= mesh[:, -1][:, None]
+    mesh = meshCore
+    meshCore = (mesh - mesh[:, -1][:, None]) / mesh[:, -1][:, None]
+    mesh = meshWing
+    meshWing = (mesh - mesh[:, -1][:, None]) / mesh[:, -1][:, None]
+    mesh = meshBlue
+    meshBlue = (mesh - mesh[:, -1][:, None]) / mesh[:, -1][:, None]
+    vmin = 0.0
+    vmax = meshCore.max()
+
+    fig, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5), constrained_layout=True)
+    distsCore = np.zeros(meshCore.shape[0])
+    for x in range(meshCore.shape[0]):
+        for y in range(meshCore.shape[1]-1, -1, -1):
+            if meshCore[x, y] > 0.4:
+                distsCore[x] = y
+                break
+
+    distsWing = np.zeros(meshCore.shape[0])
+    for x in range(meshWing.shape[0]):
+        for y in range(meshWing.shape[1]-1, -1, -1):
+            if meshWing[x, y] > 0.4:
+                distsWing[x] = y
+                break
+
+    distsBlue = np.zeros(meshCore.shape[0])
+    for x in range(meshWing.shape[0]):
+        for y in range(meshWing.shape[1]-1, -1, -1):
+            if meshBlue[x, y] > 0.4:
+                distsBlue[x] = y
+                break
+    timeObjs = [Time(t) for t in times]
+    timePlots = [t.plot_date for t in timeObjs]
+
+    ax[0].imshow(meshBlue.T,
+                 extent=[min(timePlots), max(timePlots), 0, meshBlue.shape[1]],
+                 origin='lower', cmap='Greys_r', aspect='auto', rasterized=True)
+    ax[0].plot(timePlots, distsBlue)
+    ax[1].imshow(meshCore.T,
+                 extent=[min(timePlots), max(timePlots), 0, meshBlue.shape[1]],
+                 origin='lower', cmap='Greys_r', aspect='auto', rasterized=True)
+    ax[1].plot(timePlots, distsCore)
+    ax[2].imshow(meshWing.T,
+                 extent=[min(timePlots), max(timePlots), 0, meshBlue.shape[1]],
+                 origin='lower', cmap='Greys_r', aspect='auto', rasterized=True)
+    ax[2].plot(timePlots, distsWing)
+    ax[0].set_ylabel('Exent [px]')
+    for a in ax:
+        dateFormat = mdates.DateFormatter('%H:%M')
+        a.xaxis.set_major_formatter(dateFormat)
+        a.xaxis.set_major_locator(MaxNLocator(nbins=6))
+    ax[0].set_title('Blue Wing ($-{:.2f}$ nm)'.format(wingOffsetNm))
+    ax[1].set_title('Line Core')
+    ax[2].set_title('Red Wing ($+{:.2f}$ nm)'.format(wingOffsetNm))
+    fig.autofmt_xdate()
+
+    return fig, [distsBlue, distsCore, distsWing]
+
+def plot_enhancement_dists(dists, times, wingOffsetNm=0.01):
+    distsBlue, distsCore, distsWing = dists
+    plt.figure(figsize=texfigure.figsize(pytex, scale=1))
+
+    timeObjs = [Time(t) for t in times]
+    timePlots = [t.plot_date for t in timeObjs]
+
+    plt.plot_date(timePlots, distsBlue - distsCore, '-', label='Blue Wing ($-{:.2f}$ nm)'.format(wingOffsetNm), c='C0')
+    # plt.plot_date(timePlots, distsCore, '-', label='Line Core')
+    plt.plot(timePlots, distsWing - distsCore, '-', label='Red Wing ($+{:.2f}$ nm)'.format(wingOffsetNm), c='C3')
+    dateFormat = mdates.DateFormatter('%H:%M')
+    plt.gca().xaxis.set_major_formatter(dateFormat)
+    plt.gcf().autofmt_xdate()
+    plt.ylabel('Enhancement Offset [px]')
+#     plt.title('Extent of 40% enhancement in Ca ɪɪ 8542 $\AA$')
+    plt.legend()
+    plt.grid()
+
+def plot_enhancement_dists_sim(fig, d, wl, wlOffset, position,
+                               angularIdx, enhancementLine=0.4, dashed=False):
+    xEdges = (np.arange(d['xAxis'].shape[0]+1) - 0.5) * d['xAxis'][1]
+    xEdges /= 1e6
+    xAxis = d['xAxis'][...] / 1e6
+    wavelength = d['wavelength']
+
+    timeEdges = np.concatenate(([0],
+                                0.5 * (d.time[1:] + d.time[:-1]),
+                                [d.time[-1]]))
+
+    Idata = d['I'][:, :, angularIdx, :][...]
+    IChangeArr = (Idata - Idata[:, :, -1][:, :, None]) / Idata[:, :, -1][:, :, None]
+
+    offset = wlOffset
+
+    change1 = IChangeArr[:, wl-offset, :]
+    lineBlue = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change1[t, k] > enhancementLine:
+                lineBlue[t] = xAxis[k]
+                break
+    change2 = IChangeArr[:, wl, :]
+    lineCore = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change2[t, k] > enhancementLine:
+                lineCore[t] = xAxis[k]
+                break
+    change3 = IChangeArr[:, wl+offset, :]
+    lineRed = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change3[t, k] > enhancementLine:
+                lineRed[t] = xAxis[k]
+                break
+
+    ax = fig.gca()
+    style = '--' if dashed else '-'
+    ax.plot(d['time'], ((lineBlue - lineCore) / xAxis[1]).astype(int), style, c='C0')
+#     ax.plot(d['time'])
+    ax.plot(d['time'], ((lineRed - lineCore) / xAxis[1]).astype(int), style, c='C3')
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Enhancement Offset [px]', fontdict={'fontsize': 11})
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.grid(True)
+
+    fig.tight_layout()
+
+fig, distsCa = slice_plots(sliceData['Ca'], sliceData['times'], wingOffset=2, wingOffsetNm=0.02)
+lFig = ch2DRT.save_figure('2dCrispCaSliceEnhance', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Extent of enhancement in Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
+
+fig = plot_enhancement_dists(distsCa, sliceData['times'], wingOffsetNm=0.02)
+lFig = ch2DRT.save_figure('2dCrispCaEnhanceDists', fig, fext='.pgf')
+lFig.caption = r'Extent of enhancement in Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
+
+fig, distsHa = slice_plots(sliceData['Ca'], sliceData['times'], wingOffset=3, wingOffsetNm=0.06)
+fig = plot_enhancement_dists(distsHa, sliceData['times'], wingOffsetNm=0.06)
+lFig = ch2DRT.save_figure('2dCrispHaEnhanceDists', fig, fext='.pgf')
+lFig.caption = r'Extent of enhancement in the H$\alpha$ line for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1))
+plot_enhancement_dists_sim(fig, dataRad, 927, 7, 2, 1)
+plot_enhancement_dists_sim(fig, dataRadF10, 927, 7, 2, 1, dashed=True)
+lFig = ch2DRT.save_figure('2dSimCaEnhanceDists', fext='.pgf')
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1))
+plot_enhancement_dists_sim(fig, dataRad, 743, 15, 2, 1)
+plot_enhancement_dists_sim(fig, dataRadF10, 743, 15, 2, 1, dashed=True)
+lFig = ch2DRT.save_figure('2dSimHaEnhanceDists', fext='.pgf')
+
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2dCrispCaSliceEnhance')|
+\py[2DRT]|ch2DRT.get_figure('2dCrispCaEnhanceDists')|
+\py[2DRT]|ch2DRT.get_figure('2dCrispHaEnhanceDists')|
+\py[2DRT]|ch2DRT.get_figure('2dSimCaEnhanceDists')|
+\py[2DRT]|ch2DRT.get_figure('2dSimHaEnhanceDists')|
+
+Whilst any real world flare situation is far more complex than the two-dimensional model presented in the previous section, we will compare these results against observations of the two-ribbon M1.1 flare SOL 20140906T17:09 from the CRISP instrument, observed in \Ha{} and \CaLine{}.
+A context image of the region in the core of the \CaLine{} line at the flare peak is shown in Fig.~\ref{Fig:2dCaContext}.
+We have selected a region on edge of the western ribbon for this comparison, which is highlighted in blue in both the left- and right-hand panels of this figure.
+The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being 0.057" ($\sim\SI{42}{\kilo\metre}$).
+
+To investigate the effects presented in the simulation we shall analyse the variation of the radiation in the selected region as a function of $x$ location and time.
+The 10\,{}px in $y$ are averaged to reduce the noise present in the data.
+These timeslices are then plotted for three different wavelengths, corresponding to the two wings and the line core, and shown in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
+We take the right-hand edge of this region as approximately representing the background intensity and compute the distance from the left-hand boundary at which a 40\% enhancement over this background level is seen.
+This extent is shown as the blue lines in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
+
+We can compare the differences between the extents for these different spectral positions on both lines to investigate the differences in emission throughout the slab.
+This is shown for \CaLine{} and \Ha{} in Figs.~\ref{Fig:2dCrispCaEnhanceDists} and \ref{Fig:2dCrispHaEnhanceDists} respectively.
+For \CaLine{}, prior to 17:05, there is little difference between both line wings and the line core, although the blue wing enhancement on average extends slightly further than the red wings, and just prior to the flare peak, up to $5$\,{}px further than the line core.
+As the flare peaks, the enhancement of the line core extends consistently $5-10$\,{}px further from the ribbon than either of the wings, and this trend continues for the remainder of the dataset.
+For \Ha{}, the blue wing is significantly more extended than the red wing before $\sim$17:07, the red wing enhancement remains $\sim$15\,{}px behind the line core, whilst the blue wing starts in this region, then extends past the line core at $\sim$17:00 before falling back to a similar offset to the red wing at $\sim$17:07.
+From this point onwards, both line profiles remain at a similar offset, typically remaining 10-30\,{}px less extended than the line core.
+
+We can compute this same metric for the two simulations presented in this chapter, and these are shown in Figs.~\ref{Fig:2dSimCaEnhanceDists} and \ref{Fig:2dSimHaEnhanceDists} respectively for the \CaLine{} and \Ha{} results.
+The red and blue wings are again shown with the same colours, the solid lines refer to the F9 simulation and the dashed lines the F10 simulation.
+We note that there is a substantial variation in viewing angle between these simulations and the set of observations investigated here.
+The simulations use a viewing angle $\mu_z\approx0.951$, whilst this observation was taken at $\mu\approx0.565$.
+If the same viewing angle is used with the simulation then all of the ``pixels'' at the top of the atmosphere ``look'' directly into the flaring boundary condition, and the effect we wish to investigate cannot be resolved without performing simulations with substantially larger extents in $x$.
+Due to the prohibitive computational cost of this (a similar resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
+In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation), so we compare these directly.
+
+The \CaLine{} behaves similarly in both the F9 and F10 simulations, with the line core immediately extending significantly further than the wings (by $9-13$\,{}px) as the heating begins.
+At $\sim\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing remains approximately constant.
+This is not in agreement with the observations where the red wing offset decreases relative to the blue wing offset later in the cooling phase.
+The consistency of the red enhancement is likely due to the very strong red asymmetry present in the \regiona{} region of the simulation at later times, whilst the core remains notably enhanced further into the slab.
+Nevertheless, the extent of the line core enhancement relative to the wings remains comparable to the observation, in the $5-20$\,{}px range.
+
+There are significant differences between the F9 and F10 simulations for the \Ha{} line.
+In the less energetic simulation, the line core offset rapidly jumps to $\sim$22\,{}px further than both the red and the blue wings.
+As the heating ends there is a short-term variation ($\sim\SI{1}{\second}$) in the red and blue wing extents, which both approach the line core extent.
+For the remainder of the cooling period, the line core remains $15-20$\,{}px more extended than both of the line wings.
+This is approximately comparable to the observed offset from 17:10 onwards ($10-30$\,{}px), and the short-term spike after the heating ends could be compared to the spike in the observation just prior to 17:10, although the time-scales are very different.
+For the F10 simulation, these differences in extent between the line core and the wings remains small, but after the heating ends increases relatively rapidly to $\sim$13\,{}px.
+The red wing takes an additional $\sim\SI{8}{\second}$ to drop back to this level.
+
+Qualitatively, there are a number of features that agree between the simulations and this observation: from the flare peak onwards both line cores remain significantly more extended than their respective wings, and both simulations support this, with comparable changes in enhancement offset.
+Given the additional complexity of the observed configuration, the difference in viewing angle, timescale, and the likelihood of thermodynamic changes occurring in proximity to the flare (including Doppler shifts), it is unwise to attempt to interpret the comparison of these offsets in much greater depth than this qualitative agreement.
+For this event, after the peak of the flare, the line-core remains visibly extended into the quieter region adjacent to the western ribbon, up to 20\,{}px further than an equivalent enhancement in the wings.
+In both the simulation and the observation this is in part due to the variation of the line profile shape, changing from either a full emission or centrally reversed emission line on the ribbon to an absorption line off-ribbon.
+The basic agreement between the simulation and observation suggests that this simulation is an accurate ``first-order approximation'' of this problem, and is capturing some of the observed effects, although further simulation of more complex configurations and in-depth comparisons are needed.
+
 
 \section{Discussions}
 
-Failure of multi-grid?
+The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} show that even for a two-dimensional slab of plasma with fixed quiet-sun thermodynamic properties, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing significant enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
+Traditional inversion techniques performed on this region are likely to be led to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the local thermodynamic properties, but is instead significantly influenced by the incident radiation.
+
+The enhancement effects are not uniform as a function of wavelength, with the line core enhancement typically extending up to several hundred \si{\kilo\metre} further than the enhancements in the line wings.
+This may have implications for the calculation of filling factors, due to the wavelength dependence of this ``smearing'', but more detailed simulation and analysis are needed to attempt to prescribe any functional form for this.
+
+Nevertheless, these enhancements are on scales that are observable with current generation instruments such as SST/CRISP, and are likely to become more important with the improved resolution of upcoming telescopes such as DKIST.
+Additionally, the models presented here use a fixed temperature structure throughout the slab, both for simplicity and to better investigate the importance of incident radiation.
+It is likely that the temperatures in such a slab will vary due to the absorption of radiation, thermal conduction and other modes of heating occuring adjacent to the flare.
+Thus, the results here likely underestimate the magnitude of these line enhancement effects.
