@@ -1,5 +1,5 @@
 \chapter{Time-Dependent Radiative Transfer}\label{Chap:TimeDepRt}
-
+%TC:group pycode 0 0
 \setpythontexautoprint{false}
 \begin{pycode}[TimeDepRT]
 name = 'TimeDepRT'
@@ -13,94 +13,139 @@ chRT = texfigure.Manager(
 )
 \end{pycode}
 
-\begin{pycode}[TimeDepRT]
-from lightweaver.fal import Falc82
-from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, Si_atom, Al_atom, CaII_atom, Fe_atom, He_atom, MgII_atom, N_atom, Na_atom, S_atom
-import lightweaver as lw
-import matplotlib.pyplot as plt
-import numpy as np
+% \begin{pycode}[TimeDepRT]
+% from lightweaver.fal import Falc82
+% from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, Si_atom, Al_atom, CaII_atom, Fe_atom, He_atom, MgII_atom, N_atom, Na_atom, S_atom
+% import lightweaver as lw
+% import matplotlib.pyplot as plt
+% import numpy as np
 
-def iterate_ctx(ctx, Nscatter=3, NmaxIter=500):
-    for i in range(NmaxIter):
-        dJ = ctx.formal_sol_gamma_matrices()
-        # NOTE(cmo): Do some initial iterations without touching the
-        # populations to lambda iterate the background scattering terms
-        if i < Nscatter:
-            continue
-        delta = ctx.stat_equil()
+% def iterate_ctx(ctx, Nscatter=3, NmaxIter=500):
+%     for i in range(NmaxIter):
+%         dJ = ctx.formal_sol_gamma_matrices()
+%         # NOTE(cmo): Do some initial iterations without touching the
+%         # populations to lambda iterate the background scattering terms
+%         if i < Nscatter:
+%             continue
+%         delta = ctx.stat_equil()
 
-        # NOTE(cmo): Check convergence
-        if dJ < 3e-3 and delta < 1e-3:
-            print('Iterations taken: %d' % (i+1))
-            print('-'*60)
-            return
+%         # NOTE(cmo): Check convergence
+%         if dJ < 3e-3 and delta < 1e-3:
+%             print('Iterations taken: %d' % (i+1))
+%             print('-'*60)
+%             return
 
-wave = np.linspace(853.9444, 854.9444, 1001)
-def synth_8542(atmos, conserve, useNe):
-    # NOTE(cmo): Configure the Gauss-Legendre angular quadrature for 5 rays
-    atmos.quadrature(5)
+% wave = np.linspace(853.9444, 854.9444, 1001)
+% def synth_8542(atmos, conserve, useNe):
+%     # NOTE(cmo): Configure the Gauss-Legendre angular quadrature for 5 rays
+%     atmos.quadrature(5)
 
-    # NOTE(cmo): Construct the RadiativeSet with the following atomic models
-    aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(),
-                            Fe_atom(), He_atom(), MgII_atom(), N_atom(), Na_atom(), S_atom()])
-    # NOTE(cmo): Set Hydrogen and Calcium to active
-    aSet.set_active('H', 'Ca')
-    # NOTE(cmo): Compute the SpectrumConfiguration for this RadiativeSet
-    spect = aSet.compute_wavelength_grid()
+%     # NOTE(cmo): Construct the RadiativeSet with the following atomic models
+%     aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(),
+%                             Fe_atom(), He_atom(), MgII_atom(), N_atom(), Na_atom(), S_atom()])
+%     # NOTE(cmo): Set Hydrogen and Calcium to active
+%     aSet.set_active('H', 'Ca')
+%     # NOTE(cmo): Compute the SpectrumConfiguration for this RadiativeSet
+%     spect = aSet.compute_wavelength_grid()
 
-    # NOTE(cmo): If we're using the electron density provided with FAL C, then
-    # compute the associated LTE populations, otherwise find a solution for
-    # self consistent LTE populations and electron density.
-    if useNe:
-        eqPops = aSet.compute_eq_pops(atmos)
-    else:
-        eqPops = aSet.iterate_lte_ne_eq_pops(atmos)
+%     # NOTE(cmo): If we're using the electron density provided with FAL C, then
+%     # compute the associated LTE populations, otherwise find a solution for
+%     # self consistent LTE populations and electron density.
+%     if useNe:
+%         eqPops = aSet.compute_eq_pops(atmos)
+%     else:
+%         eqPops = aSet.iterate_lte_ne_eq_pops(atmos)
 
-    # NOTE(cmo): Construct the Context, optionally setting chargeConservation and the number of threads to use.
-    ctx = lw.Context(atmos, spect, eqPops, conserveCharge=conserve, Nthreads=8)
+%     # NOTE(cmo): Construct the Context, optionally setting chargeConservation and the number of threads to use.
+%     ctx = lw.Context(atmos, spect, eqPops, conserveCharge=conserve, Nthreads=8)
 
-    # NOTE(cmo): Iterate the NLTE problem to convergence
-    iterate_ctx(ctx)
-    # NOTE(cmo): Compute a detailed solution to Ca II 8542 on the 1 nm wavelength grid above
-    Iwave = ctx.compute_rays(wave, [1.0], stokes=False)
-    return Iwave
+%     # NOTE(cmo): Iterate the NLTE problem to convergence
+%     iterate_ctx(ctx)
+%     # NOTE(cmo): Compute a detailed solution to Ca II 8542 on the 1 nm wavelength grid above
+%     Iwave = ctx.compute_rays(wave, [1.0], stokes=False)
+%     return Iwave
 
-# NOTE(cmo): Load an atmosphere. In this case we include a copy of FAL C, but
-# Lightweaver also supports loading atmospheres in the MULTI format, and it is
-# also simple to do so from the raw data components
-atmosRef = Falc82()
-# NOTE(cmo): Ca II 8542 with the reference electron density in the FAL C atmosphere
-IwaveRef = synth_8542(atmosRef, conserve=False, useNe=True)
+% # NOTE(cmo): Load an atmosphere. In this case we include a copy of FAL C, but
+% # Lightweaver also supports loading atmospheres in the MULTI format, and it is
+% # also simple to do so from the raw data components
+% atmosRef = Falc82()
+% # NOTE(cmo): Ca II 8542 with the reference electron density in the FAL C atmosphere
+% IwaveRef = synth_8542(atmosRef, conserve=False, useNe=True)
 
-atmosCons = Falc82()
-# NOTE(cmo): Ca II 8542 with the electron density obtained from charge conservation
-IwaveCons = synth_8542(atmosCons, conserve=True, useNe=False)
+% atmosCons = Falc82()
+% # NOTE(cmo): Ca II 8542 with the electron density obtained from charge conservation
+% IwaveCons = synth_8542(atmosCons, conserve=True, useNe=False)
 
-atmosLte = Falc82()
-# NOTE(cmo): Ca II 8542 with LTE electron density
-IwaveLte = synth_8542(atmosLte, conserve=False, useNe=False)
+% atmosLte = Falc82()
+% # NOTE(cmo): Ca II 8542 with LTE electron density
+% IwaveLte = synth_8542(atmosLte, conserve=False, useNe=False)
 
-fig = plt.figure()
-plt.plot(wave, IwaveRef, label='Reference')
-plt.plot(wave, IwaveCons, '--', label='Conserved')
-plt.plot(wave, IwaveLte, '--', label='LTE')
-plt.title(r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities', y=1.04)
-plt.ylabel(r'Intensity [SI]')
-plt.xlabel(r'$\lambda$ [nm]')
-plt.legend()
-lFig = chRT.save_figure('EleDensComparison', fig, fext='.pgf')
-lFig.caption = r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities'
-\end{pycode}
-\setpythontexautoprint{false}
+% fig = plt.figure()
+% plt.plot(wave, IwaveRef, label='Reference')
+% plt.plot(wave, IwaveCons, '--', label='Conserved')
+% plt.plot(wave, IwaveLte, '--', label='LTE')
+% plt.title(r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities', y=1.04)
+% plt.ylabel(r'Intensity [SI]')
+% plt.xlabel(r'$\lambda$ [nm]')
+% plt.legend()
+% lFig = chRT.save_figure('EleDensComparison', fig, fext='.pgf')
+% lFig.caption = r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities'
+% \end{pycode}
+% \setpythontexautoprint{false}
 
-\py[TimeDepRT]|chRT.get_figure('EleDensComparison')|
+% \py[TimeDepRT]|chRT.get_figure('EleDensComparison')|
 
-\begin{itemize}
-    \item Current problems not solved by RADYN and MS\_RADYN.
-    \item \Lw{}
-    \item \MsLw{}
-    \item Reprocessing RADYN simulations
-    \item Effect of the Lyman lines on \CaLine{} in RHD simualtions
-    \item Diagnostic potential of response functions
-    \item Another item
-\end{itemize}
+% \begin{itemize}
+%     \item Current problems not solved by RADYN and MS\_RADYN.
+%     \item \Lw{}
+%     \item \MsLw{}
+%     \item Reprocessing RADYN simulations
+%     \item Effect of the Lyman lines on \CaLine{} in RHD simulations
+%     \item Diagnostic potential of response functions
+%     \item Another item - PRD is hard?
+% \end{itemize}
+
+Modern Radiation Hydrodynamic (RHD) codes are highly complex, and contain many specialised features as discussed in the previous chapter.
+In the following discussion we will focus primarily on \Radyn{}, the most widely used code of its ilk, and how using additional tools can facilitate new avenues of investigation.
+
+\TODO{Explicit vs implicit}
+
+\TODO{2 subcomponents}
+
+\section{A Brief Dissection of \Radyn{} and the Future of RHD Modelling}
+
+\emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code.}
+
+\Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code and many commonalities remain.
+NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant level population balance equations.
+This method is designed to solve the problem of non-overlapping lines but including an underlying background continuum.
+This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
+This approach also assumed the use of a local diagonal $\Lambda^*$ operator, as discussed in the previous chapter.
+\Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
+It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but affects the two methods will no long arrive at the exactly equivalent numerical formulations.
+
+The advantage of the linearisation approach in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
+Taking for example the kinetic equilibrium equation \eqref{Eq:KinEq}, \Radyn{}'s method formulates this expression such that the corrections from both the advection and population transition terms are considered simultaneously.
+This is achieved through the use of a Newton-Raphson method, where the Jacobian is computed based on an analytic derivation, including the aforementioned linearisation of the kinetic equilibrium equation.
+This same process simultaneously solves for the heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid of \citet{Dorfi1987}.
+
+A significant benefit of this implicit approach is a relaxation of the timestep constraints present in explicit approaches.
+This is particularly important when considering the very fine grid spacing often required by the dynamic grid, which combined with the large bulk velocities occurring in flares can lead to extremely oppressive timestep constraints.
+
+Despite its elegance, there are several major downsides to this implicit approach.
+Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically computed and included.
+This presents a very large barrier to entry for future developments on the platform, and this is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
+This overlapping of concerns
+Additionally, implicit codes, whilst having reduced timestep constraints, are typically much more costly per timestep than explicit codes.
+This is somewhat offset by the majority of the cost of each step residing within the formal solver, which remains similar in both cases.
+The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
+
+\Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and through these comments we do not intend to discredit its use, but instead highlight avenues for future development within the field of RHD.
+As the different uses of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
+
+As discussed previously in respect to \Lw{} and radiative transfer, the flexibility of a framework designed for solving a class of problem can yield significant advances in productivity.
+The task of designing, constructing, and testing such a framework for a problem such as the complete quasi-one-dimensional RHD simulation flares is too significant to be undertaken here.
+Nevertheless, it may prove a convenient future development once the necessary specifications are defined.
+Here, we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigate important directions for future developments in RHD modelling of flares.
+
+\section{Minority Species}

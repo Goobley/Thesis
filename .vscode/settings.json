@@ -144,12 +144,14 @@
         "overplotted",
         "photoionisation",
         "rightgoing",
+        "spectropolarimetry",
         "subgrid",
         "subgridding",
         "thermalised",
         "timeslices",
         "timestep",
-        "timesteps"
+        "timesteps",
+        "unpolarised"
     ],
     "cSpell.enabled": true
 }
