@@ -114,7 +114,7 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 
 \section{A Brief Dissection of \Radyn{} and the Future of RHD Modelling}
 
-\emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code.}
+\emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
 \Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code and many commonalities remain.
 NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant level population balance equations.
@@ -149,3 +149,58 @@ Nevertheless, it may prove a convenient future development once the necessary sp
 Here, we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigate important directions for future developments in RHD modelling of flares.
 
 \section{Minority Species}
+
+For flares, \Radyn{}'s primary focus is on the major spectral lines and continua of hydrogen, helium, and calcium.
+These typically represent the bulk of the radiative energy lost in the chromosphere.
+Singly ionised magnesium has also been shown to be an important contributor to these energy losses, however the h and k lines require a treatment including PRD to avoid significantly overestimating their losses.
+The \Caii{} H and K lines are also somewhat affected by PRD, in addition to the hydrogen Lyman lines.
+For the Lyman lines we will discuss several strategies for approximating this treatment, and for \Caii{} H and K, it has been suggested that considering these in CRD approximately accounts for the lack of Mg\,\textsc{ii} h and k if all of these transitions were treated with PRD \citep{Kerr2019a}.
+
+Whilst the lines of these four species are some of the strongest in solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can also be used to diagnose the atmosphere.
+For example, Si\,\textsc{iv} optical thickness has been investigated in a minority species context by \citet{Kerr2019c}.
+An element treated as a ``minority species'' is assumed to not interact significantly with the energy balance of the simulation (i.e. the thermodynamic response of the model does not change significantly if this species is subject to a complete radiative treatment).
+This should be true for most species with trace populations.
+The radiative transfer calculations associated with this species can then be performed in a ``second-pass'' over a previously computed \Radyn{} simulation.
+The MS\_RADYN code was designed for this task; it takes the thermodynamic parameters from every timestep of a \Radyn{} simulation, along with the non-equilibrium hydrogen populations, and solves the kinetic equilibrium equation at each timestep for a minority species.
+Due to the lack of atmospheric thermodynamic response to changes in the radiative output of this species, far more complex atomic models can be used, such as the 30 level model silicon atom used by \citet{Kerr2019c}.
+
+An approach similar to that of minority species modelling can be applied to testing the methods used in \Radyn{} and the importance of certain omissions.
+Due to the reduced complexity of solving the kinetic equilibrium equations rather than the entire RHD system, these calculations typically run significantly faster than the original simulation.
+In the following we will discuss the creation of a minority species tool for reprocessing \Radyn{} simulations, built on the \Lw{} framework, as well as its application to investigating the importance of overlapping transitions and discussing the difficulties of including PRD in these simulations.
+From the previous discussion, building such a tool on the \Lw{} framework should provide researchers with a modern, simpler codebase that is easier to conceptualise and modify, allowing for investigation of effects to be included in \Radyn{} or future RHD codes.
+Excluding the model atom definitions, the source code of the simulations presented in this chapter totals $\sim$1000 lines of Python, mostly following modern best practices.
+
+\section{Reprocessing \Radyn{} Simulations with the \Lw{} Framework}
+
+To perform a minority species simulation, a particular file from the original simulation, \texttt{atmost.dat}, must be provided.
+From investigating the contents of this file we can determine the exact configuration of \Lw{} and the equations to be solved.
+This file is written to for every internal timestep of the \Radyn{} simulation, and represents a limited subset of the less frequently written ``complete'' output (typically stored every \SI{0.1}{\second}).
+It contains some metadata describing the size of the simulation, then for each internal timestep, the current timestep, the elapsed time at each timestep, the current locations of the dynamic grid, the mass density profile, the electron density profile, the temperature structure, the vertical velocity, and the current hydrogen level populations.
+
+For the validation of \Lw{} and this style of simulation, we also wished to compute and compare the hydrogen populations to those computed in \Radyn{}.
+Several difficulties arose due to the non-thermal collisional rates used in the kinetic equilibrium calculation for hydrogen and helium.
+The non-thermal collisional rates of \citet{1993Fang} are used to determine hydrogen ionisation, and require the beam energy deposition throughout the atmosphere at each timestep.
+For helium, if the Fokker-Planck electron beam description is used, then the rates of \citet{Arnaud1985} are used, but these require integration over the electron energy distribution.
+Whilst it is possible to add both of these to the \texttt{atmost.dat} file, the complete electron distribution information is very large, and we instead elect to use ``Emslie'' beam electron formalism \citep{Emslie1978}, for which the energy deposition profile throughout the atmosphere is sufficient to describe the non-thermal rates.
+We therefore chose to slightly modify \Radyn{} and add the beam heating profile to the \texttt{atmost.dat} file.
+Our function for reading these files can handle both files with and without this modification.
+In the event that this beam heating information is not saved, an approximation of it can be reconstructed via interpolation from the information in \Radyn{}'s complete save file.
+Our testing of this show that the approximation is relatively good, but short term, or particularly narrow heating features may be lost.
+For this reason, all simulations presented here use the version with this data.
+
+With the above data we have sufficient information to construct the \Radyn{} thermodynamic atmosphere at any of its internal timesteps.
+\Lw{} does not make use of the mass density directly, but instead maps it to hydrogen density.
+For this we use of the default abundances in \Lw{}, based on \citet{Asplund2009}.
+These differ to those used in \Radyn{}, but not significantly for any of the species discussed here.
+Ignoring the advection term it is then simple to produce a minority species tool using this approach.
+In many situations, the advection term has a small effect, and can safely be ignored \NeedRef{} \TODO{Old Flarix paper}.
+The radiative transfer equation employed in \Radyn{} is formulated on the dynamic grid, and this is not the case in \Lw{}, which assumes that the grid is static (although this limitation can be worked around).
+We can simply use a fixed denser spatial sampling of the atmosphere to account for the motion of features such as the transition region over the course of the simulation.
+This model then interpolates the thermodynamic properties and NLTE hydrogen populations for the starting atmosphere onto our stratification and computes the statistical equilibrium solution for the minority species in question.
+For each subsequent timestep these properties are interpolated from the new \Radyn{} grid to the static grid, and the minority species populations can be advanced in time using the process described in Sec.~\NeedRef{}.
+
+\TODO{Talk about interpolation vs advection?, Columnmass etc}
+
+\subsection{Advection}
+
+WENO/FCT vs \Radyn{}
