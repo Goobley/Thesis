@@ -112,7 +112,7 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 
 \TODO{2 subcomponents}
 
-\section{A Brief Dissection of \Radyn{} and the Future of RHD Modelling}
+\section{A Brief Dissection of \Radyn{} and the Future of RHD Modelling}\label{Sec:RadynDissection}
 
 \emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
@@ -199,8 +199,35 @@ We can simply use a fixed denser spatial sampling of the atmosphere to account f
 This model then interpolates the thermodynamic properties and NLTE hydrogen populations for the starting atmosphere onto our stratification and computes the statistical equilibrium solution for the minority species in question.
 For each subsequent timestep these properties are interpolated from the new \Radyn{} grid to the static grid, and the minority species populations can be advanced in time using the process described in Sec.~\NeedRef{}.
 
-\TODO{Talk about interpolation vs advection?, Columnmass etc}
+To reduce the number of grid points needed for a static stratification one could instead use a fixed column mass stratification.
+The transition region moves very little in terms of column mass during the simulation, however it then becomes necessary to interpolate the populations from one column mass stratification to the next; a process which can introduce significant error if not undertaken with care.
+This error can be reduced by renormalising each specie's total number density throughout the atmosphere from the mass density and abundances, and this helps to avoid errors growing around regions of high gradient, such as the transition region.
+
+To solve the minority species problem properly in a manner compatible with \Radyn{} it is necessary to include the advection terms.
+In the following we will describe several different approaches to handling these advection terms, and thus solving the complete kinetic equilibrium equations.
 
 \subsection{Advection}
 
-WENO/FCT vs \Radyn{}
+In Sec.~\ref{Sec:RadynDissection} we discussed the coupled nature in which \Radyn{} solves the RHD equations.
+For flexibility we wish to decouple the advection terms from the population transitions.
+Our initial approach was to use an explicit method on the dense, fixed grid discussed above.
+Explicit methods are typically simpler to validate and understand, so seemed a logical fit for this project.
+
+\TODO{Describe WENO-HD -shocks etc}
+
+To improve the agreement with \Radyn{}, reduce the number of interpolations,. and leverage its adaptive grid we instead decided to apply its technique for advection, but keep it distinct from the radiative transfer.
+Thus, at the start of each timesteps we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
+This technique is known as operator splitting \NeedRef{}, and is commonly applied in hydrodynamics simulations where different numerical techniques are effective at solving different components of the system.
+Performing a na\"{i}ve splitting like this limits the accuracy of the solution to first order accuracy in time.
+Various advanced splitting techniques, such as Strang splitting \citep{Strang1968}, have been developed to reduced this error.
+Strang splitting reduces these error terms to second order, and newer approaches can reduce the impact of operator splitting to fourth order in time \NeedRef{}.
+A Strang splitting approach was implemented in our code using these components, but the results were not found to differ appreciably.
+It is likely that this is due to one of the two processes dominating.
+During explosive heating the populations in the upper chromosphere typically have very large transition rates, and comparatively slow advection.
+At later times, when the timestep is longer, the transition rate is typically much lower and the plasma flows are relatively smooth, but often high velocity.
+
+As discussed above, it is necessary to accurately and conservatively resolve shocks in advection and hydrodynamics problems, something that has been recognised since the 1950s \NeedRef{} \TODO{FCT book?}.
+For this \Radyn{} employs a variant of the second order spatially accurate method of \citet{VanLeer1979}.
+The concept of this class of method is similar to that of short characteristics formal solvers, ensuring that no spurious minima or maxima are injected into the solution, which in hydrodynamics would result in a gain or loss of density.
+
+\TODO{I think we need a clear introduction to shock capturing methods. Read over pyCLAW paper and Leveque intro.}
