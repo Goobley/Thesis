@@ -112,7 +112,126 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 
 \TODO{2 subcomponents}
 
-\section{A Brief Dissection of \Radyn{} and the Future of RHD Modelling}\label{Sec:RadynDissection}
+\section{Introduction to Hydrodynamics and Conservation Laws}
+\emph{The majority of the basic theory in this section follows the two texts by Leveque \NeedRef{}}
+
+In the previous chapter we have explained the basis of the radiative transfer methods used throughout this work.
+The difficulty in radiative transfer primarily lies in the nuance of the various integration terms.
+To provide a clear understanding of RHD we also need a description of hydrodynamics, and thus how to solve the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
+
+The scalar radiative transfer equation, solved via the formal solver, presented in the previous chapter is a good example of an ordinary differential equation.
+It is relatively easy to solve via a variety of methods, typically striving for a balance of speed, reliability, and accuracy.
+In general, PDEs are difficult to solve numerically in a general way.
+
+A generic PDE of a quantity $q$ depending on two independent variables $x$ and $y$ can be written as
+\begin{equation}
+    aq_{xx} + bq_{xy} + cq_{yy} + dq_x + eq_y + fq = g.
+\end{equation}
+The sign of the discriminant ($\Delta = b^2-4ac$) of this equation determines the class of the problem.
+\begin{itemize}
+    \item $\Delta < 0$: Elliptic problem (e.g. Poisson equation).
+    \item $\Delta = 0$: Parabolic problem (e.g. Heat equation).
+    \item $\Delta > 0$: Hyperbolic problem (e.g. Advection equation).
+\end{itemize}
+Here, we will focus primarily on hyperbolic problems, with a brief discussion of parabolic terms.
+Hyperbolic problems take the form
+\begin{equation}\label{Eq:ConsLaw}
+    q_t + f(q)_x = 0,
+\end{equation}
+where $f$ is a function describing the the flux of $q$ at each location in the domain.
+There is an inherent assumption that the flux function is local, and act only on the local state variables $q$.
+
+Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant.
+This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
+The simplest equation of this form is advection, which simply arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $u$ as
+\begin{equation}\label{Eq:Advection}
+    \rho_t + (\rho u)_x = 0.
+\end{equation}
+
+The advection equation can be augmented with two further equations to form the Euler equation set.
+These three equations are the conservation of mass, momentum, and energy.
+Together they describe the evolution of ideal fluids.
+The complete set is written
+\begin{equation}\label{Eq:EulerEqns}
+\begin{split}
+    \rho_t + (\rho u)_x &= 0,\\
+    (\rho u)_t + (\rho u^2 + p)_x &= 0,\\
+    E_t + (u(E + p))_x &= 0,
+\end{split}
+\end{equation}
+where $E$ is the total energy and $p$ is the gas pressure.
+As our three conserved quantities are the mass density, momentum density, and energy, the pressure must be expressed as a combination of these so as to be able to write this system in the form of \eqref{Eq:ConsLaw}.
+The simplest way to achieve this is to use the equation of state for an ideal gas
+\begin{equation}
+    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho u^2.
+\end{equation}
+Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, as considered in the case of solar plasma.
+
+The Euler equations \eqref{Eq:EulerEqns} describe evolution of an ideal fluid without any losses.
+In practice we often need to model some loss terms.
+Ignoring radiative effects for now, the most important of these is heat conduction\footnote{In the plasmas considered here there is additional nuance to heat conduction, which we will return to in \TODO{sec}.}, which is typically described by parabolic equations.
+This adds a second spatial derivative term to the right-hand side of the energy conservation equation.
+It is also common to need source and sink terms when modelling real world problems, these can account for fluids entering and leaving a volume, the non-local emission and absorption of energy, or simply the effects of gravity.
+These terms are also added to the right-hand side of the equations of \eqref{Eq:EulerEqns}, and together with the effects of viscosity, these describe the Navier-Stokes equations.
+
+\subsection{Numerical Approaches}
+
+The typical first choice for numerically solving differential equations is to apply a finite difference method.
+In this class of method, the problem is discretised, similarly to the approach taken in radiative transfer, and the values associated with each grid point represent the local pointwise value.
+The local gradient of the conserved quantities can then be estimated from pointwise difference between in the quantity between adjacent cells.
+This method can be applied to discrete problems in both space and time.
+Applying a basic one-sided method to the advection equation \eqref{Eq:Advection} gives
+\begin{equation}\label{Eq:FdmAdvection}
+    \frac{q^{t+1}_i - q^t_i}{\Delta t} + u\left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
+\end{equation}
+where the subscript refers to the location of the conserved quantity, the superscript the discrete timestep, with $\Delta x$ and $\Delta t$ being the local grid spacing and timestep duration respectively.
+
+It is clear that without loss of generality we could have also chosen to spatially difference our problem in the other direction (i.e. $q^t_i - q^t_{i-1}$).
+From the infinitesimal definition of the derivative, these two formulations are equivalent.
+This is not the case in discretised problems.
+It is better to locally use the formulation such that information from points ``upwind'' in terms of the fluid velocity are used to update the points downwind of themselves.
+In this sense the information used to update points is following the fluid flow.
+Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the approximate value of the quantity at the next timestep,
+\begin{equation}
+    q^{t+1}_i {\Delta t} = q^t_i - \frac{u \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
+\end{equation}
+
+This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
+
+Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
+Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell,
+Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
+This implies
+\begin{equation}
+    q_i^t \approx \frac{1}{\Delta x}\int_{x_i}^{x_{i+1}} q^t(x)\, dx.
+\end{equation}
+Rewriting the conservation law \eqref{Eq:ConsLaw} in an integral form then gives
+\begin{equation}
+    \int_{x_i}^{x_{i+1}} q^{t+1}(x)\, dx = \int_{x_i}^{x_{i+1}} q^{t}(x)\, dx
+                                         + \int_{t_t}^{t_{t+1}} q_i(t)\, dt
+                                         - \int_{t_t}^{t_{t+1}} q_{i+1}(t)\, dt,
+\end{equation}
+which can then be written as the flux-differencing form
+\begin{equation}\label{Eq:FiniteVolumeMethod}
+    q_i^{t+1} = q_i^t - \frac{\Delta t}{\Delta x}\left( F^t_{i+1} - F^t_{i} \right),
+\end{equation}
+where $F_i$ represents the flux due between cells $i$ and $i-1$, and $F_{i+1}$ the flux between cells $i$ and $i+1$.
+In the case of an explicit method with a correctly chosen timestep for the grid, where information cannot move further than one cell in a timestep, each of these flux functions depends only on cell $i$ and one of its neighbours.
+An important strength of this method for solving conservation law problems is that if $F_i$ and $F_{i+1}$ are respectively the left and right edge fluxes for cell $i$, then $F_{i+1}$ will be the left edge flux for cell $i+1$, and $F_{i}$ will be the right edge flux for cell $i-1$.
+Thus the numerical integration of $q^{t+1}$ is conserved with respect to $q^t$ as all numerical fluxes, other than the left- and right-most, will cancel due to the formulation of \eqref{Eq:FiniteVolumeMethod}.
+These left- and right-most fluxes will need to consider the boundary conditions of the finite simulation volume to ensure the correctness of the conservation law.
+
+\subsection{Numerical Fluxes}
+
+\subsection{Godunov's Method}
+
+\subsection{Approximate Riemann Solvers}
+
+\subsection{Stability and CFL}
+
+\section{Conduction}
+
+\section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
 
 \emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
