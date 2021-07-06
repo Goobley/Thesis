@@ -221,13 +221,141 @@ An important strength of this method for solving conservation law problems is th
 Thus the numerical integration of $q^{t+1}$ is conserved with respect to $q^t$ as all numerical fluxes, other than the left- and right-most, will cancel due to the formulation of \eqref{Eq:FiniteVolumeMethod}.
 These left- and right-most fluxes will need to consider the boundary conditions of the finite simulation volume to ensure the correctness of the conservation law.
 
+\subsection{Riemann Problems}
+
+% spell-checker: disable
+\begin{pycode}[TimeDepRT]
+from shocktubecalc import sod
+from matplotlib.ticker import MaxNLocator
+
+gamma = 1.4
+positions, regions, values = sod.solve(left_state=(1.0, 1.0, 0.0), right_state=(0.1, 0.125, 0.0),
+                                       geometry=(0.0, 1.0, 0.5), t=0.2, gamma=gamma, npts=500)
+fig, ax = plt.subplots(2, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6),
+                       constrained_layout=True)
+ax = ax.ravel()
+grid = values['x']
+pressure = values['p']
+density = values['rho']
+velocity = values['u']
+totE = pressure / (gamma - 1.0) + 0.5 * density * velocity**2
+
+ax[0].plot(grid, density)
+ax[0].set_xticklabels([])
+ax[1].plot(grid, velocity)
+ax[1].set_xticklabels([])
+ax[2].plot(grid, pressure)
+ax[3].plot(grid, totE)
+
+ax[0].set_ylabel(r'$\rho$')
+ax[1].set_ylabel(r'$u$')
+ax[2].set_ylabel(r'$p$')
+ax[3].set_ylabel(r'$E$')
+
+ax[2].set_xlabel(r'$x$')
+ax[3].set_xlabel(r'$x$')
+
+lFig = chRT.save_figure('SodTubeAnalytic', fig, fext='.pgf')
+lFig.caption = r'Solution to the classic Sod shock tube problem at $t=\SI{0.2}{\second}$.'
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+ax = plt.gca()
+ax.plot(grid, density)
+ax.set_ylabel(r'$\rho$', c='C0')
+ax.set_xlabel(r'$x$')
+
+ax2 = ax.twinx()
+# ax2.plot([0.5, 0.7], [0, 0.2], c='#222222')
+for i, p in enumerate(positions.values()):
+    ax2.axvline(p, c='k')
+    if i != 1:
+        ax2.plot([0.5, p], [0, 0.2], c='#555555')
+regionLims = np.array([0, *positions.values(), 1])
+regionCentres = 0.5 * (regionLims[1:] + regionLims[:-1])
+labels = [r'$\alpha$', r'$\beta$', r'$\gamma$', r'$\delta$', r'$\epsilon$']
+for i, c in enumerate(regionCentres):
+    ax2.text(c, 0.02, labels[i])
+
+ax2.set_ylabel(r'$t$')
+ax2.yaxis.set_major_locator(MaxNLocator(5))
+lFig = chRT.save_figure('RiemannFan', fig, fext='.pgf')
+lFig.caption = r'Riemann fan of different wave speeds and associated regions for the Sod shock tube problem.'
+\end{pycode}
+
+\py[TimeDepRT]|chRT.get_figure('SodTubeAnalytic')|
+\py[TimeDepRT]|chRT.get_figure('RiemannFan')|
+% spell-checker: enable
+
+The finite volume method we have described therefore depends on finding expressions for the numerical flux between two adjacent cells.
+This is often framed as a Riemann problem at the cell interface.
+A Riemann problem consists of solving a conservation law with an initial parameter distribution consisting of two constant states meeting at a discontinuity.
+Without loss of generality this discontinuity can be placed at $x=0$, and the value of $q$ for $x<0$ is termed $q_l$ and $q_r$ for $x>0$.
+
+A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics is that of the Sod shock tube \citep{Sod1978}.
+The problem is a single Riemann problem, with gas at a different pressure and density on each side of a membrane.
+At $t=0$ the membrane is removed, and multiple waves with different velocities are launched in both directions.
+A solution to the classic Sod shock tube with states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
+At this time, a complex pressure and density structure has formed in the shock tube.
+It often best to look at the Riemann problem in terms of the propagating waves.
+In Fig.~\ref{Fig:RiemannFan} we show the same density profile, but divided into regions by black lines, with grey lines showing a time-distance plot of the different waves in the system.
+This plot, and manner of considering the waves in the system is known as a Riemann fan.
+
+The left- and right-most regions of density ($\alpha$ and $\epsilon$) shown in Fig.~\ref{Fig:RiemannFan}, are simply the initial left and right states of the fluid, as these are currently unperturbed by the waves propagating from the initial discontinuity.
+Starting from the initial discontinuity, a rarefaction wave (reduction in density) moves into the high density region (to the left), and a shock wave propagates into the low density region (to the right).
+The rarefaction wave is present in region $\beta$, with the shock front being the boundary between $\delta$ and $\epsilon$.
+There is an additional front between regions $\beta$ and $\gamma$, which we note is not visible on either the velocity or pressure panels of Fig.~\ref{Fig:SodTubeAnalytic}.
+This is a contact discontinuity and represents the boundary between two regions of different entropy.
+This is the original interface between the two gases at $t=0$, and it is advected along with the flow at the velocity $u$, so there is no mixing between the two sides of this contact discontinuity (in the case of an ideal gas).
+
+From analysis of the Jacobian of the flux function of the Euler equations, the structure of this solution can be revealed.
+There are three waves, associated with the eigenvalues of this Jacobian.
+The contact discontinuity propagates at the fluid velocity $u$ (as the fluid expands into the low density region), the other two eigenvalues are $u\pm c_s$, where $c_s$ is the sound speed of the fluid.
+Unfortunately these waves are non-linear and do not necessarily propagate at the characteristic velocity given by their associated eigenvalue.
+Instead it is necessary to apply the Rankine-Hugoniot jump conditions, at both the shock front and the contact discontinuity (given that the pressure and velocity do not vary across the latter), and solve the resultant transcendental equation to determine the parameters of regions $\gamma$ and $\delta$.
+These problems can be solved using iterative methods and knowledge of the expected wave form of the solution.
+
+As the complexity of the system and the equation of state increases, it becomes harder (or impossible) to compute this solution in an efficient manner.
+Fortunately, it is rarely necessary to compute the exact solution to the Riemann problem, but it is important to understand the the structure originating from this simple case to interpret and validate the numerical methods described later.
+
+% N.B. The characteristic of a system like this is a line for which the the solution q is constant. i.e. for advection this is x(t) = x0 + ut
+% For linear systems we can transform to characteristic variables, for which the coefficient matrix is diagonal and we have a system of independent scalar advection equations.
+% The velocity is time/space varying along the rarefaction wave.
+% The characteristic field of an equation is an eigenvector, if this is linearly
+% degenerate then we can only have contact discontinuities.
+% Integral curves are curves which connect two points by an integral of one of the eigenvectors of the system.
+% A function of q that is invariant along any integral curve is called a Riemann invariant, these are used for solving problems related to rarefaction waves.
+% These Riemann invariants are conserved along the characteristic. For the u eigenvector, we have u and p as invariant, hence only the pressure can change => contact discontinuity.
+% Characteristics on each side of shock linked by Hugoniot locus
+
+\subsection{Godunov's Method and Higher Order Reconstructions}
+
+Godunov's method \citep{Godunov1959} consists of assuming that the data $q$ is piecewise constant in each cell of our simulation domain.
+At this point the values on the left- and right-hand side of each interface are known and the flux through this interface can be determined by solving a Riemann problem.
+The Riemann problem at each interface can be treated independently under the assumption that the fastest wave from one interface not carry information to the next.
+This is a fundamental requirement of stability and will be discussed in more detail in Sec.~\ref{Sec:HydroStability}.
+
+This method provides a basic framework for solving conservation laws.
+It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for the some of the most accurate numerical methods for conservation laws.
+\citet{VanLeer1979} provided one of the first higher order extension to Godunov's method.
+It is tempting to attempt to estimate the value of $q$ at cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
+The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under or overshoots to the data.
+This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
+If the current cell is an extremum then the slope is set to 0.
+Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as Leveque \NeedRef{}.
+This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
+
+There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984}, providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods \NeedRef{}.
+WENO methods are a cornerstone of reconstruction\footnote{The properties that render WENO methods a good choice for reconstruction are also key to their applicability to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
+
+\TODO{Brief WENO5}
+
 \subsection{Numerical Fluxes}
 
-\subsection{Godunov's Method}
+Whilst there are many approximate Riemann solvers that can accurately and efficiently solve the Riemann problems arising from the Euler equations including the addition of source terms, it does not appear feasible to express the evolution of the RHD system in this way.
+Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces is used.
+For implicit methods we can instead use a Newton iterative scheme to minimise the residual of the discretised conservation law across the cell interfaces with the fluxes typically computed from the upwind value of the reconstructed parameter.
 
-\subsection{Approximate Riemann Solvers}
-
-\subsection{Stability and CFL}
+\subsection{Time Integration and Stability}\label{Sec:HydroStability}
 
 \section{Conduction}
 
