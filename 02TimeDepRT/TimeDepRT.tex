@@ -198,6 +198,9 @@ Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the ap
 
 This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
 
+Many other spatial and temporal discretisations can be devised for conservation laws, and it is important to choose a discretisation that introduces minimal error.
+In general, we term discretisations where $q^{t+1}$ depends only on $q^{t}$ as \emph{explicit}, and those also depending on $q^{t+1}$ as \emph{implicit}, necessitating the solution of a system of typically non-linear equations.
+
 Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
 Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell,
 Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
@@ -220,6 +223,7 @@ In the case of an explicit method with a correctly chosen timestep for the grid,
 An important strength of this method for solving conservation law problems is that if $F_i$ and $F_{i+1}$ are respectively the left and right edge fluxes for cell $i$, then $F_{i+1}$ will be the left edge flux for cell $i+1$, and $F_{i}$ will be the right edge flux for cell $i-1$.
 Thus the numerical integration of $q^{t+1}$ is conserved with respect to $q^t$ as all numerical fluxes, other than the left- and right-most, will cancel due to the formulation of \eqref{Eq:FiniteVolumeMethod}.
 These left- and right-most fluxes will need to consider the boundary conditions of the finite simulation volume to ensure the correctness of the conservation law.
+
 
 \subsection{Riemann Problems}
 
@@ -344,10 +348,22 @@ If the current cell is an extremum then the slope is set to 0.
 Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as Leveque \NeedRef{}.
 This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
 
-There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984}, providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods \NeedRef{}.
-WENO methods are a cornerstone of reconstruction\footnote{The properties that render WENO methods a good choice for reconstruction are also key to their applicability to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
+There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984}, providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
+WENO methods are a cornerstone of reconstruction\footnote{The properties that make WENO methods a good choice for reconstruction also render them applicable to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
 
-\TODO{Brief WENO5}
+WENO methods were first proposed by \citet{Liu1994}, and formalised for arbitrary order by \citet{Jiang1996}.
+These methods form a convex combination of interpolating polynomials over overlapping regions.
+For example, in the case of the commonly used fifth-order WENO method of \citet{Jiang1996}, three parabolae are constructed over five adjacent points, i.e. the first uses the stencil $\{x_1, x_2, x_3\}$ the second $\{x_2, x_3, x_4\}$, and the third $\{x_3, x_4, x_5\}$.
+We can equivalently define a fifth-order polynomial over the stencil $\{x_1, \ldots, x_5\}$, which can also be written as a linear combination of our interpolating parabolae at each point in this region.
+These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities or similar effects.
+
+The process of computing these initial interpolating functions is somewhat complex due to the finite volume framework often applied in hydrodynamics.
+These should be computed such that the integral over the interpolating polynomial in each cell is close to the average value, rather than simply taking it as a pointwise value.
+For a fixed uniform grid, the integration weights for each interface can be computed analytically, and the lack of conditional branches in the calculation of the final weighted value renders the method highly performant.
+For non-uniform grids, the weights can be precalculated if the grid remains fixed, or computed on the fly if necessary.
+There are also a number of approximate methods for handling non-uniform grids at low computational cost such as WENO-NM \citep{Huang2018}.
+The WENO method has been extended many times to provide increased accuracy or meet certain requirements, its strong reconstructive ability, and reliable behaviour around shocks makes it a workhorse of modern hydrodynamics and enables simpler flux functions to be reliably used, as will be discussed in the next section.
+
 
 \subsection{Numerical Fluxes}
 
@@ -355,7 +371,47 @@ Whilst there are many approximate Riemann solvers that can accurately and effici
 Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces is used.
 For implicit methods we can instead use a Newton iterative scheme to minimise the residual of the discretised conservation law across the cell interfaces with the fluxes typically computed from the upwind value of the reconstructed parameter.
 
+With high-order reconstructions, simple expressions for the fluxes can be used and give accurate results.
+An obvious first choice would be the average flux from the reconstructed states left and right of the interface.
+Unfortunately, this leads to numerical instabilities, and some artificial damping (numerical viscosity) is needed.
+This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{Rusanov1962}
+\begin{equation}
+    F_{\mathrm{LLF}} = \frac{1}{2}(f(q_{i+1}^L) + f(q_i^R)) - \frac{1}{2}\alpha(q_i^R - q_{i+1}^L).
+\end{equation}
+Here $q_i^L$ and $q_i^R$ represent the left and right hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
+Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.
+General symmetric fluxes like this are simple, and efficient but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
+This effect can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available a specialised Riemann solver for the current problem is likely a better choice.
+
 \subsection{Time Integration and Stability}\label{Sec:HydroStability}
+
+Explicit schemes are only stable (i.e. do not diverge or introduce spurious oscillations) if the Courant-Friedrichs-Lewy (CFL) condition is met.
+The CFL condition states that the numerical domain of dependence of the the equation (i.e. the terms used in the computation of the method) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
+This is a necessary, but not sufficient condition, and the exact requirements of each scheme can sometimes be derived analytically, although it is common to simply apply a safety margin to the maximum permitted value of the CFL condition.
+
+For explicit methods the CFL condition sets the maximum timestep that can be used based on the current simulation conditions.
+In a hyperbolic system the CFL condition takes the form
+\begin{equation}
+    C = \frac{u\Delta t}{\Delta x},
+\end{equation}
+and will be constrained to a maximum value ($\leq 1$) for stability of an explicit method.
+Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
+This is discussed \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost despite the method being nominally stable for large CFL values.
+
+It is difficult to achieve better than second order accuracy due to the temporal discretisations discussed so far, but by viewing $F_i^t$ as the flux at time $t$, we can achieve higher order accuracy by applying a multi-step method to more accurately integrate these fluxes (and any associated source terms) over time.
+A good choice for this is a method in the family of total-variation diminishing Runge-Kutta methods \citep[e.g.][]{Shu1988}.
+These multi-step time integration methods can be combined with fractional step methods that allow us to perform \emph{operator splitting}.
+That is, splitting an equation into two subproblems that can solved independently.
+An example of this would be the radioactive decay of an isotope transported by advection.
+Splitting this into an advection and a reaction problem allows for standard methods to be used in both of these problems, but clearly their results need to be coupled to each other.
+A naive first approach is to solve one of the subproblems over the timestep, and then solve the other, but this method cannot be better than first order accurate in time for coupled subproblems.
+A commonly used approach that is second order is known at Strang splitting \citep{Strang1968}, which consists of time-advancing the first subproblem by half the timestep, then the second by the whole timestep, before once again advancing the first subproblem by a timestep.
+This method can provide second-order accuracy.
+Many more advanced splitting procedures have been developed, but Strang splitting remains widely used due to its ease of implementation.
+
+There are many nuances to each of the techniques needed to accurately and robustly solve conservation laws numerically, and no single \emph{correct} method to use.
+The above is intended to serve as an introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
+It is hoped that this introduction will improve general understanding of this aspect of RHD codes.
 
 \section{Conduction}
 
