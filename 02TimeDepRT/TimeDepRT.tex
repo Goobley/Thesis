@@ -409,11 +409,35 @@ A commonly used approach that is second order is known at Strang splitting \cite
 This method can provide second-order accuracy.
 Many more advanced splitting procedures have been developed, but Strang splitting remains widely used due to its ease of implementation.
 
+LeVeque \NeedRef{} comments that in many situations the first-order splitting described above performs better than would be commonly expected from its formal first-order accuracy.
+This is because the errors introduced are equivalent to solving the problem at a slightly different time, differing by up to a single timestep.
+Whilst this renders the method first-order accurate, the quality of the solution is still primarily controlled by the quality of the methods used to solve the subproblems, and this exceedingly simple splitting scheme can often be applied with no problems.
+
 There are many nuances to each of the techniques needed to accurately and robustly solve conservation laws numerically, and no single \emph{correct} method to use.
 The above is intended to serve as an introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
 It is hoped that this introduction will improve general understanding of this aspect of RHD codes.
 
 \section{Conduction}
+
+When expressed in terms of energy the heat equation in a plasma along a magnetic field line is given by
+\begin{equation}
+    \frac{\partial E}{\partial t} = \frac{\partial}{\partial z}\left( \kappa_0 T^{5/2} \frac{\partial T}{\partial z} \right),
+\end{equation}
+with spatial coordinate $z$, and coefficient $\kappa_0$ varying, but typically taken to be approximately \SI{1e-6}{\erg\per\centi\metre\per\second\per\kelvin\tothe{7/2}} \citep{Spitzer1953,Braginskii1965}, based on deviations from a fully ionised hydrogen plasma.
+The form of this equation poses several problems the most significant being that in regions of sufficiently steep temperature gradients, the conductive flux approaches infinity.
+Clearly this is not physical and there is a limit maximum limit, known as the free-streaming limit at which all electrons in the plasma are flowing at their thermal speed with this heat gradient, representing a finite limit on this term.
+As this free-streaming limit is approached the heat flux becomes non-local and depends on the global temperature and density structure in the loop \citep{Battaglia2009}.
+\citet{Campbell1984} provides an expression for the transport coefficients used to determine the conductive flux through an ionised plasma and smoothly handles both the Spitzer, locally limited, and non-locally limited regimes.
+This approach can be applied in numerical simulations but more frequently (such as in RADYN) the method of \citet{FISHER1985} is applied which smoothly limits the local flux to remain less than the free-streaming limit, hence helping to stabilise this equation.
+
+Due to its parabolic nature, an explicit solution of the heat equation can be extremely costly; stability requirements provide a timestep requirement scaling with the square of the grid spacing, rather than linearly as in the case of most hyperbolic equations.
+Any attempt to explicitly integrate the heat equation on a timestep limit set by the hydrodynamic equations will likely be met with rapid divergence of any small perturbation in the data.
+This renders the conduction term stiff compared to the hydrodynamical terms and it may therefore be advantageous to use an implicit method  to guarantee stability.
+Several alternative methods have been developed, such as reforming the parabolic equation as a hyperbolic wave equation \citep{Rempel2016}, implicit-explicit methods (which may also be used for integrating stiff source terms such as the atomic level population transition rates) which perform operator splitting and use both implicit and explicit methods as needed\citep[e.g.][]{Ascher1995}, or accepting the cost of an explicit discretisation in exchange for simplicity and accuracy \citep{Bradshaw2003, Bradshaw2013}.
+
+Recently, discussion has emerged around the concept of turbulence suppressed conduction \citep{Bian2016}, where turbulence restricts the motion of electrons along the loop, and it has been suggested that the standard assumption of collisionally-dominated conduction may represent a significant overestimation of true conduction rates.
+Simulations using the zero-dimensional enthalpy based EBTEL code currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents a portion of this effect \citep{Bian2018}.
+As part of further investigations, work is currently under way to integrate these effects in the \Radyn{} and HYDRAD codes.
 
 \section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
 
