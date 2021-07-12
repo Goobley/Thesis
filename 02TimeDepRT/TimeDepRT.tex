@@ -462,8 +462,7 @@ This is particularly important when considering the very fine grid spacing often
 Despite its elegance, there are several major downsides to this implicit approach.
 Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically computed and included.
 This presents a very large barrier to entry for future developments on the platform, and this is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
-This overlapping of concerns
-Additionally, implicit codes, whilst having reduced timestep constraints, are typically much more costly per timestep than explicit codes.
+Additionally, implicit codes, whilst having less severe timestep constraints, are typically much more costly per timestep than explicit codes.
 This is somewhat offset by the majority of the cost of each step residing within the formal solver, which remains similar in both cases.
 The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
 
@@ -509,7 +508,7 @@ Several difficulties arose due to the non-thermal collisional rates used in the 
 The non-thermal collisional rates of \citet{1993Fang} are used to determine hydrogen ionisation, and require the beam energy deposition throughout the atmosphere at each timestep.
 For helium, if the Fokker-Planck electron beam description is used, then the rates of \citet{Arnaud1985} are used, but these require integration over the electron energy distribution.
 Whilst it is possible to add both of these to the \texttt{atmost.dat} file, the complete electron distribution information is very large, and we instead elect to use ``Emslie'' beam electron formalism \citep{Emslie1978}, for which the energy deposition profile throughout the atmosphere is sufficient to describe the non-thermal rates.
-We therefore chose to slightly modify \Radyn{} and add the beam heating profile to the \texttt{atmost.dat} file.
+We therefore chose to slightly modify \Radyn{} and add the beam deposition profile to the \texttt{atmost.dat} file.
 Our function for reading these files can handle both files with and without this modification.
 In the event that this beam heating information is not saved, an approximation of it can be reconstructed via interpolation from the information in \Radyn{}'s complete save file.
 Our testing of this show that the approximation is relatively good, but short term, or particularly narrow heating features may be lost.
@@ -558,3 +557,101 @@ For this \Radyn{} employs a variant of the second order spatially accurate metho
 The concept of this class of method is similar to that of short characteristics formal solvers, ensuring that no spurious minima or maxima are injected into the solution, which in hydrodynamics would result in a gain or loss of density.
 
 \TODO{I think we need a clear introduction to shock capturing methods. Read over pyCLAW paper and Leveque intro.}
+
+\section{On the Importance of \Caii{} Photoionisation by the Hydrogen Lyman Lines in Flare Models}
+
+\emph{The content of this section is based on the work presented in \Caii{} paper \NeedRef{}.}
+
+The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of \Caii{} photoionisation on these models.
+In \Radyn{} the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
+Fig.~\ref{Fig:CaIIOverlaps} shows the the overlap between the hydrogen Lyman transitions and the \Caii{} continua present in our model.
+Radiation from Ly$\alpha$ photoionises \Caii{} from all levels other than the ground state.
+All of the other Lyman transitions present can photoionise \Caii{} to \Caiii{} from all levels present in this model.
+Additionally, in flaring conditions, the higher lines of the Lyman sequence are significantly Stark broadened and create a quasi-continuum between Ly$\delta$ and the Lyman continuum \citep{DeFeiter1975}, which will further enhance the photoionisation of \Caii{} from what is considered in our model.
+
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+from MsLightweaverAtoms import H_6, CaII
+from matplotlib.patches import Rectangle
+from weno4 import weno4
+
+# plt.ion()
+H = H_6()
+Ca = CaII()
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+ax = plt.gca()
+
+# C1 = '#EECC66'
+# C2 = '#6699CC'
+C1 = 'C1'
+C2 = 'C0'
+
+lineLabels = [r'Ly$\alpha$', r'Ly$\beta$', r'Ly$\gamma$', r'Ly$\delta$']
+lineIdx = 0
+for l in H.lines:
+    if l.i != 0:
+        continue
+    plt.axvline(l.lambda0, c=C1)
+    ha = 'center' if lineIdx != 2 else 'left'
+    ax.annotate(lineLabels[lineIdx], xy=(l.lambda0, 1), xytext=(-1, 6),
+                xycoords=ax.get_xaxis_transform(), textcoords='offset points', ha=ha, fontsize='small')
+    lineIdx += 1
+
+caLabels = [
+    r'Ca\textsc{ii} 3p$^6$ 4s – Ca\textsc{iii}',
+    r'Ca\textsc{ii} 3p$^6$ 4p – Ca\textsc{iii}',
+    r'Ca\textsc{ii} 3p$^6$ 3d – Ca\textsc{iii}']
+labelIdx = 0
+for i, c in enumerate(Ca.continua[::2]):
+    patch = Rectangle((c.minLambda, i-0.25), c.lambdaEdge - c.minLambda, 0.5, fc=C2, alpha=0.7)
+    ax.add_patch(patch)
+    ax.annotate(caLabels[labelIdx], xy=(c.lambdaEdge + 1, i), va='center', fontsize='small')
+    labelIdx += 1
+plt.ylim(-0.25, len(Ca.continua[::2])-0.75)
+plt.xlim(80, 160)
+
+c = H.continua[0]
+patch = Rectangle((c.minLambda, -0.25), c.lambdaEdge - c.minLambda, 5, fc=C1,
+                  alpha=0.5, hatch='/', ec=C1, lw=0.0)
+ax.add_patch(patch)
+plt.axvline(c.lambdaEdge, c=C1, ls='--', alpha=0.8)
+ax.annotate('← LyC', xy=(c.lambdaEdge, 1), xytext=(-5, 6),
+            xycoords=ax.get_xaxis_transform(), textcoords='offset points', ha='center', fontsize='small')
+
+# yticks = np.arange(5)
+# plt.yticks(yticks, ['A', 'B', 'C', 'D', 'E'])
+plt.yticks([],[])
+
+plt.xlabel(r"$\lambda$ [nm]")
+plt.tight_layout()
+lFig = chRT.save_figure('CaIIOverlaps', fig, fext='.pgf')
+lFig.caption = r'The overlap betwen the hydrogen Lyman lines and continuum with the Ca\,\textsc{ii} continua present in the model atom used here. Both the Ca\,\textsc{ii} 3p$^6$ 4p and 3p$^6$ 3d levels contain two sub-levels with indistinguishably different continuum edges.'
+lFig.placement = 'hbtp'
+\end{pycode}
+
+\py[TimeDepRT]|chRT.get_figure('CaIIOverlaps')|
+%spell-checker: enable
+
+The hydrogen (five bound levels with H\,\textsc{ii} continuum and ten lines), helium, and calcium (five bound \Caii{} levels with \Caiii{} continuum and five lines) model atoms used in the simulations presented here are the same as those used in \Radyn{}.
+All other model atoms used in the LTE background opacities are taken from the \Lw{} standard library (and have in turn been converted from  RH distribution \citep{Uitenbroek2001}).
+
+To determine the importance of the photoionisation by the Lyman lines, each \Radyn{} simulation is reprocessed twice, once including the effects of the Lyman lines on \Caii{} (henceforth Lyman inclusive (LI)), and once without these effects (Lyman exclusive (LE)).
+In both cases the effects of the Lyman continuum are included, as this is commonly considered in RHD codes, and allows for direct comparison of the LE simulation against \Radyn{}.
+The simulations are performed using the CRD formalism for consistency with \Radyn{}, although the models used for the Lyman lines contain an approximation to PRD by removing radiative broadening and reducing van der Waals broadening.
+This is one of the two more common approaches to approximating PRD effects in these transitions, the other being to truncate the line quadrature around ten Doppler widths from the line core.
+Both of these are empirical but we favour the former in flare simulations as the narrow grid used in the latter can easily ``lose'' opacity in the moderate to high Doppler shifts that occur in flare models (Carlsson, \emph{private communication}).
+PRD effects are also present in the \Caii{} lines (primarily the resonance lines, although cross-redistribution effects also affect the infra-red triplet).
+The effects on these are typically less significant than those on the hydrogen Lyman lines, especially due to the high chromospheric densities that occur during flares.
+We therefore do not add any approximate PRD treatments to the \Caii{} lines.
+These model atoms are therefore identical between \Radyn{} and \Lw{}, and the two models differ only in their description of LTE background opacities, which in the case of the \Lw{} simulations includes helium.
+By comparing these simulations it should therefore be relatively easy to disentangle the photoionisation effects we wish to study.
+
+\subsection{The \Radyn{} simulations}
+
+\subsection{Line Profiles}
+
+\subsection{Radiative Losses}
+
+\subsection{Discussions}
+
+\section{PRD}
