@@ -518,9 +518,10 @@ With the above data we have sufficient information to construct the \Radyn{} the
 \Lw{} does not make use of the mass density directly, but instead maps it to hydrogen density.
 For this we use of the default abundances in \Lw{}, based on \citet{Asplund2009}.
 These differ to those used in \Radyn{}, but not significantly for any of the species discussed here.
+
 Ignoring the advection term it is then simple to produce a minority species tool using this approach.
 In many situations, the advection term has a small effect, and can safely be ignored \NeedRef{} \TODO{Old Flarix paper}.
-The radiative transfer equation employed in \Radyn{} is formulated on the dynamic grid, and this is not the case in \Lw{}, which assumes that the grid is static (although this limitation can be worked around).
+The method for advancing the atomic populations in time employed in \Radyn{} is formulated on the dynamic grid, and this is not the case in \Lw{}, which assumes that the grid is static (although this limitation can be worked around).
 We can simply use a fixed denser spatial sampling of the atmosphere to account for the motion of features such as the transition region over the course of the simulation.
 This model then interpolates the thermodynamic properties and NLTE hydrogen populations for the starting atmosphere onto our stratification and computes the statistical equilibrium solution for the minority species in question.
 For each subsequent timestep these properties are interpolated from the new \Radyn{} grid to the static grid, and the minority species populations can be advanced in time using the process described in Sec.~\NeedRef{}.
@@ -530,18 +531,34 @@ The transition region moves very little in terms of column mass during the simul
 This error can be reduced by renormalising each specie's total number density throughout the atmosphere from the mass density and abundances, and this helps to avoid errors growing around regions of high gradient, such as the transition region.
 
 To solve the minority species problem properly in a manner compatible with \Radyn{} it is necessary to include the advection terms.
-In the following we will describe several different approaches to handling these advection terms, and thus solving the complete kinetic equilibrium equations.
+In the following we will describe several different approaches to handling these advection terms, drawing on our previous discussions of hydrodynamics, and thus solving the complete kinetic equilibrium equations.
 
 \subsection{Advection}
+
+\TODO{This section needs to be completely redone.}
 
 In Sec.~\ref{Sec:RadynDissection} we discussed the coupled nature in which \Radyn{} solves the RHD equations.
 For flexibility we wish to decouple the advection terms from the population transitions.
 Our initial approach was to use an explicit method on the dense, fixed grid discussed above.
-Explicit methods are typically simpler to validate and understand, so seemed a logical fit for this project.
+This method is available in the \texttt{Advection} branch of the associated repository \NeedRef{}.
+It draws from the simple explicit finite-volume approaches discussed earlier in this chapter, and thus uses a fifth-order WENO-NM scheme for reconstruction and the simple local Lax-Friedrichs flux for estimating the flow of the atomic populations through the simulation.
+This numerical scheme performs extremely well in textbook advection and hydrodynamic tests, however it was found to be ill-suited to the long internal timesteps that \Radyn{}'s implicit method chooses.
+These timesteps are longer than those permitted by the CFL condition, requiring the explicit method to perform multiple substeps for each of \Radyn{}'s timestep.
+This alone can introduce cumulative error, which is further compounded by the use of the dense static grid.
+As this grid needs to conform to the requirements of the simulation over its entire evolution, rather than just its instantaneous requirements (as is the case for \Radyn{}'s grid) there are often dense clusters of points in regions where they are not required to resolve the atmospheric structure.
+These regions may have high plasma flow velocities, further increasing the timestep restrictions on the explicit method.
+In some cases several thousand applications of the explicit scheme were required to match one of \Radyn{}'s internal timesteps.
+With such different timestep restrictions imposed on the two components of this simulation, it is difficult to correctly treat both processes in a coupled fashion.
 
-\TODO{Describe WENO-HD -shocks etc}
+Using this explicit approach for advection, a fair agreement with \Radyn{} was found, but as the energy deposition in simulations increased, in turn increasing the flow speeds and moving the transition region further from its starting altitude.
+Due to \Radyn{}'s longer timesteps, during more explosive evaporative phases, the advection scheme was occasionally able to carry chromospheric material through the majority of the transition region.
+Whilst the populations quickly evolved in their new environment this process is sufficiently slow to introduce unexpected variability in the line profiles.
+A higher order splitting scheme may have helped to mitigate this but would add more computational cost to an already expensive process (due to the shear number of advection steps needed).
+This effect can also be mitigated by limiting the maximum timestep that can be taken by \Radyn{} during the creation of the baseline simulation.
+However, limiting \Radyn{}'s performance is a poor solution to this problem; the explicit advection method described here could serve well at the core of a code designed around it, in the way that FLARIX and HYDRAD both use explicit schemes, but many difficulties are created by the difference in ideologies between this and \Radyn{}'s implicit dynamic grid scheme.
 
-To improve the agreement with \Radyn{}, reduce the number of interpolations,. and leverage its adaptive grid we instead decided to apply its technique for advection, but keep it distinct from the radiative transfer.
+
+To improve the agreement with \Radyn{}, reduce the number of interpolations, and leverage rather than fight its adaptive grid we instead decided to apply its technique for advection, but keep it separate from the radiative transfer.
 Thus, at the start of each timesteps we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
 This technique is known as operator splitting \NeedRef{}, and is commonly applied in hydrodynamics simulations where different numerical techniques are effective at solving different components of the system.
 Performing a na\"{i}ve splitting like this limits the accuracy of the solution to first order accuracy in time.
@@ -556,7 +573,6 @@ As discussed above, it is necessary to accurately and conservatively resolve sho
 For this \Radyn{} employs a variant of the second order spatially accurate method of \citet{VanLeer1979}.
 The concept of this class of method is similar to that of short characteristics formal solvers, ensuring that no spurious minima or maxima are injected into the solution, which in hydrodynamics would result in a gain or loss of density.
 
-\TODO{I think we need a clear introduction to shock capturing methods. Read over pyCLAW paper and Leveque intro.}
 
 \section{On the Importance of \Caii{} Photoionisation by the Hydrogen Lyman Lines in Flare Models}
 
@@ -636,15 +652,23 @@ The hydrogen (five bound levels with H\,\textsc{ii} continuum and ten lines), he
 All other model atoms used in the LTE background opacities are taken from the \Lw{} standard library (and have in turn been converted from  RH distribution \citep{Uitenbroek2001}).
 
 To determine the importance of the photoionisation by the Lyman lines, each \Radyn{} simulation is reprocessed twice, once including the effects of the Lyman lines on \Caii{} (henceforth Lyman inclusive (LI)), and once without these effects (Lyman exclusive (LE)).
+This is achieved through the use of two different hydrogen model atoms.
 In both cases the effects of the Lyman continuum are included, as this is commonly considered in RHD codes, and allows for direct comparison of the LE simulation against \Radyn{}.
 The simulations are performed using the CRD formalism for consistency with \Radyn{}, although the models used for the Lyman lines contain an approximation to PRD by removing radiative broadening and reducing van der Waals broadening.
 This is one of the two more common approaches to approximating PRD effects in these transitions, the other being to truncate the line quadrature around ten Doppler widths from the line core.
-Both of these are empirical but we favour the former in flare simulations as the narrow grid used in the latter can easily ``lose'' opacity in the moderate to high Doppler shifts that occur in flare models (Carlsson, \emph{private communication}).
+Both of these are empirical but we favour the former in flare simulations as the narrow grid used in the latter can easily ``lose'' opacity in the moderate to high Doppler shifts that occur in flare models (Carlsson 2021, \emph{private communication}).
 PRD effects are also present in the \Caii{} lines (primarily the resonance lines, although cross-redistribution effects also affect the infra-red triplet).
 The effects on these are typically less significant than those on the hydrogen Lyman lines, especially due to the high chromospheric densities that occur during flares.
 We therefore do not add any approximate PRD treatments to the \Caii{} lines.
 These model atoms are therefore identical between \Radyn{} and \Lw{}, and the two models differ only in their description of LTE background opacities, which in the case of the \Lw{} simulations includes helium.
-By comparing these simulations it should therefore be relatively easy to disentangle the photoionisation effects we wish to study.
+Comparison of these simulations should therefore enable the study of these photoionisation effects.
+
+Our \Lw{}-based tool uses the first-order splitting technique discussed in Sec.~\ref{Sec:HydroStability}.
+The complete kinetic equilibrium equations are split into radiative and advective operators that are applied sequentially.
+A Strang-splitting approach was trialled but provided no noticeable difference in the solution over this first-order technique and whilst being more computationally costly than the simpler approach.
+After solving the statistical equilibrium problem to determine an initial solution for the atomic populations in \Radyn{}'s starting atomsphere, the populations are then advected, and the thermodynamic atmospheric parameters are updated using the \Radyn{} data from the next timestep.
+This process includes the calculation of the LTE populations of all species considered and computing the resultant background opacities.
+The atomic level populations are then advanced in time using the approach described in \NeedRef{}.
 
 \subsection{The \Radyn{} simulations}
 
