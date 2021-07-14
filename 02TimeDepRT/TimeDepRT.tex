@@ -538,7 +538,7 @@ In the following we will describe several different approaches to handling these
 \TODO{This section needs to be completely redone.}
 
 In Sec.~\ref{Sec:RadynDissection} we discussed the coupled nature in which \Radyn{} solves the RHD equations.
-For flexibility we wish to decouple the advection terms from the population transitions.
+For flexibility we wish to decouple the advection terms from the radiative effects.
 Our initial approach was to use an explicit method on the dense, fixed grid discussed above.
 This method is available in the \texttt{Advection} branch of the associated repository \NeedRef{}.
 It draws from the simple explicit finite-volume approaches discussed earlier in this chapter, and thus uses a fifth-order WENO-NM scheme for reconstruction and the simple local Lax-Friedrichs flux for estimating the flow of the atomic populations through the simulation.
@@ -555,24 +555,22 @@ Due to \Radyn{}'s longer timesteps, during more explosive evaporative phases, th
 Whilst the populations quickly evolved in their new environment this process is sufficiently slow to introduce unexpected variability in the line profiles.
 A higher order splitting scheme may have helped to mitigate this but would add more computational cost to an already expensive process (due to the shear number of advection steps needed).
 This effect can also be mitigated by limiting the maximum timestep that can be taken by \Radyn{} during the creation of the baseline simulation.
-However, limiting \Radyn{}'s performance is a poor solution to this problem; the explicit advection method described here could serve well at the core of a code designed around it, in the way that FLARIX and HYDRAD both use explicit schemes, but many difficulties are created by the difference in ideologies between this and \Radyn{}'s implicit dynamic grid scheme.
-
+However, limiting \Radyn{}'s performance is a poor solution to this problem; the explicit advection method described here could serve well at the core of a code designed around it, in the way that FLARIX and HYDRAD both use similar explicit advection schemes, but many difficulties are created by the difference in ideologies between this and \Radyn{}'s implicit dynamic grid scheme.
 
 To improve the agreement with \Radyn{}, reduce the number of interpolations, and leverage rather than fight its adaptive grid we instead decided to apply its technique for advection, but keep it separate from the radiative transfer.
-Thus, at the start of each timesteps we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
-This technique is known as operator splitting \NeedRef{}, and is commonly applied in hydrodynamics simulations where different numerical techniques are effective at solving different components of the system.
-Performing a na\"{i}ve splitting like this limits the accuracy of the solution to first order accuracy in time.
-Various advanced splitting techniques, such as Strang splitting \citep{Strang1968}, have been developed to reduced this error.
-Strang splitting reduces these error terms to second order, and newer approaches can reduce the impact of operator splitting to fourth order in time \NeedRef{}.
-A Strang splitting approach was implemented in our code using these components, but the results were not found to differ appreciably.
-It is likely that this is due to one of the two processes dominating.
-During explosive heating the populations in the upper chromosphere typically have very large transition rates, and comparatively slow advection.
-At later times, when the timestep is longer, the transition rate is typically much lower and the plasma flows are relatively smooth, but often high velocity.
-
-As discussed above, it is necessary to accurately and conservatively resolve shocks in advection and hydrodynamics problems, something that has been recognised since the 1950s \NeedRef{} \TODO{FCT book?}.
-For this \Radyn{} employs a variant of the second order spatially accurate method of \citet{VanLeer1979}.
-The concept of this class of method is similar to that of short characteristics formal solvers, ensuring that no spurious minima or maxima are injected into the solution, which in hydrodynamics would result in a gain or loss of density.
-
+Thus, at the start of each timestep we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
+This method employs a variant of the second order spatially accurate method of \citet{VanLeer1979} to reconstruct the values on either side of the interface, of which the upwind value is chosen.
+This is set within a time-centering scheme similar to that described in Dorfi \NeedRef{}.
+Under this scheme the advection stencil depends on the values of five cells, two on either side of the current one.
+Thus the Jacobian matrix for this equation is pentadiagonal.
+For simplicity and ease of implementation we chose to not directly code the expressions for these derivatives that occur in the Jacobian matrix, but instead compute them by finite differences.
+There is an elegant technique that can be used to optimise this process when an equation's region of dependence is known.
+This approach is known as Coloured Finite Difference \citep{Curtis1974}; so long as only one point in the domain affected each output point is perturbed the gradient can be trivially attributed to the correct point.
+In essence, we need only perform five additional evaluations of the advection residual, perturbing one point in every five to fill the Jacobian, rather than the traditional approach where each point would be perturbed in turn.
+The solution to this system is then computed by a Newton-Raphson iteration with Armijo line search \NeedRef{} to accelerate convergence.
+This technique has proven far more suited for reprocessing these simulations than the previous explicit scheme.
+Only one application of the method (typically requiring at most five Newton-Raphson iterations) is needed for each timestep and the computational cost is $<0.1\,\%$ of the total CPU time.
+This approach remains harder to debug and modify due to its implicit nature, although this is simplified thanks to the finite difference method for computing the Jacobian which does not need to be adjusted if the equations are modified so long as the stencil remains the same.
 
 \section{On the Importance of \Caii{} Photoionisation by the Hydrogen Lyman Lines in Flare Models}
 
@@ -580,10 +578,13 @@ The concept of this class of method is similar to that of short characteristics 
 
 The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of \Caii{} photoionisation on these models.
 In \Radyn{} the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
+The hydrogen Lyman lines are strongly enhanced in flares, and a two dex enhancement relative to quiet sun intensity was found by \citet{RubioDaCosta2009} using observations from the Transition Region and Coronal Explorer (TRACE).
+RHD modelling using \Radyn{} has also suggested that enhancements at least this large are to be expected in this line \citep{Brown2018, Hong2019}.
 Fig.~\ref{Fig:CaIIOverlaps} shows the the overlap between the hydrogen Lyman transitions and the \Caii{} continua present in our model.
 Radiation from Ly$\alpha$ photoionises \Caii{} from all levels other than the ground state.
 All of the other Lyman transitions present can photoionise \Caii{} to \Caiii{} from all levels present in this model.
 Additionally, in flaring conditions, the higher lines of the Lyman sequence are significantly Stark broadened and create a quasi-continuum between Ly$\delta$ and the Lyman continuum \citep{DeFeiter1975}, which will further enhance the photoionisation of \Caii{} from what is considered in our model.
+These highly enhanced transitions therefore provide an important mechanism for the photoionisation of \Caii{} to \Caiii{} and in the following we will investigate the effect this has on both the emergent line profiles and the radiative losses of several RHD models.
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -671,6 +672,25 @@ This process includes the calculation of the LTE populations of all species cons
 The atomic level populations are then advanced in time using the approach described in \NeedRef{}.
 
 \subsection{The \Radyn{} simulations}
+
+For this investigation two \Radyn{} simulations were used.
+Their parameters were chosen to serve as typical simulations, and were based on those used by \citet{Kerr2019, Kerr2019a}.
+The same starting atmosphere derived from VAL3C \citep{Vernazza1981} as used in the F-CHROMA grid of simulations was used.
+As previously discussed, the ``Emslie'' beam formalism was chosen over the Fokker-Planck for ease of reconstructing non-thermal rates that might be needed.
+The spectral index used for the power-law distribution of electron energies was $\delta=5$, with a low-energy cut-off of \SI{20}{\kilo\electronvolt}.
+The two simulations differed only in energy deposition which was a constant flux for \SI{10}{\second} of $1\times 10^{6}$ or \SI{1e7}{\joule\per\square\metre\per\second} \footnote{In the cgs units that are commonly adopted for \Radyn{} simulations these represent $1\times 10^9$ and \SI{1e10}{\erg\per\square\centi\metre\per\second}}.
+These simulations will be referred to as F9 and F10 respectively.
+
+All of these parameters fall within the range of those used in the F-CHROMA grid, other than the beam energy flux which is lower than the peak fluxes used in the grid.
+This is primarily due to the triangular \SI{20}{\second} duration heating profile used which is less demanding on the simulation than the constant deposition used in our simulations.
+Our choice of parameters are also supported by observational data.
+The low-energy cut-off is in accord with the findings of \citet{Sui2007} whose analysis of 33 early impulsive flares using the Ramaty High Energy Solar Spectroscopy Imager (RHESSI) found a range of 10-\SI{50}{\kilo\electronvolt} whilst accounting for X-ray albedo and under the assumption of a cold collisional thick target model.
+Another study of 53 flares using RHESSI by \citet{Saint-Hilaire2008} found that the photon spectral index $\gamma$ was distributed between 2 and 5, peaking between 3 and 3.5.
+Given this, our choice of spectral index is reasonable and lies well inside this distribution as the spectral index of the electron beam is related to the photon spectral index by $\delta = \gamma + 1$.
+
+For both of these simulations \Radyn{}'s coronal irradiation terms were disabled due to discrepancies that were found between the implementation of these in \Radyn{} and \Lw{}.
+Additionally, the maximum timestep allowed in \Radyn{} was limited to \SI{0.01}{\second}.
+This was primarily due to experiments with the explicit advection scheme, but likely also improved the accuracy of the operator splitting used in our final reprocessed simulations.
 
 \subsection{Line Profiles}
 
