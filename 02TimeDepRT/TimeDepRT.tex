@@ -694,7 +694,452 @@ This was primarily due to experiments with the explicit advection scheme, but li
 
 \subsection{Line Profiles}
 
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+import zarr
+from matplotlib.ticker import MultipleLocator, AutoMinorLocator
+from MsLightweaverAtoms import CaII
+import astropy.units as u
+import lightweaver as lw
+from radynpy.cdf import LazyRadynData
+
+# Get the RADYN intensity for a line down a particular direction; in SI
+def line_intensity_with_cont(data, kr, muIdx):
+    if not not data.cont[kr]:
+        print('line_intensity cannot compute bf intensity')
+        return
+
+    wl = data.alamb[kr] / (data.q[0:data.nq[kr], kr] *  data.qnorm * 1e5 / data.cc + 1)
+    intens = (data.outint[:, 1:data.nq[kr]+1, muIdx, kr] + data.outint[:, 0, muIdx, kr][:, np.newaxis]) *  data.cc * 1e8 / (wl**2)[np.newaxis, :]
+    print(intens.shape)
+    # wl is retruned in angstrom, intens in erg/cm^2/sr/A/s
+    wl = wl[::-1] << u.Angstrom
+    intens = lw.utils.convert_specific_intensity(wl, intens[:, ::-1] << u.erg / u.cm**2 / u.sr / u.Angstrom / u.s, 'J/m2/sr/Hz/s')
+
+    return wl << u.nm, intens
+
+def plot_8542_profiles(liData, leData, radyn):
+    plotTimes = [5, 11, 20, 40]
+    fig, ax = plt.subplots(1, 4, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.40),
+                           sharex=True, sharey=True,
+                           gridspec_kw={'wspace': 0.1, 'width_ratios':[1,1,1,1]})
+    fig.subplots_adjust(left=0.12, right=0.99)
+    ax = ax.ravel()
+
+    lineData = line_intensity_with_cont(radyn, 20, -1)
+    waveRange = (854.3444, 854.5444)
+    ca = CaII()
+    wavelength = liData['wavelength'][...]
+    wavelengthLE = leData['wavelength'][...]
+    for i, time in enumerate(plotTimes):
+        lwIdx = np.searchsorted(liData['time'], time)
+        radynIdx = np.searchsorted(radyn.time, time)
+        lambda0 = ca.lines[-1].lambda0
+
+        if i == 0:
+            ax[i].plot(lineData[0].value - lambda0, lineData[1][radynIdx], label='RADYN')
+            ax[i].plot(wavelength - lambda0, liData['Iwave'][lwIdx, :, -1], '--', label='Lightweaver LI')
+            ax[i].plot(wavelengthLE - lambda0, leData['Iwave'][lwIdx, :, -1], '--', label='Lightweaver LE')
+        else:
+            ax[i].plot(lineData[0].value - lambda0, lineData[1][radynIdx])
+            ax[i].plot(wavelength - lambda0, liData['Iwave'][lwIdx, :, -1], '--')
+            ax[i].plot(wavelengthLE - lambda0, leData['Iwave'][lwIdx, :, -1], '--')
+
+        ax[i].set_title('{:.2f} s'.format(time))
+        ax[i].xaxis.set_minor_locator(AutoMinorLocator())
+
+    ax[0].set_yscale('log')
+    ax[0].set_ylim(1e-8, 1.3e-7)
+    ax[0].set_xlim(-0.08, 0.08)
+
+    ax[0].yaxis.offsetText.set_visible(False)
+    ax[0].set_ylabel('Specific Intensity [SI]')
+    for a in ax:
+        a.set_xlabel('$\Delta\lambda$ [nm]')
+    fig.subplots_adjust(bottom=0.15)
+    fig.legend(*ax[0].get_legend_handles_labels(), loc=(0.80,0.66), frameon=False,
+               handletextpad=0.5, handlelength=1.5, fontsize=9)#, bbox_to_anchor=(0.5,0.53))
+#     fig.savefig('LineProfiles1e10_8542.png', dpi=300)
+    return fig
+
+from radynpy.cdf import LazyRadynData
+radyn = LazyRadynData(chRT.data_file('Flat1e9NoIncRad/radyn_out.cdf'))
+liData = zarr.convenience.open(chRT.data_file('Flat1e9NoIncRad/Flat1e9NoIncRadLIThesis.zip'), 'r')
+leData = zarr.convenience.open(chRT.data_file('Flat1e9NoIncRad/Flat1e9NoIncRadLEThesis.zip'), 'r')
+fig = plot_8542_profiles(liData, leData, radyn)
+lFig = chRT.save_figure('F9Profiles', fig, fext='.pgf')
+lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line profiles during the F9 simulation.'
+
+radynF10 = LazyRadynData(chRT.data_file('Flat1e10NoIncRad/radyn_out.cdf'))
+liDataF10 = zarr.convenience.open(chRT.data_file('Flat1e10NoIncRad/Flat1e10NoIncRadLIThesis.zip'), 'r')
+leDataF10 = zarr.convenience.open(chRT.data_file('Flat1e10NoIncRad/Flat1e10NoIncRadLEThesis.zip'), 'r')
+fig = plot_8542_profiles(liDataF10, leDataF10, radynF10)
+lFig = chRT.save_figure('F10Profiles', fig, fext='.pgf')
+lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line profiles during the F10 simulation.'
+\end{pycode}
+\py[TimeDepRT]|chRT.get_figure('F9Profiles')|
+\py[TimeDepRT]|chRT.get_figure('F10Profiles')|
+%spell-checker: enable
+
+
 \subsection{Radiative Losses}
+
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+from ReadAtmost import read_atmost
+from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, OI_ord_atom, Si_atom, Al_atom, Fe_atom, FeI_atom, MgII_atom, N_atom, Na_atom, S_atom, CaII_atom, He_9_atom
+from MsLightweaverAtoms import H_6, CaII, H_6_nasa, CaII_nasa, H_6_nobb
+from lightweaver.LwCompiled import FastBackground
+from weno4 import weno4
+from matplotlib.colors import LogNorm, SymLogNorm
+from contextlib import redirect_stdout
+import os
+
+atmost = read_atmost(chRT.data_file('Flat1e9NoIncRad/atmost.dat'))
+atmost.to_SI()
+atmostF10 = read_atmost(chRT.data_file('Flat1e10NoIncRad/atmost.dat'))
+atmostF10.to_SI()
+
+# Set up atmosphere with data from initial timestep
+nHTot = atmost.d1 / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)
+atmos = lw.Atmosphere.make_1d(scale=lw.ScaleType.Geometric, depthScale=np.copy(atmost.z1[0]),
+                              temperature=np.copy(atmost.tg1[0]), vlos=np.copy(atmost.vz1[0]),
+                              vturb=np.copy(atmost.vturb), ne=np.copy(atmost.ne1[0]), nHTot=np.copy(nHTot[0]))
+atmos.quadrature(5)
+FchromaAtoms = [H_6(), CaII(), He_9_atom(), C_atom(), O_atom(), Si_atom(), Fe_atom(),
+                MgII_atom(), N_atom(), Na_atom(), S_atom()]
+
+# Set up our atoms and Lightweaver context
+aSet = lw.RadiativeSet(FchromaAtoms)
+aSet.set_active('H', 'Ca')
+spect = aSet.compute_wavelength_grid()
+eqPops = aSet.compute_eq_pops(atmos)
+def fast_background(*args, Nthreads=12):
+    return FastBackground(*args, Nthreads=Nthreads)
+ctx = lw.Context(atmos, spect, eqPops, initSol=lw.InitialSolution.Lte, conserveCharge=False, Nthreads=12, backgroundProvider=fast_background)
+ctx.depthData.fill = True
+
+# Add the extra information expected by our Atoms with Fang non-thermal beam collisional rates
+atmos.bHeat = np.ones_like(atmost.bheat1[0]) * 1e-20
+atmos.hPops = eqPops['H']
+
+# An omission from Lightweaver (will be added in a later version), computes tau from the complete chi array
+def compute_tau(ctx, mu):
+    upDown = 1
+    tau = np.zeros_like(ctx.depthData.chi[:, mu, upDown, :])
+    chi = ctx.depthData.chi
+    atmos = ctx.kwargs['atmos']
+
+    # NOTE(cmo): Compute tau for all wavelengths
+    tau[:, 0] = 1e-20
+    for k in range(1, tau.shape[1]):
+        tau[:, k] = tau[:, k-1] + 0.5 * (chi[:, mu, upDown, k] + chi[:, mu, upDown, k-1]) \
+                                      * (atmos.height[k-1] - atmos.height[k]) / atmos.muz[mu]
+    return tau
+
+# Load the data from a particular timestep into the Lightweaver context
+def load_timestep(atmost, file, idx):
+    nHTot = atmost.d1 / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)
+    internalIdx = np.searchsorted(atmost.time, file['time'][idx])
+    atmos.temperature[:] = atmost.tg1[internalIdx]
+    atmos.vlos[:] = atmost.vz1[internalIdx]
+    atmos.ne[:] = atmost.ne1[internalIdx]
+    atmos.nHTot[:] = nHTot[internalIdx]
+    atmos.bHeat[:] = atmost.bheat1[internalIdx]
+
+    atmos.height[:] = atmost.z1[internalIdx]
+
+    for name, pops in file['eqPops'].items():
+        if 'n' in pops.keys():
+            eqPops.atomicPops[name].pops[:] = pops['n'][idx]
+        eqPops.atomicPops[name].nStar[:] = pops['nStar'][idx]
+    atmos.ne[:] = file['ne'][idx]
+    ctx.update_deps()
+
+# Support functions for plotting the contribution function
+def scale_cfn(cfn, scaleLimits=None):
+    cfnLog = cfn
+    if scaleLimits is None:
+        minVal = np.min(cfnLog[np.isfinite(cfnLog)])
+        maxVal = np.max(cfnLog[np.isfinite(cfnLog)])
+    else:
+        minVal = scaleLimits[0]
+        maxVal = scaleLimits[1]
+    cfnLog = np.clip(cfnLog, minVal, maxVal)
+    return cfnLog
+
+# Scale a line profile to overlie the contfn
+def scale_profile(wavelengthGrid, profile, wavelengthRange, scaleRange):
+    minIdx = np.searchsorted(wavelengthGrid, wavelengthRange[0])
+    maxIdx = np.searchsorted(wavelengthGrid, wavelengthRange[1]) + 1
+
+    profile = np.copy(profile)
+    profile -= profile[minIdx:maxIdx].min()
+    profile /= profile[minIdx:maxIdx].max()
+    profile *= (scaleRange[1] - scaleRange[0])
+    profile += scaleRange[0]
+    return profile
+
+# Compute the tau=1 line via interpolation
+def tau1_line(tau, z):
+    tau1 = np.zeros(tau.shape[0])
+
+    for la in range(tau.shape[0]):
+        tau1[la] = weno4(1.0, tau[la], z)
+
+    return tau1
+
+def quiet_pls(fn, *args, **kwargs):
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            return fn(*args, **kwargs)
+
+def plot_cfn(timeToPlot, liData, leData, atmost):
+    lwIdx = np.searchsorted(liData['time'], timeToPlot)
+    internalIdx = np.searchsorted(atmost.time, liData['time'][lwIdx])
+
+    wavelength = liData['wavelength'][...]
+    wavelengthLE = leData['wavelength'][...]
+    # Use ctx for LI case
+#     load_timestep('TimestepsAdvNrLosses/', lwIdx)
+    def load_iter_ctx(data, idx):
+        load_timestep(atmost, data, idx)
+        for i in range(10):
+            dJ = ctx.formal_sol_gamma_matrices()
+            if dJ < 1e-3:
+                break
+    quiet_pls(load_iter_ctx, liData, lwIdx)
+
+    fullNe = np.copy(ctx.kwargs['atmos'].ne)
+    fullTau = compute_tau(ctx, mu=-1)
+    fullCfn = lw.compute_contribution_fn(ctx, mu=-1)
+    caPopsFull = np.copy(ctx.eqPops['Ca'])
+
+    # LE case
+    quiet_pls(load_iter_ctx, leData, lwIdx)
+
+    noLybbNe = np.copy(ctx.kwargs['atmos'].ne)
+    noLybbTau = compute_tau(ctx, mu=-1)
+    noLybbCfn = lw.compute_contribution_fn(ctx, mu=-1)
+    caPopsNoLybb = np.copy(ctx.eqPops['Ca'])
+
+    # Now plot
+    fig, ax = plt.subplots(1, 3, sharey=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.45),
+    gridspec_kw={'wspace':0.1})
+    fig.subplots_adjust(left=0.12, right=0.99)
+
+    heightEdges = lw.compute_height_edges(ctx) / 1e6
+    wlEdges = lw.compute_wavelength_edges(ctx)
+
+    minVal = max(np.min(noLybbCfn), np.min(fullCfn))
+    maxVal = max(np.max(noLybbCfn), np.max(fullCfn))
+
+    fullCfnLog = scale_cfn(fullCfn, scaleLimits=None)
+    noLybbCfnLog = scale_cfn(noLybbCfn, scaleLimits=None)
+    ca = CaII()
+    line = ca.lines[-1]
+    lambda0 = line.lambda0
+    waveRange = (-0.1, 0.1)
+    waveRangeFull = (854.3444, 854.5444)
+    lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
+    higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
+    ax[0].pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, heightEdges, fullCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+    ax[1].pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, heightEdges, noLybbCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+
+    ax[0].set_xlim(*waveRange)
+    ax[1].set_xlim(*waveRange)
+    ax[0].set_ylim(None, 2.4)
+
+    ax[0].plot(wavelength-lambda0, scale_profile(wavelength, liData['Iwave'][lwIdx, :, -1], waveRangeFull, ax[0].get_ylim()), alpha=0.5)
+    ax[0].plot(wavelength-lambda0, tau1_line(fullTau, atmost.z1[internalIdx] / 1e6), 'r', alpha=0.5)
+    ax[1].plot(wavelengthLE-lambda0, scale_profile(wavelengthLE, leData['Iwave'][lwIdx, :, -1], waveRangeFull, ax[0].get_ylim()), '--', alpha=0.5)
+    ax[1].plot(wavelength-lambda0, tau1_line(noLybbTau, atmost.z1[internalIdx] / 1e6), 'r', alpha=0.5)
+
+    ax[2].semilogx(caPopsFull[line.j], atmost.z1[internalIdx] / 1e6, c='C0', label='upper')
+    ax[2].semilogx(caPopsFull[line.i], atmost.z1[internalIdx] / 1e6, c='C1', label='lower')
+    ax[2].semilogx(caPopsNoLybb[line.j], atmost.z1[internalIdx] / 1e6, '--', c='C0')
+    ax[2].semilogx(caPopsNoLybb[line.i], atmost.z1[internalIdx] / 1e6, '--', c='C1')
+    ax[2].semilogx(caPopsFull[-1], atmost.z1[internalIdx] / 1e6, c='C3', label=r'Ca \textsc{iii}')
+    ax[2].semilogx(caPopsNoLybb[-1], atmost.z1[internalIdx] / 1e6, '--', c='C3')
+    ax[2].semilogx(caPopsNoLybb[-1][0], atmost.z1[internalIdx][0] / 1e6, 'C2', label='Temperature')
+
+    ax[2].tick_params(axis='x', which='both')
+    ax[0].set_xticks([-0.05, 0, 0.05])
+    ax[0].xaxis.set_minor_locator(AutoMinorLocator())
+    ax[1].set_xticks([-0.05, 0, 0.05])
+    ax[1].xaxis.set_minor_locator(AutoMinorLocator())
+    ax3 = ax[2].twiny()
+    fig.subplots_adjust(top=0.82, bottom=0.18, hspace=0.5)
+    ax3.semilogx(atmost.tg1[internalIdx], atmost.z1[internalIdx] / 1e6, c='C2')
+    ax3.set_xlabel('T [K]', c='C2')
+    ax[2].set_xlabel('Number Density [m$^{-3}$]')
+    ax[0].set_xlabel('$\lambda$ [nm]')
+    ax[1].set_xlabel('$\lambda$ [nm]')
+    ax[0].set_ylabel('Height [Mm]')
+    ax[0].set_title('Full treatment', size=11)
+    ax[1].set_title('Lyman lines excluded', size=11)
+    # for a in ax:
+    #     a.tick_params(which='both', direction='in')
+    # ax3.tick_params(which='both', direction='in')
+    leg = fig.legend(*ax[2].get_legend_handles_labels(), loc=(0.75,0.23), frameon=False, handletextpad=0, handlelength=0)#, bbox_to_anchor=(0.5,0.53))
+    legLines = leg.get_lines()
+    for line in legLines:
+        line.set_linestyle(' ')
+
+    for handle, label in zip(leg.legendHandles, leg.texts):
+        label.set_color(handle.get_color())
+    fig.suptitle('Time: {:.2f} s'.format(atmost.time[internalIdx]))
+    return fig
+    # fig.savefig('ContFn1e10_8542_%d.png' % atmost.time[lwIdx], dpi=300)
+
+for timeToPlot in [11.0, 20.0]:
+    fig = plot_cfn(timeToPlot, liData, leData, atmost)
+    chRT.save_figure('F9ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+
+for timeToPlot in [11.0, 20.0]:
+    fig = plot_cfn(timeToPlot, liDataF10, leDataF10, atmostF10)
+    chRT.save_figure('F10ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+\end{pycode}
+
+\py[TimeDepRT]|chRT.get_figure('F9ContFn11s')|
+\py[TimeDepRT]|chRT.get_figure('F9ContFn20s')|
+\py[TimeDepRT]|chRT.get_figure('F10ContFn11s')|
+\py[TimeDepRT]|chRT.get_figure('F10ContFn20s')|
+%spell-checker: enable
+
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+import matplotlib.ticker as ticker
+from weno4 import weno4
+def plot_loss_comparison(liData, leData, radyn):
+    # Get the losses from RADYN for the appropriate transitions
+    radynCaIdxs = []
+    radynHCaIdxs = []
+    radynTotIdxs = []
+
+    for kr in range(radyn.ielrad.shape[0]):
+        if radyn.ielrad[kr] == 2 and radyn.cont[kr] == 0:
+            radynCaIdxs.append(kr)
+        if radyn.ielrad[kr] == 1 or radyn.cont[kr] == 0:
+            radynTotIdxs.append(kr)
+        if str(radyn.atomid[0, radyn.ielrad[kr]-1]).startswith('he') and radyn.cont[kr] == 1 and radyn.alamb[kr] < 900.0:
+            radynTotIdxs.append(kr)
+        if (radyn.ielrad[kr] == 1 or radyn.ielrad[kr] == 2) and radyn.cont[kr] == 0:
+            radynHCaIdxs.append(kr)
+        if (radyn.ielrad[kr] == 1) and radyn.cont[kr] == 1:
+            radynHCaIdxs.append(kr)
+        if str(radyn.atomid[0, radyn.ielrad[kr]-1]).startswith('he') and radyn.cont[kr] == 1 and radyn.alamb[kr] < 900.0:
+            radynHCaIdxs.append(kr)
+
+    radynCaLosses = np.sum(np.abs(radyn.cool[:,:,radynCaIdxs]), axis=-1)
+    radynAbsCool = np.sum(np.abs(radyn.cool[:,:,radynTotIdxs]), axis=-1)
+
+    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.45))
+    fig.subplots_adjust(left=0.12, right=0.95, top=0.85, bottom=0.15)
+    gs = fig.add_gridspec(1, 5, width_ratios=[1, 0.07, 0.18, 1, 0.07], height_ratios=[1])
+#     gs.update(left=0.1, right=0.95, wspace=0.2, hspace=0.4)
+    caLossesBig = []
+    caLossesLEBig = []
+    radynCaLossesBig = []
+    radynAbsCoolBig = []
+    tempInterp = []
+    fixedZGrid = np.linspace(radyn.z1[0].min(), 2.5e8, 10000)
+    # Get the losses for ~250 timesteps (0.2s cadence)
+    for tIdx in range(liData['time'].shape[0]):
+        rIdx = np.searchsorted(radyn.time, liData['time'][tIdx])
+        tempInterp.append(weno4(fixedZGrid, radyn.z1[rIdx], radyn.tg1[rIdx]))
+        caLosses = np.sum(np.abs(np.stack(liData['losses'][tIdx, -5:])), axis=0)
+        caLossesLE = np.sum(np.abs(np.stack(leData['losses'][tIdx, -5:])), axis=0)
+        caLossesBig.append(weno4(fixedZGrid, radyn.z1[rIdx], caLosses))
+        caLossesLEBig.append(weno4(fixedZGrid, radyn.z1[rIdx], caLossesLE))
+        radynCaLossesBig.append(weno4(fixedZGrid, radyn.z1[rIdx], radynCaLosses[rIdx]))
+        radynAbsCoolBig.append(weno4(fixedZGrid, radyn.z1[rIdx], radynAbsCool[rIdx]))
+    caLossesBig = np.stack(caLossesBig)
+    caLossesLEBig = np.stack(caLossesLEBig)
+    radynCaLossesBig = np.stack(radynCaLossesBig)
+    radynAbsCoolBig = np.stack(radynAbsCoolBig)
+    tempInterp = np.stack(tempInterp)
+
+    zEdges = np.concatenate(((fixedZGrid[0] + 0.5 * (fixedZGrid[0] - fixedZGrid[1]),),
+                    0.5 * (fixedZGrid[1:] + fixedZGrid[:-1]),
+                    (fixedZGrid[-1] + 0.5 * (fixedZGrid[-1] - fixedZGrid[-2]),)
+                   ))
+    timeEdgesRadyn = np.concatenate(((0,), 0.5 * (radyn.time[:-1] + radyn.time[1:])))
+    timeEdges = np.concatenate(((0,), 0.5 * (liData['time'][:-1] + liData['time'][1:])))
+
+    ax0 = fig.add_subplot(gs[0])
+    cb0 = fig.add_subplot(gs[1])
+    ax1 = fig.add_subplot(gs[3])
+    cb1 = fig.add_subplot(gs[4])
+    lpanel = ((caLossesLEBig - caLossesBig) / (caLossesLEBig)).T
+    rpanel = (radynCaLossesBig / radynAbsCoolBig).T
+    maxVal = max(lpanel.max(), abs(lpanel.min()))
+    mesh0 = ax0.pcolormesh(timeEdges, zEdges / 1e8,
+                           lpanel
+                           , cmap='RdBu_r', norm=SymLogNorm(linthresh=1e-2, vmax=maxVal, vmin=-maxVal),
+                           rasterized=True)
+    mesh1 = ax1.pcolormesh(timeEdges, zEdges / 1e8,
+                           rpanel
+                           , cmap='Spectral_r', vmax=0.4,
+                           rasterized=True)
+    fig.colorbar(mesh0, cax=cb0)
+    fig.colorbar(mesh1, cax=cb1)
+    ax0.set_title('Relative change of Ca line losses\nwith LE and LI treatments')
+    ax1.set_title('Proportion of total radiative\nlosses due to Ca lines')
+    ax0.set_xlabel('t [s]')
+    ax1.set_xlabel('t [s]')
+    ax0.set_ylabel('Height [Mm]')
+
+    panelData = {'timeEdges': timeEdges, 'zEdges': zEdges / 1e8, 'data': lpanel * rpanel}
+
+    return fig, panelData
+    # fig.savefig('Losses1e10_Im.png', dpi=300)
+    # with open('F10LossPanels.pickle', 'wb') as pkl:
+    #     pickle.dump({'timeEdges': timeEdges, 'zEdges': zEdges / 1e8, 'data': lpanel * rpanel}, pkl)
+
+fig, F9PanelData = plot_loss_comparison(liData, leData, radyn)
+lFig = chRT.save_figure('F9LossComparison', fig, fext='.pgf', dpi=500)
+
+fig, F10PanelData = plot_loss_comparison(liDataF10, leDataF10, radynF10)
+lFig = chRT.save_figure('F10LossComparison', fig, fext='.pgf', dpi=500)
+\end{pycode}
+\py[TimeDepRT]|chRT.get_figure('F9LossComparison')|
+\py[TimeDepRT]|chRT.get_figure('F10LossComparison')|
+%spell-checker: enable
+
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+def plot_loss_variation(F9LossData, F10LossData):
+    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.45))
+    fig.subplots_adjust(left=0.12, right=0.92, top=0.85, bottom=0.15)
+    gs = fig.add_gridspec(1, 5, width_ratios=[1, 0.07, 0.18, 1, 0.07], height_ratios=[1])
+    # gs.update(wspace=0.05)
+    ax0 = fig.add_subplot(gs[0])
+    cb0 = fig.add_subplot(gs[1])
+    ax1 = fig.add_subplot(gs[3])
+    cb1 = fig.add_subplot(gs[4])
+    maxVal = max(F9LossData['data'].max(), abs(F9LossData['data'].min()))
+    mesh0 = ax0.pcolormesh(F9LossData['timeEdges'], F9LossData['zEdges'],
+                        F9LossData['data'], cmap='RdBu_r', norm=SymLogNorm(1e-2, vmin=-maxVal, vmax=maxVal), rasterized=True)
+    # plt.colorbar()
+    maxVal = max(F10LossData['data'].max(), abs(F10LossData['data'].min()))
+    mesh1 = ax1.pcolormesh(F10LossData['timeEdges'], F10LossData['zEdges'], F10LossData['data'],
+                        cmap='RdBu_r', norm=SymLogNorm(1e-2, vmin=-maxVal, vmax=maxVal),
+                        rasterized=True)
+    #                        , vmax=0.2)
+    fig.colorbar(mesh0, cax=cb0)
+    fig.colorbar(mesh1, cax=cb1)
+    ax0.set_title('Variation in losses due to calcium\ntreatment in F9 simulation')
+    ax1.set_title('Variation in losses due to calcium\ntreatment in F10 simulation')
+    ax0.set_xlabel('t [s]')
+    ax1.set_xlabel('t [s]')
+    ax0.set_ylabel('Height [Mm]')
+    return fig
+fig = plot_loss_variation(F9PanelData, F10PanelData)
+lFig = chRT.save_figure('LossVariation', fig, fext='.pgf', dpi=500)
+\end{pycode}
+\py[TimeDepRT]|chRT.get_figure('LossVariation')|
+%spell-checker: enable
 
 \subsection{Discussions}
 
