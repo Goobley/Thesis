@@ -449,7 +449,10 @@ This method is designed to solve the problem of non-overlapping lines but includ
 This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
 This approach also assumed the use of a local diagonal $\Lambda^*$ operator, as discussed in the previous chapter.
 \Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
-It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but affects the two methods will no long arrive at the exactly equivalent numerical formulations.
+It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but the two methods will no longer arrive at exactly equivalent numerical formulations.
+Additionally, \Radyn{} uses an efficient Feautrier formalism for its formal solver, which solves for both the up- and down-going rays simultaneously but cannot simultaneously handle overlapping lines and Doppler shifts.
+There are no lines with significant overlap considered in the standard model atoms used in \Radyn{}, and continuum emissivities and opacities rarely change sufficiently over the wavelength range of a line to need to be considered in a wavelength varying sense.
+This is likely fair trade-off for \Radyn{} given the computational benefits it can bring.
 
 The advantage of the linearisation approach in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
 Taking for example the kinetic equilibrium equation \eqref{Eq:KinEq}, \Radyn{}'s method formulates this expression such that the corrections from both the advection and population transition terms are considered simultaneously.
@@ -781,8 +784,22 @@ lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{
 \py[TimeDepRT]|chRT.get_figure('F10Profiles')|
 %spell-checker: enable
 
+The \CaLine{} line profile from 5, 11, 20, and \SI{40}{\second} after the onset of heating in the F9 and F10 simulations is shown in Figs.~\ref{Fig:F9Profiles} and \ref{Fig:F10Profiles} respectively.
+These figures show the comparison of the LI and LE treatments, as well as the reference line profiles computed by \Radyn{}.
+Despite the different formal solvers and numerical techniques, the agreement between the \Radyn{} and LE profiles is extremely good, differing by a few percent at most.
+There are substantial differences between the LI and LE models; in the F9 simulation the LI line profile is narrower, consistently double-peaked, and less intense than the LE profile, which is much more variable, including becoming singly-peaked after the heating ends ($t=11$ and \SI{20}{\second}), before returning to a double-peaked shape at later times in the simulation.
 
-\subsection{Radiative Losses}
+The differences in the outgoing radiation in the F10 case are still significant, but perhaps a little less dramatic than the F9 case.
+The LI peak intensity is significantly reduced relative to the LE line profile in the $t=\SI{5}{\second}$ plot, and post-heating ($t=\SI{11}{\second}$) the asymmetry of the double-peaked profiles is reversed between the LI and LE treatments.
+At $t=\SI{20}{\second}$ the situation is similar to the F9 simulation; the LE treatment produces a singly-peaked line profile, whilst the LI treatment produces an asymmetric double-peaked profile (due to the appearance of a secondary peak on the violet wing).
+At later times there is a significant dip in the far violet wing for the LE treatment that is not present in the LI treatment.
+This dip varies slowly in position and depth over the evolution of the cooling phase.
+
+We can investigate the formation of these line profiles by looking at the contribution functions, and the atomic level populations associated with these spectral lines.
+From Figs.~\ref{Fig:F9Profiles} and \ref{Fig:F10Profiles}, we estimate that the difference between the two treatments is most significant at $t=11$ and \SI{20}{\second}.
+The contribution functions and associated atomic level populations for these two times in both of the simulations are plotted in Figs.~\ref{Fig:F9ContFn11s}-\ref{Fig:F10ContFn20s}.
+
+
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -992,13 +1009,21 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
     return fig
     # fig.savefig('ContFn1e10_8542_%d.png' % atmost.time[lwIdx], dpi=300)
 
-for timeToPlot in [11.0, 20.0]:
+plotTimes = [11.0, 20.0]
+for timeToPlot in plotTimes:
     fig = plot_cfn(timeToPlot, liData, leData, atmost)
-    chRT.save_figure('F9ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+    lFig = chRT.save_figure('F9ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+    if timeToPlot == plotTimes[0]:
+        lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The two left-hand panels show the contribution function, overlaid with the line profile in blue and the $\tau_\nu=1$ line in red. The right-hand panel shows the structure of the atmosphere, with populations from the LI treatment shown with solid lines and the LE treatment with dashed lines.'.format(timeToPlot)
+    else:
+        lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
+    lFig.placement = r'htbp'
 
-for timeToPlot in [11.0, 20.0]:
+for timeToPlot in plotTimes:
     fig = plot_cfn(timeToPlot, liDataF10, leDataF10, atmostF10)
-    chRT.save_figure('F10ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+    lFig = chRT.save_figure('F10ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
+    lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F10 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
+    lFig.placement = r'htbp'
 \end{pycode}
 
 \py[TimeDepRT]|chRT.get_figure('F9ContFn11s')|
@@ -1007,6 +1032,16 @@ for timeToPlot in [11.0, 20.0]:
 \py[TimeDepRT]|chRT.get_figure('F10ContFn20s')|
 %spell-checker: enable
 
+The level populations for both treatments are plotted in the right-hand panel of these figures.
+The LI and LE treatments produce significantly different populations for the upper and lower levels of the \CaLine{} transition.
+The left-hand and centre panels present the contribution functions for the two different treatments with the $\tau_\nu=1$ line overlaid in red.
+The $\tau_\nu=1$ line is reliably extended to higher altitudes in the line core of the LE treatment, suggesting that this core is formed in a different location between the two treatments.
+There is a significant feature contributing to the violet wing of the LE models around the \SI{1.5}{\mega\metre} region.
+In this same region the both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
+Under the LI treatment we instead see that there is substantially more \Caiii{} in this region likely due to \Caii{} to \Caiii{} photoionisation from Lyman lines formed in the upper chromosphere and transition region.
+In the F10 simulation there is also a significant difference between the \Caiii{} populations computed in the two treatments around the temperature minimum region, this is much deeper than any of the \Caii{} spectral line cores typically form, but is likely due to the same photoionisation process and the effects of the much larger Lyman line intensity that occurs in the F10 model.
+
+\subsection{Radiative Losses}
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
 import matplotlib.ticker as ticker
@@ -1099,9 +1134,11 @@ def plot_loss_comparison(liData, leData, radyn):
 
 fig, F9PanelData = plot_loss_comparison(liData, leData, radyn)
 lFig = chRT.save_figure('F9LossComparison', fig, fext='.pgf', dpi=500)
+lFig.caption = 'Time evolution of the calcium losses in the F9 simulation. The left-hand panel shows the absolute relative change in losses due to the different calcium treatments, and the right-hand panel shows the proportion of the total radiative losses due to the calcium lines.'
 
 fig, F10PanelData = plot_loss_comparison(liDataF10, leDataF10, radynF10)
 lFig = chRT.save_figure('F10LossComparison', fig, fext='.pgf', dpi=500)
+lFig.caption = 'Time evolution of the calcium losses in the F10 simulation. The left-hand panel shows the absolute relative change in losses due to the different calcium treatments, and the right-hand panel shows the proportion of the total radiative losses due to the calcium lines.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9LossComparison')|
 \py[TimeDepRT]|chRT.get_figure('F10LossComparison')|
@@ -1137,9 +1174,37 @@ def plot_loss_variation(F9LossData, F10LossData):
     return fig
 fig = plot_loss_variation(F9PanelData, F10PanelData)
 lFig = chRT.save_figure('LossVariation', fig, fext='.pgf', dpi=500)
+lFig.caption = r'The absolute relative change of the radiative losses considered here due to the two different calcium treatments in each of the simulations (i.e. the product of the two panels in each of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison}).'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('LossVariation')|
 %spell-checker: enable
+
+Whilst the term ``radiative losses'' is often used to describe the effects of radiation on the energy balance of the plasma, these effects are not uniquely negative.
+In many regions of the plasma absorption leads to a net gain in plasma energy, especially considering each transition on an independent basis.
+It is therefore difficult to immediately assess the effect that a change in radiative loss has on the system.
+For this we adopt an absolute relative difference metric computed following
+\begin{equation}
+    \frac{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LE}}| - \sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LI}}|}{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LE}}|}
+\end{equation}
+where $\mathcal{C}$ is the set of calcium lines used on our model atom, and $\mathrm{loss}_i$ is the volumetric radiative loss of transition $i$.
+This metric therefore quantifies the effect on the total energy being redistributed throughout the simulation (or leaving the simulation) from the different treatments of the \Caii{} lines.
+To assess the importance of this it is also essential to know the importance of the \Caii{} lines on the total energy balance of the simulation.
+Thus we also compute
+\begin{equation}
+    \frac{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{\Radyn{}}}|}{\sum_j|\mathrm{loss}_{j,\,\mathrm{\Radyn{}}}|},
+\end{equation}
+which describes the proportion of all radiative losses considered with a detailed NLTE treatment in \Radyn{} (hydrogen, helium, and calcium, lines and continua) due to the calcium lines.
+These two metrics are plotted in the left- and right-hand panels respectively of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison} for the F9 and F10 simulations respectively.
+
+Looking first at the F9 simulations, shown in Fig.~\ref{Fig:F9LossComparison}, there is a significant difference between the calcium losses in the two treatments during heating (0-\SI{10}{\second}).
+This is not surprising given the difference in the outgoing profiles shown in Fig.~\ref{Fig:F9Profiles}.
+This difference remain important above an altitude of \SI{1}{\mega\metre} throughout the entire simulation.
+The right-hand panel shows that these losses represent the largest proportion of the total radiative losses in the 0.6-\SI{1}{\mega\metre} region (after heating has ended), this is also the region in which the radiative losses between the two treatments agree the best.
+Nevertheless, in the region above \SI{1}{\mega\metre} where there is significant disagreement between the two treatments, the calcium losses typically represent in excess of the 10\% of the total.
+
+\subsection{Response Functions}
+
+\TODO{Compare with Cfn at a couple of timesteps?}
 
 \subsection{Discussions}
 
