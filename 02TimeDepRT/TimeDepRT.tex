@@ -588,6 +588,7 @@ Radiation from Ly$\alpha$ photoionises \Caii{} from all levels other than the gr
 All of the other Lyman transitions present can photoionise \Caii{} to \Caiii{} from all levels present in this model.
 Additionally, in flaring conditions, the higher lines of the Lyman sequence are significantly Stark broadened and create a quasi-continuum between Ly$\delta$ and the Lyman continuum \citep{DeFeiter1975}, which will further enhance the photoionisation of \Caii{} from what is considered in our model.
 These highly enhanced transitions therefore provide an important mechanism for the photoionisation of \Caii{} to \Caiii{} and in the following we will investigate the effect this has on both the emergent line profiles and the radiative losses of several RHD models.
+These effects have long been considered in prominence modelling, starting with the work of \citet{Ishizawa1971}, however we are not aware of any previous detailed investigation of these effects in RHD modelling of flares, where the Lyman transitions become so significantly enhanced.
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -1196,15 +1197,48 @@ Thus we also compute
 which describes the proportion of all radiative losses considered with a detailed NLTE treatment in \Radyn{} (hydrogen, helium, and calcium, lines and continua) due to the calcium lines.
 These two metrics are plotted in the left- and right-hand panels respectively of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison} for the F9 and F10 simulations respectively.
 
-Looking first at the F9 simulations, shown in Fig.~\ref{Fig:F9LossComparison}, there is a significant difference between the calcium losses in the two treatments during heating (0-\SI{10}{\second}).
+Looking first at the F9 simulation shown in Fig.~\ref{Fig:F9LossComparison}, there is a significant difference between the calcium losses in the two treatments during heating (0--\SI{10}{\second}).
 This is not surprising given the difference in the outgoing profiles shown in Fig.~\ref{Fig:F9Profiles}.
-This difference remain important above an altitude of \SI{1}{\mega\metre} throughout the entire simulation.
-The right-hand panel shows that these losses represent the largest proportion of the total radiative losses in the 0.6-\SI{1}{\mega\metre} region (after heating has ended), this is also the region in which the radiative losses between the two treatments agree the best.
+This difference remains important above an altitude of \SI{1}{\mega\metre} throughout the entire simulation.
+The right-hand panel shows that these losses represent the largest proportion of the total radiative losses in the 0.6--\SI{1}{\mega\metre} region (after heating has ended), this is also the region in which the radiative losses between the two treatments agree the best.
 Nevertheless, in the region above \SI{1}{\mega\metre} where there is significant disagreement between the two treatments, the calcium losses typically represent in excess of the 10\% of the total.
+
+The effects are quite similar in the F10 simulation.
+During energy deposition the region where the difference between the two treatments is largest is a smaller band, which is centred on $\sim$\SI{1.2}{\mega\metre}.
+This is in agreement with the line-core formation region shown in the contribution functions.
+This region expands significantly due to evaporation as the beam heating ends.
+Similarly to the F9 simulation, the region where the calcium lines represent the largest proportion of the total radiative losses is between 0.6 and \SI{1}{\mega\metre} at later times in the simulation, which is also the region where the two treatments best agree.
+In the region above this, where the difference between the two treatments is significant, the calcium line losses typically represent 5--20\% of the total radiative losses.
+
+The difference between the LI and LE calcium treatments appears comparable between the two simulations presented here.
+We can obtain a clearer estimate of the effects of the calcium treatment on the total radiative losses by plotting the product of the left- and right-hand panels of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison}.
+These are plotted in Fig.~\ref{Fig:LossVariation} and confirm our conclusions from the previous figures.
+In both cases, throughout the upper chromosphere there is a variation in total radiative losses of up to 15\%.
+Time-averaging this variation suggests that the average difference is larger in the F9 simulation than the F10 simulation, although these are both of the same order of magnitude.
+This is likely due to a larger proportion of the total radiative losses from this region being mediated by the hydrogen transitions in the more energetic simulation.
+From these simulations, we can suggest that it is likely that using a self-consistent LI treatment (where the changes in radiative losses directly affect the hydrodynamic evolution) could produce a change in energy balance in the chromosphere of 10--15\%.
+This is sufficiently large to noticeably modify the atmospheric evolution, which would further affect the outgoing calcium line profiles and formation heights, but also other chromospheric lines, such as the hydrogen Balmer series.
 
 \subsection{Response Functions}
 
 \TODO{Compare with Cfn at a couple of timesteps?}
+
+\subsection{Is Full Time-Dependence Necessary?}
+
+\emph{The work in this section was performed in collaboration with P. Heinzel and J. Kašparová, in parallel with the study of \Caii{} photoionisation, as a result of the International Space Science Institute (ISSI) meeting: "Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving: led by G.S. Kerr and V. Polito.}
+
+It has been repeatedly shown that full time-dependent treatment of the hydrogen lines is necessary in RHD simulations.
+This was first investigated in wave heated chromospheric simulations by \citet{Carlsson2002}, who found a settling time for hydrogen to return to equilibrium ionisation of the order of thousands of seconds.
+\citet{Brown2018} also compared the hydrogen line profiles, computed with \Radyn{}'s approximate PRD and time-dependence, and also with statistical equilibrium using a the full PRD treatment of RH.
+They found that the time-dependence had a more significant effect on the Lyman lines, and could not be ignored.
+More recently \citet{Kerr2019a} have investigated the effects of a time-dependent treatment of the level populations of Mg\,\textsc{ii}, and found that whilst there were differences between the statistical equilibrium and time-dependent treatments, the statistical equilibrium treatment was sufficient for most stages of the flare models investigated.
+
+It is therefore important to assess the impact of a time-dependent treatment of \Caii{} in solar flare models.
+In the following, we shall briefly summarise our investigation of the importance of treating \Caii{} with time-dependence in the RHD model used for the comparison of the \Radyn{} and FLARIX codes presented in \citet{Kasparova2019}.
+This simulation utilises a set of features common to both codes, considering only hydrogen and calcium in detailed radiative transfer, and using an analytic ``Emslie'' beam formalism \NeedRef{} (Hawley \& Fisher 1994).
+The beam flux is modulated to have a symmetric triangular time profile, lasting \SI{20}{\second} and peaking at \SI{10}{\second} depositing a total of \SI{1e8}{\joule\per\square\metre} \footnote{\SI{1e11}{\erg\per\square\centi\metre}}.
+A spectral index of 3 and low-energy cut-off of \SI{20}{\kilo\electronvolt} was also chosen, and similarly to the models shown previously the initial atmosphere was based on the VAL3C model of \citet{Vernazza1981}.
+
 
 \subsection{Discussions}
 
