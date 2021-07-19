@@ -1007,12 +1007,16 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
     for handle, label in zip(leg.legendHandles, leg.texts):
         label.set_color(handle.get_color())
     fig.suptitle('Time: {:.2f} s'.format(atmost.time[internalIdx]))
-    return fig
+    cfnData = {'LI': fullCfn.T[:, lowerIdx:higherIdx], 'LE': noLybbCfn.T[:, lowerIdx:higherIdx],
+               'wavelengthEdges': wlEdges[lowerIdx:higherIdx]-lambda0, 'heightEdges': heightEdges, 'maxVal': maxVal}
+    return fig, cfnData
     # fig.savefig('ContFn1e10_8542_%d.png' % atmost.time[lwIdx], dpi=300)
 
 plotTimes = [11.0, 20.0]
+F9Cfns = []
 for timeToPlot in plotTimes:
-    fig = plot_cfn(timeToPlot, liData, leData, atmost)
+    fig, cfnData = plot_cfn(timeToPlot, liData, leData, atmost)
+    F9Cfns.append(cfnData)
     lFig = chRT.save_figure('F9ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
     if timeToPlot == plotTimes[0]:
         lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The two left-hand panels show the contribution function, overlaid with the line profile in blue and the $\tau_\nu=1$ line in red. The right-hand panel shows the structure of the atmosphere, with populations from the LI treatment shown with solid lines and the LE treatment with dashed lines.'.format(timeToPlot)
@@ -1020,8 +1024,10 @@ for timeToPlot in plotTimes:
         lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
     lFig.placement = r'htbp'
 
+F10Cfns = []
 for timeToPlot in plotTimes:
-    fig = plot_cfn(timeToPlot, liDataF10, leDataF10, atmostF10)
+    fig, cfnData = plot_cfn(timeToPlot, liDataF10, leDataF10, atmostF10)
+    F10Cfns.append(cfnData)
     lFig = chRT.save_figure('F10ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
     lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F10 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
     lFig.placement = r'htbp'
@@ -1221,9 +1227,123 @@ This is sufficiently large to noticeably modify the atmospheric evolution, which
 
 \subsection{Response Functions}
 
+%spell-checker: disable
+\begin{pycode}[TimeDepRT]
+
+def rf_sym_range(rf):
+    vmin = rf.min()
+    vmax = rf.max()
+    vmaxAbs = max(abs(vmin), abs(vmax))
+    return vmaxAbs
+
+def plot_cf_rf_comparison(cfnData, rfTempLI, rfVlosLI,
+                          rfTempLE, rfVlosLE, wavelengthLI, wavelengthLE):
+    fig, ax = plt.subplots(2, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+    fig.subplots_adjust(left=0.12, right=0.99)
+
+    wavelengthEdgesLI = np.concatenate(([wavelengthLI[0]],
+                                        0.5 * (wavelengthLI[1:] + wavelengthLI[:-1]),
+                                        [wavelengthLI[-1]]))
+    wavelengthEdgesLE = np.concatenate(([wavelengthLE[0]],
+                                        0.5 * (wavelengthLE[1:] + wavelengthLE[:-1]),
+                                        [wavelengthLE[-1]]))
+
+    ca = CaII()
+    lambda0 = ca.lines[-1].lambda0
+
+    ax[0, 0].pcolormesh(cfnData['wavelengthEdges'], cfnData['heightEdges'], cfnData['LI'],
+                        rasterized=True, cmap='Blues',
+                        norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=cfnData['maxVal']))
+    ax[0, 0].set_xlim(-0.1, 0.1)
+    ax[0, 0].set_ylim(None, 2.4)
+    vmaxAbs = rf_sym_range(rfTempLI['rf'])
+    ax[0, 1].pcolormesh(wavelengthEdgesLI - lambda0, cfnData['heightEdges'], rfTempLI['rf'],
+                        rasterized=True, cmap='RdBu_r',
+                        norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[0, 1].set_xlim(-0.1, 0.1)
+    ax[0, 1].set_ylim(None, 2.4)
+    vmaxAbs = rf_sym_range(rfVlosLI['rf'])
+    ax[0, 2].pcolormesh(wavelengthEdgesLI - lambda0, cfnData['heightEdges'], rfVlosLI['rf'],
+                        rasterized=True, cmap='RdBu_r',
+                        norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[0, 2].set_xlim(-0.1, 0.1)
+    ax[0, 2].set_ylim(None, 2.4)
+
+    ax[1, 0].pcolormesh(cfnData['wavelengthEdges'], cfnData['heightEdges'], cfnData['LE'],
+                        rasterized=True, cmap='Blues',
+                        norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=cfnData['maxVal']))
+    ax[1, 0].set_xlim(-0.1, 0.1)
+    ax[1, 0].set_ylim(None, 2.4)
+    vmaxAbs = rf_sym_range(rfTempLE['rf'])
+    ax[1, 1].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfTempLE['rf'],
+                        rasterized=True, cmap='RdBu_r',
+                        norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[1, 1].set_xlim(-0.1, 0.1)
+    ax[1, 1].set_ylim(None, 2.4)
+    vmaxAbs = rf_sym_range(rfVlosLI['rf'])
+    ax[1, 2].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfVlosLE['rf'],
+                        rasterized=True, cmap='RdBu_r',
+                        norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[1, 2].set_xlim(-0.1, 0.1)
+    ax[1, 2].set_ylim(None, 2.4)
+
+    axFlat = ax.ravel()
+    for i in range(axFlat.shape[0]):
+        if not (i == 0 or i == 3):
+            axFlat[i].set_yticklabels([])
+        else:
+            axFlat[i].set_ylabel('Height [Mm]')
+
+        if i < 3:
+            axFlat[i].set_xticklabels([])
+        else:
+            axFlat[i].xaxis.set_major_locator(MaxNLocator(3))
+            axFlat[i].set_xlabel(r'$\Delta\lambda$ [nm]')
+    return fig
+
+def read_rfs(folder, stepIdx, dt=1e-3):
+    with open(chRT.data_file(folder + '/Rfs/LI/' + 'Rf_temp_5.00e+01_{:.2e}_{:d}.pickle'.format(dt, stepIdx)), 'rb') as pkl:
+        rfTempLI = pickle.load(pkl)
+
+    with open(chRT.data_file(folder + '/Rfs/LI/' + 'Rf_vlos_2.00e+01_{:.2e}_{:d}.pickle'.format(dt, stepIdx)), 'rb') as pkl:
+        rfVlosLI = pickle.load(pkl)
+
+    with open(chRT.data_file(folder + '/Rfs/LE/' + 'Rf_temp_5.00e+01_{:.2e}_{:d}.pickle'.format(dt, stepIdx)), 'rb') as pkl:
+        rfTempLE = pickle.load(pkl)
+
+    with open(chRT.data_file(folder + '/Rfs/LE/' + 'Rf_vlos_2.00e+01_{:.2e}_{:d}.pickle'.format(dt, stepIdx)), 'rb') as pkl:
+        rfVlosLE = pickle.load(pkl)
+
+    wavelengthLI = np.load(chRT.data_file(folder + '/Rfs/LI/Wavelength.npy'))
+    wavelengthLE = np.load(chRT.data_file(folder + '/Rfs/LE/Wavelength.npy'))
+
+    return rfTempLI, rfVlosLI, rfTempLE, rfVlosLE, wavelengthLI, wavelengthLE
+
+timesToPlot = [11, 20]
+for i, t in enumerate(timesToPlot):
+    stepIdx = np.searchsorted(atmost.time, t)
+    rfs = read_rfs('Flat1e9NoIncRad', stepIdx)
+    fig = plot_cf_rf_comparison(F9Cfns[i], *rfs)
+    lFig  = chRT.save_figure('F9RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
+    lFig.caption = r'CF/RF Comparison F9 {:d} s.'.format(t)
+
+for i, t in enumerate(timesToPlot):
+    stepIdx = np.searchsorted(atmostF10.time, t)
+    rfs = read_rfs('Flat1e10NoIncRad', stepIdx)
+    fig = plot_cf_rf_comparison(F10Cfns[i], *rfs)
+    lFig  = chRT.save_figure('F10RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
+    lFig.caption = r'CF/RF Comparison F10 {:d} s.'.format(t)
+\end{pycode}
+
+\py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
+\py[TimeDepRT]|chRT.get_figure('F9RfComp20s')|
+\py[TimeDepRT]|chRT.get_figure('F10RfComp11s')|
+\py[TimeDepRT]|chRT.get_figure('F10RfComp20s')|
+%spell-checker: enable
+
 \TODO{Compare with Cfn at a couple of timesteps?}
 
-\subsection{Is Full Time-Dependence Necessary?}
+\subsection{Is Full Time-Dependence Necessary?}\label{Sec:TimeDepSE}
 
 \emph{The work in this section was performed in collaboration with P. Heinzel and J. Kašparová, in parallel with the study of \Caii{} photoionisation, as a result of the International Space Science Institute (ISSI) meeting: "Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving: led by G.S. Kerr and V. Polito.}
 
@@ -1239,6 +1359,109 @@ This simulation utilises a set of features common to both codes, considering onl
 The beam flux is modulated to have a symmetric triangular time profile, lasting \SI{20}{\second} and peaking at \SI{10}{\second} depositing a total of \SI{1e8}{\joule\per\square\metre} \footnote{\SI{1e11}{\erg\per\square\centi\metre}}.
 A spectral index of 3 and low-energy cut-off of \SI{20}{\kilo\electronvolt} was also chosen, and similarly to the models shown previously the initial atmosphere was based on the VAL3C model of \citet{Vernazza1981}.
 
+% spell-checker: disable
+% \begin{pycode}[TimeDepRT]
+% timesToSim = [2, 5, 10, 15, 20, 25]
+% radOutput = []
+% for t in timesToSim:
+%     idx10s = np.searchsorted(atmost.time, t)
+
+%     atmos = lw.Atmosphere.make_1d(scale=lw.ScaleType.Geometric, depthScale=np.copy(atmost.z1[idx10s]),
+%                                   temperature=np.copy(atmost.tg1[idx10s]),
+%                                   vlos=np.copy(atmost.vz1[idx10s]),
+%                                   vturb=np.ones_like(atmost.tg1[idx10s]) * 2e3,
+%                                   ne=np.copy(atmost.ne1[idx10s]),
+%                                   nHTot=(atmost.d1[idx10s] / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)),
+%                         )
+%     atmos.quadrature(5)
+
+%     from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, OI_ord_atom, Si_atom, Al_atom, Fe_atom, FeI_atom, MgII_atom, N_atom, Na_atom, S_atom, CaII_atom, He_9_atom
+%     from MsLightweaverAtoms import H_6, CaII, H_6_nasa, CaII_nasa, H_6_noLybb
+
+%     Atoms = [H_6(), CaII(), He_9_atom(), C_atom(), O_atom(), Si_atom(), Fe_atom(),
+%                     MgII_atom(), N_atom(), Na_atom(), S_atom()]
+%     AtomsNoLybb = [H_6_noLybb(), CaII(), He_9_atom(), C_atom(), O_atom(), Si_atom(), Fe_atom(),
+%                     MgII_atom(), N_atom(), Na_atom(), S_atom()]
+%     aSet = lw.RadiativeSet(Atoms)
+%     aSet.set_detailed_static('H')
+%     aSet.set_active('Ca')
+%     spect = aSet.compute_wavelength_grid()
+%     eqPops = aSet.compute_eq_pops(atmos)
+%     eqPops['H'][...] = atmost.nh1[idx10s, :]
+
+%     aSetNoLy = lw.RadiativeSet(AtomsNoLybb)
+%     aSetNoLy.set_detailed_static('H')
+%     aSetNoLy.set_active('Ca')
+%     spectNoLy = aSetNoLy.compute_wavelength_grid()
+%     eqPopsNoLy = aSetNoLy.compute_eq_pops(atmos)
+%     eqPopsNoLy['H'][...] = atmost.nh1[idx10s, :]
+
+%     ctx = lw.Context(atmos, spect, eqPops, initSol=lw.InitialSolution.Lte, conserveCharge=False, Nthreads=12)
+%     ctxNoLy = lw.Context(atmos, spectNoLy, eqPopsNoLy, initSol=lw.InitialSolution.Lte, conserveCharge=False, Nthreads=12)
+
+%     for i in range(500):
+%         dJ = ctx.formal_sol_gamma_matrices()
+%         if i < 10:
+%             continue
+%         delta = ctx.stat_equil()
+%         if dJ < 3e-3 and delta < 1e-3:
+%             print(i)
+%             break
+%     for i in range(500):
+%         dJ = ctxNoLy.formal_sol_gamma_matrices()
+%         if i < 10:
+%             continue
+%         delta = ctxNoLy.stat_equil()
+%         if dJ < 3e-3 and delta < 1e-3:
+%             print(i)
+%             break
+
+%     radOutput.append({'Full': np.copy(ctx.spect.I), 'NoLybb': np.copy(ctxNoLy.spect.I)})
+% \end{pycode}
+
+\begin{pycode}[TimeDepRT]
+from matplotlib.ticker import MaxNLocator
+flarixComp = zarr.convenience.open(chRT.data_file('FlarixCompHard/FlarixCompHardFull.zip'), 'r')
+flarixCompNoLy = zarr.convenience.open(chRT.data_file('FlarixCompHard/FlarixCompHardNoLybb.zip'), 'r')
+with open(chRT.data_file('FlarixCompHard/RadynFlarixCompHardStatEqLightweaver.pickle'), 'rb') as pkl:
+    flarixCompSe = pickle.load(pkl)
+
+plotTimes = [2, 5, 10, 15, 20, 25]
+fig, ax = plt.subplots(2, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig.subplots_adjust(left=0.12, right=0.99)
+ax = ax.ravel()
+
+maxI = flarixCompNoLy['Iwave'][...].max()
+wave = flarixCompSe['wavelength']
+waveNoLy = flarixCompSe['wavelengthNoLy']
+ca = CaII()
+
+for i, t in enumerate(plotTimes):
+    zarrIdx = np.searchsorted(flarixComp['time'][...], t)
+    ax[i].plot(wave - ca.lines[-1].lambda0, flarixComp['Iwave'][zarrIdx, :, -1], c='C0')
+    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompNoLy['Iwave'][zarrIdx, :, -1], c='C1')
+    ax[i].plot(wave - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['Full'][:, -1], '--', c='C0')
+    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['NoLybb'][:, -1], '--', c='C1')
+    ax[i].set_xlim(-0.1, 0.1)
+    ax[i].set_ylim(None, maxI * 1.05)
+    ax[i].set_title('{:.1f} s'.format(t))
+
+    if not (i == 0 or i == 3):
+        ax[i].set_yticklabels([])
+    else:
+        ax[i].set_ylabel('Specific Intensity [SI]')
+
+    if i < 3:
+        ax[i].set_xticklabels([])
+    else:
+        ax[i].xaxis.set_major_locator(MaxNLocator(3))
+        ax[i].set_xlabel(r'$\Delta\lambda$ [nm]')
+lFig = chRT.save_figure('TimeDepSEComparison', fig, fext='.pgf')
+lFig.caption = r'Comparison of time-dependent and statistical equilibrium treatments for the Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for LI and LE treatments in the simulation described in Section~\ref{Sec:TimeDepSE}. The time-dependent treatments are shown with solid lines, and the statistical equilibrium treatments with dashed lines. Blue is used for the LI treatment, and orange for the LE treatment.'
+\end{pycode}
+
+\py[TimeDepRT]|chRT.get_figure('TimeDepSEComparison')|
+% spell-checker: enable
 
 \subsection{Discussions}
 
