@@ -499,6 +499,8 @@ In the following we will discuss the creation of a minority species tool for rep
 From the previous discussion, building such a tool on the \Lw{} framework should provide researchers with a modern, simpler codebase that is easier to conceptualise and modify, allowing for investigation of effects to be included in \Radyn{} or future RHD codes.
 Excluding the model atom definitions, the source code of the simulations presented in this chapter totals $\sim$1000 lines of Python, mostly following modern best practices.
 
+This approach could also be applied to a simple investigation of the effects of a magnetic field on the outgoing radiation by imposing an \emph{ad hoc} magnetic field (constant or varying) on the model atmosphere and computing the emergent line profiles, in a much simpler way than a modifying \Radyn{} for this task.
+
 \section{Reprocessing \Radyn{} Simulations with the \Lw{} Framework}
 
 To perform a minority species simulation, a particular file from the original simulation, \texttt{atmost.dat}, must be provided.
@@ -696,7 +698,7 @@ For both of these simulations \Radyn{}'s coronal irradiation terms were disabled
 Additionally, the maximum timestep allowed in \Radyn{} was limited to \SI{0.01}{\second}.
 This was primarily due to experiments with the explicit advection scheme, but likely also improved the accuracy of the operator splitting used in our final reprocessed simulations.
 
-\subsection{Line Profiles}
+\subsection{Line Profiles}\label{Sec:TimeDep8542Profiles}
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -968,10 +970,12 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
     ax[1].set_xlim(*waveRange)
     ax[0].set_ylim(None, 2.4)
 
+    tau1LI = tau1_line(fullTau, atmost.z1[internalIdx] / 1e6)
+    tau1LE = tau1_line(noLybbTau, atmost.z1[internalIdx] / 1e6)
     ax[0].plot(wavelength-lambda0, scale_profile(wavelength, liData['Iwave'][lwIdx, :, -1], waveRangeFull, ax[0].get_ylim()), alpha=0.5)
-    ax[0].plot(wavelength-lambda0, tau1_line(fullTau, atmost.z1[internalIdx] / 1e6), 'r', alpha=0.5)
+    ax[0].plot(wavelength-lambda0, tau1LI, 'r', alpha=0.5)
     ax[1].plot(wavelengthLE-lambda0, scale_profile(wavelengthLE, leData['Iwave'][lwIdx, :, -1], waveRangeFull, ax[0].get_ylim()), '--', alpha=0.5)
-    ax[1].plot(wavelength-lambda0, tau1_line(noLybbTau, atmost.z1[internalIdx] / 1e6), 'r', alpha=0.5)
+    ax[1].plot(wavelength-lambda0, tau1LE, 'r', alpha=0.5)
 
     ax[2].semilogx(caPopsFull[line.j], atmost.z1[internalIdx] / 1e6, c='C0', label='upper')
     ax[2].semilogx(caPopsFull[line.i], atmost.z1[internalIdx] / 1e6, c='C1', label='lower')
@@ -1008,7 +1012,8 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
         label.set_color(handle.get_color())
     fig.suptitle('Time: {:.2f} s'.format(atmost.time[internalIdx]))
     cfnData = {'LI': fullCfn.T[:, lowerIdx:higherIdx], 'LE': noLybbCfn.T[:, lowerIdx:higherIdx],
-               'wavelengthEdges': wlEdges[lowerIdx:higherIdx]-lambda0, 'heightEdges': heightEdges, 'maxVal': maxVal}
+               'wavelengthEdges': wlEdges[lowerIdx:higherIdx]-lambda0, 'heightEdges': heightEdges, 'maxVal': maxVal, 'wavelengthTau1': wavelength - lambda0,
+               'tau1LI': tau1LI, 'tau1LE': tau1LE}
     return fig, cfnData
     # fig.savefig('ContFn1e10_8542_%d.png' % atmost.time[lwIdx], dpi=300)
 
@@ -1254,36 +1259,45 @@ def plot_cf_rf_comparison(cfnData, rfTempLI, rfVlosLI,
     ax[0, 0].pcolormesh(cfnData['wavelengthEdges'], cfnData['heightEdges'], cfnData['LI'],
                         rasterized=True, cmap='Blues',
                         norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=cfnData['maxVal']))
+    ax[0, 0].plot(cfnData['wavelengthTau1'], cfnData['tau1LI'], c='r', alpha=0.5)
     ax[0, 0].set_xlim(-0.1, 0.1)
     ax[0, 0].set_ylim(None, 2.4)
+    ax[0, 0].set_title('Contribution Function')
     vmaxAbs = rf_sym_range(rfTempLI['rf'])
     ax[0, 1].pcolormesh(wavelengthEdgesLI - lambda0, cfnData['heightEdges'], rfTempLI['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[0, 1].plot(cfnData['wavelengthTau1'], cfnData['tau1LI'], c='r', alpha=0.5)
     ax[0, 1].set_xlim(-0.1, 0.1)
     ax[0, 1].set_ylim(None, 2.4)
+    ax[0, 1].set_title('Temperature Response')
     vmaxAbs = rf_sym_range(rfVlosLI['rf'])
     ax[0, 2].pcolormesh(wavelengthEdgesLI - lambda0, cfnData['heightEdges'], rfVlosLI['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[0, 2].plot(cfnData['wavelengthTau1'], cfnData['tau1LI'], c='r', alpha=0.5)
     ax[0, 2].set_xlim(-0.1, 0.1)
     ax[0, 2].set_ylim(None, 2.4)
+    ax[0, 2].set_title('Velocity Response')
 
     ax[1, 0].pcolormesh(cfnData['wavelengthEdges'], cfnData['heightEdges'], cfnData['LE'],
                         rasterized=True, cmap='Blues',
                         norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=cfnData['maxVal']))
+    ax[1, 0].plot(cfnData['wavelengthTau1'], cfnData['tau1LE'], c='r', alpha=0.5)
     ax[1, 0].set_xlim(-0.1, 0.1)
     ax[1, 0].set_ylim(None, 2.4)
     vmaxAbs = rf_sym_range(rfTempLE['rf'])
     ax[1, 1].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfTempLE['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[1, 1].plot(cfnData['wavelengthTau1'], cfnData['tau1LE'], c='r', alpha=0.5)
     ax[1, 1].set_xlim(-0.1, 0.1)
     ax[1, 1].set_ylim(None, 2.4)
     vmaxAbs = rf_sym_range(rfVlosLI['rf'])
     ax[1, 2].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfVlosLE['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
+    ax[1, 2].plot(cfnData['wavelengthTau1'], cfnData['tau1LE'], c='r', alpha=0.5)
     ax[1, 2].set_xlim(-0.1, 0.1)
     ax[1, 2].set_ylim(None, 2.4)
 
@@ -1325,14 +1339,17 @@ for i, t in enumerate(timesToPlot):
     rfs = read_rfs('Flat1e9NoIncRad', stepIdx)
     fig = plot_cf_rf_comparison(F9Cfns[i], *rfs)
     lFig  = chRT.save_figure('F9RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
-    lFig.caption = r'CF/RF Comparison F9 {:d} s.'.format(t)
+    if i == 0:
+        lFig.caption = r'Comparative plots of the temperature and velocity response functions and the contribution function for the Ca\,\textsc{{ii}} \SI{{854.2}}{{\nano\metre}} line in the F9 simulation at {:d} s. The upper row shows the LI treatment, and the lower row the LE treatment. For the response functions, enhancement to a positive perturbation is shown in red, and reduction in blue. The $\tau_\nu=1$ line is overlaid on each plot.'.format(t)
+    else:
+        lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F9 simulation at {:d} s.'.format(t)
 
 for i, t in enumerate(timesToPlot):
     stepIdx = np.searchsorted(atmostF10.time, t)
     rfs = read_rfs('Flat1e10NoIncRad', stepIdx)
     fig = plot_cf_rf_comparison(F10Cfns[i], *rfs)
     lFig  = chRT.save_figure('F10RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
-    lFig.caption = r'CF/RF Comparison F10 {:d} s.'.format(t)
+    lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F10 simulation at {:d} s.'.format(t)
 \end{pycode}
 
 \py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
@@ -1341,7 +1358,84 @@ for i, t in enumerate(timesToPlot):
 \py[TimeDepRT]|chRT.get_figure('F10RfComp20s')|
 %spell-checker: enable
 
-\TODO{Compare with Cfn at a couple of timesteps?}
+In Section~\ref{Sec:TimeDep8542Profiles} the contribution function was used to investigate the effects of the LI treatment on the \CaLine{} line.
+In the NLTE problem the contribution function provides limited interpretability, for reasons we will explore.
+
+The contribution function is often interpreted as a description of the location at which a spectral line forms.
+In many lines, the contribution at the line core can span a relatively large region, and thus there is a high probability that photons measured at the same wavelength have been produced in significantly different locations.
+It is therefore difficult to meaningfully ascribe mean thermodynamic parameters of line formation to a non-uniform extended region over which the line forms.
+This problem becomes more complex still if the contribution function is double-peaked, as is the case for the blue side of the LE line core in many of the examples presented so far.
+
+It is common to use the integral form of the RTE
+\begin{equation}
+    I(\nu) = \int_0^\infty S(\nu, t_\nu) e^{-t_\nu}\, dt_\nu,
+\end{equation}
+and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
+As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
+
+The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that can occur in NLTE RT as the radiation field from one region of the model atmosphere can determine the populations and thus the emissions in another.
+These effects can instead be captured by the use of response functions.
+
+Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the coupling of these two problems.
+A response function tells us how the outgoing intensity changes \emph{in response} to a change in atmospheric parameters.
+These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
+In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
+
+To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
+In a traditional semi-empirical statistical equilibrium model, many parameters can be adjusted freely, and thus the response to them computed.
+Here, the most important atmospheric parameters that describe our model are temperature, plasma bulk velocity, and electron density.
+The last of these is determined by charge conservation in the simulations considered here, and we will therefore compute the response to the first two.
+
+Response functions have typically been considered in a statistical equilibrium context, as they are commonly applied as part of quiet sun inversion procedures.
+The atmosphere in our model varies hugely over the \SI{50}{\second} duration of the simulation, so the typical methods for computing response functions need to be adapted to this setting.
+Whilst computationally expensive, the ``brute force'' approach to response functions makes them simple to calculate.
+Following this approach the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the the populations are updated given the new radiation field and atmosphere.
+This procedure is repeated for the parameter at each depth in the atmosphere.
+The intensity response to perturbation $\delta q$ in parameter $q$ at depth point $k$ can then be computed by finite differences as
+\begin{equation}
+    \mathcal{R}_q(k) = \frac{I(q_k + \delta q) - I(q_k)}{\delta q}.
+\end{equation}
+Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}), and has proven more robust.
+The response function is then written as
+\begin{equation}
+    \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
+\end{equation}
+
+In a statistical equilibrium case, the standard statistical equilibrium procedure of formal solution and population update is updated until convergence is reached.
+For the time-dependent situation, a timestep by which to advance the system is needed.
+This should be short to compared to the hydrodynamic evolution of our system, but sufficiently long to allow the population change to rise above our convergence threshold and correctly converge to the new solution.
+\citet{Carlsson2002} note that a population out of statistical equilibrium will follow an exponential decay back to the steady state solution, further supporting the choice of a short timestep to attempt to remain within the more ``linear'' regime of this process.
+Extreme care should therefore be taken when trying to make quantitative use of these time-dependent response functions over longer time periods, but for now we shall focus on qualitative aspects.
+
+For a parameter $q$, measured in units of Q, and specific intensity in units of I, a statistical equilibrium response function has units of $\mathrm{I}\,\mathrm{Q}^{-1}$.
+In the time-dependent case, we can further divide by the timestep used to obtain a response function in units of $\mathrm{I}\,\mathrm{Q}^{-1}\,\mathrm{s}^{-1}$.
+As previously stated, care must be taken with extrapolating quantitative variations of outgoing intensity from the time-dependent response function, but in both cases the simple units present allow for easy comparison of the magnitude of the line's response to different effects.
+
+The method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
+These are plotted in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
+All of the response functions shown in these plots were computed with a timestep on \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
+In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
+The shape of the temperature response function is immediately recognisable as similar to the contribution function shown in the first column.
+This is not surprising, as temperature is the most important atmospheric parameter in spectral line formation, and will always affect the region where the observed photons form.
+Nevertheless, at a particular wavelength, temperature response features can be seen at greater depth (well below the $\tau_\nu=1$ line) than any in the contribution function, as a change in radiation field at this depth can affect the radiative rates in the line-forming region.
+
+The other immediately remarkable feature present in all of the temperature response functions show here is the presence of a negative response to temperature above $\sim$\SI{1.2}{\mega\metre} (i.e. an increase in temperature in this region decreases the outgoing intensity, effectively trapping radiation formed deeper in the atmosphere).
+This same region is simply shown as contributing in the contribution function panels and tends to be more pronounced in models with the LE treatment, where the $\tau_\nu=1$ line is at a higher altitude.
+
+There is a narrow blue bar in the line core of the LI temperature response function of Fig.~\ref{Fig:F9RfComp11s} around \SI{0.25}{\mega\metre}.
+This is likely an artifact of the numerical method used to compute the response function, although it also appears for the other timesteps used to verify the response function.
+When a feature like this appears only for one depth point it is usually a spurious numerical artifact, and we will discount it in the following.
+
+In the right-most column of these figures we have plotted the velocity response function.
+The structure of this plot below $\sim$\SI{1}{\mega\metre} is easy to interpret; an increase in velocity shifts the line-core towards bluer wavelengths, and away from redder wavelengths.
+The effects on the far wings, visible below $\sim$\SI{0.4}{\mega\metre} are less immediately intuitive, but correspond to increased absorption of photospheric emission in the blue wing, and reduced in the red wing.
+The structure in the line core is far more complex, and has a non-trivial response to variations in velocity, affecting the LE and LI cases differently.
+This is most pronounced in the F10 response function at \SI{11}{\second} (Fig.~\ref{Fig:F10RfComp11s}).
+There are also responses due to changes in velocity from well below the $\tau_\nu=1$ line in the line core due to changes in opacity in these regions affecting the radiation field in the line forming region.
+
+Here we have presented a brief introduction to the concept and application of response functions to the simulations investigating the effects of the LI and LE treatments.
+Response functions can provide additional information on line formation and how it is affected by the model atmosphere.
+In this way they represent a powerful, but moderately computationally expensive, supplement to the traditional contribution function, allowing for additional insight into the formation of NLTE spectral lines and their domains of sensitivity.
 
 \subsection{Is Full Time-Dependence Necessary?}\label{Sec:TimeDepSE}
 
