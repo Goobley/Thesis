@@ -108,10 +108,6 @@ chRT = texfigure.Manager(
 Modern Radiation Hydrodynamic (RHD) codes are highly complex, and contain many specialised features as discussed in the previous chapter.
 In the following discussion we will focus primarily on \Radyn{}, the most widely used code of its ilk, and how using additional tools can facilitate new avenues of investigation.
 
-\TODO{Explicit vs implicit}
-
-\TODO{2 subcomponents}
-
 \section{Introduction to Hydrodynamics and Conservation Laws}
 \emph{The majority of the basic theory in this section follows the two texts by Leveque \NeedRef{}}
 
@@ -1599,7 +1595,7 @@ In the F9 simulation this approach proves to be rapidly convergent at early time
 Initially this appears unintuitive, but the non-thermal collisional rates from the electron beam depositing energy in the simulation are substantial during the heating phase and likely reduce the effects of PRD on these lines.
 At later times the Lyman line forming regions are likely to be relatively non-collisional (hence the expectation of PRD effects), and the population transition rate is likely dominated by the radiative effects, increasing the relative importance of these PRD effects.
 However, the bulk of the Ly$\alpha$ line core forms in the transition region, which is not as dramatically affected by direct energy deposition from the beam as the chromosphere, due to its decreased density, so the reason for this variation in convergence behaviour is not clear.
-Similar behaviour occurred when reprocessing the F10 simulation, but the convergence degenerates sooner and despite adjustments to the number of PRD iterations taken, and usually fails around $t=\SI{3.75}{\second}$.
+Similar behaviour occurred when reprocessing the F10 simulation, but the convergence deteriorates sooner and despite adjustments to the number of PRD iterations taken, usually fails to converge around $t=\SI{3.75}{\second}$.
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -1646,12 +1642,107 @@ def plot_prd_profiles(liData, prdData, radyn):
                handletextpad=0.5, handlelength=1.5, fontsize=9)#, bbox_to_anchor=(0.5,0.53))
     return fig
 
+def plot_prd_K_profiles(liData, prdData, radyn):
+    plotTimes = [5, 11, 20, 40]
+    fig, ax = plt.subplots(1, 4, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.40),
+                           sharex=True, sharey=True,
+                           gridspec_kw={'wspace': 0.1, 'width_ratios':[1,1,1,1]})
+    fig.subplots_adjust(left=0.12, right=0.99)
+    ax = ax.ravel()
+
+    lineData = line_intensity_with_cont(radyn, 17, -1)
+    ca = CaII()
+    wavelength = liData['wavelength'][...]
+    wavelengthPrd = prdData['wavelength'][...]
+    for i, time in enumerate(plotTimes):
+        lwIdx = np.searchsorted(liData['time'], time)
+        radynIdx = np.searchsorted(radyn.time, time)
+        lambda0 = ca.lines[1].lambda0
+
+        if i == 0:
+            ax[i].plot(lineData[0].value - lambda0, lineData[1][radynIdx], label='RADYN')
+            ax[i].plot(wavelength - lambda0, liData['Iwave'][lwIdx, :, -1], '--', label='CRD')
+            ax[i].plot(wavelengthPrd - lambda0, prdData['Iwave'][lwIdx, :, -1], '--', label='PRD')
+        else:
+            ax[i].plot(lineData[0].value - lambda0, lineData[1][radynIdx])
+            ax[i].plot(wavelength - lambda0, liData['Iwave'][lwIdx, :, -1], '--')
+            ax[i].plot(wavelengthPrd - lambda0, prdData['Iwave'][lwIdx, :, -1], '--')
+
+        ax[i].set_title('{:.2f} s'.format(time))
+        ax[i].xaxis.set_minor_locator(AutoMinorLocator())
+
+    ax[0].set_yscale('log')
+    ax[0].set_ylim(5e-10, 14e-8)
+    ax[0].set_xlim(-0.075, 0.075)
+
+    ax[0].yaxis.offsetText.set_visible(False)
+    ax[0].set_ylabel('Specific Intensity [SI]')
+    for a in ax:
+        a.set_xlabel('$\Delta\lambda$ [nm]')
+    fig.subplots_adjust(bottom=0.15)
+    fig.legend(*ax[0].get_legend_handles_labels(), loc=(0.80,0.66), frameon=False,
+               handletextpad=0.5, handlelength=1.5, fontsize=9)#, bbox_to_anchor=(0.5,0.53))
+    return fig
+
+from matplotlib.ticker import SymmetricalLogLocator
+def plot_K_losses(atmost, liData, prdData):
+    plotTimes = [5, 11, 20, 40]
+    fig, ax = plt.subplots(1, 4, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.40),
+                           sharex=True, sharey=True,
+                           gridspec_kw={'wspace': 0.1, 'width_ratios':[1,1,1,1]})
+    fig.subplots_adjust(left=0.08, right=0.99)
+    ax = ax.ravel()
+    caKIndex = 11
+
+    lineData = line_intensity_with_cont(radyn, 17, -1)
+    for i, time in enumerate(plotTimes):
+        lwIdx = np.searchsorted(liData['time'], time)
+        atmostIdx = np.searchsorted(atmost.time, time)
+
+        if i == 0:
+            ax[i].plot(liData['losses'][lwIdx, caKIndex, :],
+                       atmost.z1[atmostIdx] / 1e6, c='C1', label='CRD')
+            ax[i].plot(prdData['losses'][lwIdx, caKIndex, :],
+                       atmost.z1[atmostIdx] / 1e6, '--', c='C2', label='PRD')
+        else:
+            ax[i].plot(liData['losses'][lwIdx, caKIndex, :],
+                       atmost.z1[atmostIdx] / 1e6, c='C1')
+            ax[i].plot(prdData['losses'][lwIdx, caKIndex, :],
+                       atmost.z1[atmostIdx] / 1e6, '--', c='C2')
+
+        ax[i].set_title('{:.2f} s'.format(time))
+        # ax[i].xaxis.set_minor_locator(AutoMinorLocator())
+
+    ax[0].set_xscale('symlog', linthreshx=1e-5)
+    ax[0].set_ylim(0.2, 2.0)
+    ax[0].set_xlim(-1e-1, 1e-1)
+
+    # ax[0].yaxis.offsetText.set_visible(False)
+    ax[0].set_ylabel('Height [Mm]')
+    for a in ax:
+        a.set_xlabel('Loss [W\,m$^{-3}$]')
+        a.set_xticks([-1e-2, -1e-4, 0, 1e-4, 1e-2])
+    fig.subplots_adjust(bottom=0.17)
+    fig.legend(*ax[0].get_legend_handles_labels(), loc=(0.86,0.48), frameon=False,
+               handletextpad=0.5, handlelength=1.5, fontsize=9)#, bbox_to_anchor=(0.5,0.53))
+    return fig
+
 prdData = zarr.convenience.open(chRT.data_file('Flat1e9NoIncRadPrdFineGridThesis.zip'), 'r')
 fig = plot_prd_profiles(liData, prdData, radyn)
 lFig = chRT.save_figure('F9LyaProfiles', fig, fext='.pgf')
 lFig.caption = r'Comparison of the CRD (with reduced broadening to approximate PRD), and PRD treatments of the Ly$\alpha$ line in the F9 model.'
+
+fig = plot_prd_K_profiles(liData, prdData, radyn)
+lFig = chRT.save_figure('F9KProfiles', fig, fext='.pgf')
+lFig.caption = r'Comparison of the CRD and PRD treatments of the Ca\,\textsc{ii} K line in the F9 model.'
+
+fig = plot_K_losses(atmost, liData, prdData)
+lFig = chRT.save_figure('F9KLossesPrd', fig, fext='.pgf')
+lFig.caption = r'Comparison of the chromospheric radiative losses under CRD and PRD treatments of the Ca\,\textsc{ii} K line in the F9 model.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9LyaProfiles')|
+\py[TimeDepRT]|chRT.get_figure('F9KProfiles')|
+\py[TimeDepRT]|chRT.get_figure('F9KLossesPrd')|
 %spell-checker: enable
 
 The Ly$\alpha$ line computed in the reprocessed F9 simulation, both with and without PRD effects, is shown in Fig.~\ref{Fig:F9LyaProfiles}.
@@ -1660,14 +1751,25 @@ Other than the line wings at $t=\SI{5}{\second}$ and to a lesser extent at $t=\S
 This is encouraging for the use of this approximation, especially in light of the difficulties converging the PRD problem in time-dependent simulations.
 Furthermore, the PRD solution, due to its poor convergence at later times, is extremely computationally costly when compared to the CRD solution, taking close to two orders of magnitude more CPU time (73 vs 1.2 wall hours).
 
+Ly$\alpha$ is not the only line affected by PRD in this simulation; we also investigated the effects on Ly$\beta$ and the \Caii{} H and K resonance lines.
+Ly$\beta$ was found to have very good agreement between the approximate and complete PRD treatments, similar or better to that found for Ly$\alpha$.
+\Caii{} H and K are also affected by the use of the LI treatment, albeit less than \CaLine{}, this is likely due to the lack of overlap between Ly$\alpha$ and the \Caii{} resonance continuum.
+In Fig.~\ref{Fig:F9KProfiles}, the variation of the \Caii{} K line computed using CRD with the LI treatment and PRD with the LI treatment is shown.
+The differences between the CRD line profiles and the \Radyn{} line profiles are due to the LI treatment.
+The PRD line cores agree very well with the CRD LI treatment, but as expected, when a significant proportion of the scattering is coherent the line wings are deeper and slowly return to the same continuum level as the CRD case.
+\citet{Uitenbroek2002} undertook similar tests in a wave-heated quiet Sun \Radyn{} simulation and looked at the radiative losses in the \Caii{} K line when treated in PRD (under statistical equilibrium).
+In the chromosphere these losses were found to vary between the CRD and PRD treatments by a factor of 2-5.
+Qualitatively, there is a smaller difference in the \Caii{} wings in our flare simulation than their wave heated model.
+The losses between these two different treatments in the chromosphere are shown in Fig.~\ref{Fig:F9KLossesPrd}.
+The differences in the radiative losses are most significant at $t=\SI{5}{\second}$ with the inversion of the sign of the losses between the PRD and CRD treatments around \SI{1}{\mega\metre}.
+Whilst less significant, at the other times shown there is also notable variation in radiative losses due to the treatment of these \Caii{} resonance lines in PRD, typically decreasing these relative to their CRD values.
+
 Whilst we have not attempted to implement this, it is possible that applying a direct, rather than iterative solution for evaluating the emission profile ratio may be more stable in this situation.
 The iterative method, implemented as first presented in \citet{Uitenbroek2001}, tends to have very good convergence when used in the statistical equilibrium case, whilst being less computationally expensive and much easier to apply in multi-dimensional geometry.
 It is plausible here that the effective damping of the population update equations of the time-dependent kinetic equilibrium equations relative to statistical equilibrium is reducing the convergence rate, due to the slower rate (per iteration) at which the populations evolve.
 It may therefore be worth investigating the direct solution in the hope that by more rapidly converging to the correct solution for the emission profile the populations do not pass through intermediate states that are not ``valid'' i.e. states that are intermediate to the iteration scheme, but do not occur at any point in the real world system we are computing.
 It is plausible that many of the intermediate states that occur in both time-dependent and statistical equilibrium are not states that occur naturally, instead resulting from our numerical treatment of the system.
 When additional iteration processes such as PRD and charge conservation are applied, whilst being combined with the damped nature of the time-dependent population update, it appears that cycles in the global iteration procedure can occur quite frequently, and no method that we have found reliably prevents these (including interleaving basic $\Lambda$-iterations and applying Ng acceleration).
-
-\TODO{H \& K changes}
 
 \section{Discussions}
 
@@ -1695,6 +1797,14 @@ It would then become significantly easier to apply machine learning models to th
 Parallels can be drawn between the application of machine learning to this problem and the use of interpolated rates following the method of Sollum \NeedRef{} as can be done with HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
-Nevertheless, for the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
+Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
 We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed (that can simultaneously solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios).
 It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this line to be incorporated into RHD simulations in the near future.
+
+The effects of treating the \Caii{} resonance lines in PRD were significantly larger than those seen with the hydrogen Lyman lines.
+This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD).
+It is therefore important to investigate whether applying PRD to the H and K lines can be done efficiently.
+Empirically, we have found that the majority of convergence problems originate from the hydrogen Lyman lines, thus it may be relatively efficient to treat the \Caii{} resonance lines in PRD.
+If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that applied to the Ly$\alpha$ and Ly$\beta$.
+It has been suggested that \Radyn{}'s treatment of the \Caii{} resonance lines in CRD overestimates the radiative losses but this overestimation is compensated by not considering the Mg\,\textsc{ii}h and k lines \citep[e.g.][]{Kerr2019a}.
+The techniques presented in this chapter should allow for a thorough investigation of this and the development of suitable PRD approximations if necessary.
