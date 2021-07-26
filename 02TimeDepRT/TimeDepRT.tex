@@ -113,17 +113,18 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 
 In the previous chapter we have explained the basis of the radiative transfer methods used throughout this work.
 The difficulty in radiative transfer primarily lies in the nuance of the various integration terms.
-To provide a clear understanding of RHD we also need a description of hydrodynamics, and thus how to solve the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
+To provide a clear understanding of RHD we also need a numerical description of hydrodynamics, and an explanation of solving the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
 
-The scalar radiative transfer equation, solved via the formal solver, presented in the previous chapter is a good example of an ordinary differential equation.
+The scalar radiative transfer equation, solved via the formal solver (presented in the previous chapter) is a good example of an ordinary differential equation.
 It is relatively easy to solve via a variety of methods, typically striving for a balance of speed, reliability, and accuracy.
 In general, PDEs are difficult to solve numerically in a general way.
 
-A generic PDE of a quantity $q$ depending on two independent variables $x$ and $y$ can be written as
+A generic second-order PDE of a quantity $q$ depending on two independent variables $x$ and $y$ can be written as
 \begin{equation}
-    aq_{xx} + bq_{xy} + cq_{yy} + dq_x + eq_y + fq = g.
+    aq_{xx} + bq_{xy} + cq_{yy} + dq_x + eq_y + fq = g,
 \end{equation}
-The sign of the discriminant ($\Delta = b^2-4ac$) of this equation determines the class of the problem.
+wherein the subscripts represent partial derivatives with respect to these variables.
+The sign of the discriminant ($\Delta = b^2-4ac$) of this equation determines the class of the problem:
 \begin{itemize}
     \item $\Delta < 0$: Elliptic problem (e.g. Poisson equation).
     \item $\Delta = 0$: Parabolic problem (e.g. Heat equation).
@@ -134,10 +135,10 @@ Hyperbolic problems take the form
 \begin{equation}\label{Eq:ConsLaw}
     q_t + f(q)_x = 0,
 \end{equation}
-where $f$ is a function describing the the flux of $q$ at each location in the domain.
-There is an inherent assumption that the flux function is local, and act only on the local state variables $q$.
+where $f$ is a function describing the the flux of $q$ at each location in the domain, $t$ indicates a temporal coordinate, and $x$ a spatial coordinate.
+There is an inherent assumption that the flux function is local, and acts only on the local state variables $q$.
 
-Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant.
+Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant in time.
 This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
 The simplest equation of this form is advection, which simply arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $u$ as
 \begin{equation}\label{Eq:Advection}
@@ -163,9 +164,9 @@ The simplest way to achieve this is to use the equation of state for an ideal ga
 \end{equation}
 Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, as considered in the case of solar plasma.
 
-The Euler equations \eqref{Eq:EulerEqns} describe evolution of an ideal fluid without any losses.
+The Euler equations \eqref{Eq:EulerEqns} describe the evolution of an ideal fluid without any energy losses.
 In practice we often need to model some loss terms.
-Ignoring radiative effects for now, the most important of these is heat conduction\footnote{In the plasmas considered here there is additional nuance to heat conduction, which we will return to in \TODO{sec}.}, which is typically described by parabolic equations.
+Ignoring radiative effects for now, the most important of these is heat conduction\footnote{In the plasmas considered here there is additional nuance to heat conduction, which we will return to in Sec.~\ref{Sec:NumericalConduction}.}, which is typically described by parabolic equations.
 This adds a second spatial derivative term to the right-hand side of the energy conservation equation.
 It is also common to need source and sink terms when modelling real world problems, these can account for fluids entering and leaving a volume, the non-local emission and absorption of energy, or simply the effects of gravity.
 These terms are also added to the right-hand side of the equations of \eqref{Eq:EulerEqns}, and together with the effects of viscosity, these describe the Navier-Stokes equations.
@@ -189,7 +190,7 @@ It is better to locally use the formulation such that information from points ``
 In this sense the information used to update points is following the fluid flow.
 Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the approximate value of the quantity at the next timestep,
 \begin{equation}
-    q^{t+1}_i {\Delta t} = q^t_i - \frac{u \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
+    q^{t+1}_i = q^t_i - \frac{u \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
 \end{equation}
 
 This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
@@ -198,7 +199,7 @@ Many other spatial and temporal discretisations can be devised for conservation 
 In general, we term discretisations where $q^{t+1}$ depends only on $q^{t}$ as \emph{explicit}, and those also depending on $q^{t+1}$ as \emph{implicit}, necessitating the solution of a system of typically non-linear equations.
 
 Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
-Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell,
+Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell.
 Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
 This implies
 \begin{equation}
@@ -291,12 +292,12 @@ This is often framed as a Riemann problem at the cell interface.
 A Riemann problem consists of solving a conservation law with an initial parameter distribution consisting of two constant states meeting at a discontinuity.
 Without loss of generality this discontinuity can be placed at $x=0$, and the value of $q$ for $x<0$ is termed $q_l$ and $q_r$ for $x>0$.
 
-A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics is that of the Sod shock tube \citep{Sod1978}.
+A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics, is that of the Sod shock tube \citep{Sod1978}.
 The problem is a single Riemann problem, with gas at a different pressure and density on each side of a membrane.
 At $t=0$ the membrane is removed, and multiple waves with different velocities are launched in both directions.
 A solution to the classic Sod shock tube with states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
 At this time, a complex pressure and density structure has formed in the shock tube.
-It often best to look at the Riemann problem in terms of the propagating waves.
+The Riemann problem is often considered in terms of the propagating waves.
 In Fig.~\ref{Fig:RiemannFan} we show the same density profile, but divided into regions by black lines, with grey lines showing a time-distance plot of the different waves in the system.
 This plot, and manner of considering the waves in the system is known as a Riemann fan.
 
@@ -335,20 +336,20 @@ The Riemann problem at each interface can be treated independently under the ass
 This is a fundamental requirement of stability and will be discussed in more detail in Sec.~\ref{Sec:HydroStability}.
 
 This method provides a basic framework for solving conservation laws.
-It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for the some of the most accurate numerical methods for conservation laws.
+It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for some of the most accurate numerical methods for conservation laws.
 \citet{VanLeer1979} provided one of the first higher order extension to Godunov's method.
 It is tempting to attempt to estimate the value of $q$ at cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
-The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under or overshoots to the data.
+The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under- or over-shoots to the data.
 This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
 If the current cell is an extremum then the slope is set to 0.
 Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as Leveque \NeedRef{}.
 This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
 
-There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984}, providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
+There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984} providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
 WENO methods are a cornerstone of reconstruction\footnote{The properties that make WENO methods a good choice for reconstruction also render them applicable to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
 
 WENO methods were first proposed by \citet{Liu1994}, and formalised for arbitrary order by \citet{Jiang1996}.
-These methods form a convex combination of interpolating polynomials over overlapping regions.
+These methods form a convex combination of polynomials over overlapping regions.
 For example, in the case of the commonly used fifth-order WENO method of \citet{Jiang1996}, three parabolae are constructed over five adjacent points, i.e. the first uses the stencil $\{x_1, x_2, x_3\}$ the second $\{x_2, x_3, x_4\}$, and the third $\{x_3, x_4, x_5\}$.
 We can equivalently define a fifth-order polynomial over the stencil $\{x_1, \ldots, x_5\}$, which can also be written as a linear combination of our interpolating parabolae at each point in this region.
 These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities or similar effects.
@@ -358,7 +359,7 @@ These should be computed such that the integral over the interpolating polynomia
 For a fixed uniform grid, the integration weights for each interface can be computed analytically, and the lack of conditional branches in the calculation of the final weighted value renders the method highly performant.
 For non-uniform grids, the weights can be precalculated if the grid remains fixed, or computed on the fly if necessary.
 There are also a number of approximate methods for handling non-uniform grids at low computational cost such as WENO-NM \citep{Huang2018}.
-The WENO method has been extended many times to provide increased accuracy or meet certain requirements, its strong reconstructive ability, and reliable behaviour around shocks makes it a workhorse of modern hydrodynamics and enables simpler flux functions to be reliably used, as will be discussed in the next section.
+The WENO method has been extended many times to provide increased accuracy or meet certain requirements; its strong reconstructive ability and reliable behaviour around shocks makes it a workhorse of modern hydrodynamics and enables simpler flux functions to be reliably used, as will be discussed in the next section.
 
 
 \subsection{Numerical Fluxes}
@@ -376,14 +377,14 @@ This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{R
 \end{equation}
 Here $q_i^L$ and $q_i^R$ represent the left and right hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
 Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.
-General symmetric fluxes like this are simple, and efficient but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
-This effect can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available a specialised Riemann solver for the current problem is likely a better choice.
+General symmetric fluxes like this are simple and efficient, but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
+This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available, a specialised Riemann solver for the current problem is likely a better choice.
 
 \subsection{Time Integration and Stability}\label{Sec:HydroStability}
 
 Explicit schemes are only stable (i.e. do not diverge or introduce spurious oscillations) if the Courant-Friedrichs-Lewy (CFL) condition is met.
-The CFL condition states that the numerical domain of dependence of the the equation (i.e. the terms used in the computation of the method) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
-This is a necessary, but not sufficient condition, and the exact requirements of each scheme can sometimes be derived analytically, although it is common to simply apply a safety margin to the maximum permitted value of the CFL condition.
+The CFL condition states that the numerical domain of dependence of the the equation (i.e. the terms used in the computation of a value in the next timestep) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
+This is a necessary, but not sufficient condition, and the exact requirements of each scheme can often be derived analytically, although it is common to apply an additional safety margin to the maximum permitted value of the CFL condition.
 
 For explicit methods the CFL condition sets the maximum timestep that can be used based on the current simulation conditions.
 In a hyperbolic system the CFL condition takes the form
@@ -392,7 +393,7 @@ In a hyperbolic system the CFL condition takes the form
 \end{equation}
 and will be constrained to a maximum value ($\leq 1$) for stability of an explicit method.
 Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
-This is discussed \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost despite the method being nominally stable for large CFL values.
+This is discussed \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost ratio despite the method being nominally stable for large CFL values.
 
 It is difficult to achieve better than second order accuracy due to the temporal discretisations discussed so far, but by viewing $F_i^t$ as the flux at time $t$, we can achieve higher order accuracy by applying a multi-step method to more accurately integrate these fluxes (and any associated source terms) over time.
 A good choice for this is a method in the family of total-variation diminishing Runge-Kutta methods \citep[e.g.][]{Shu1988}.
@@ -413,65 +414,66 @@ There are many nuances to each of the techniques needed to accurately and robust
 The above is intended to serve as an introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
 It is hoped that this introduction will improve general understanding of this aspect of RHD codes.
 
-\section{Conduction}
+\section{Conduction}\label{Sec:NumericalConduction}
 
 When expressed in terms of energy the heat equation in a plasma along a magnetic field line is given by
 \begin{equation}
     \frac{\partial E}{\partial t} = \frac{\partial}{\partial z}\left( \kappa_0 T^{5/2} \frac{\partial T}{\partial z} \right),
 \end{equation}
-with spatial coordinate $z$, and coefficient $\kappa_0$ varying, but typically taken to be approximately \SI{1e-6}{\erg\per\centi\metre\per\second\per\kelvin\tothe{7/2}} \citep{Spitzer1953,Braginskii1965}, based on deviations from a fully ionised hydrogen plasma.
+with spatial coordinate $z$, and coefficient $\kappa_0$ varying, but typically taken to be approximately \SI{1e-6}{\erg\per\centi\metre\per\second\per\kelvin\tothe{7/2}} \citep{Spitzer1953,Braginskii1965} based on deviations from a fully ionised hydrogen plasma.
 The form of this equation poses several problems, the most significant being that in regions of sufficiently steep temperature gradients, the conductive flux approaches infinity.
-Clearly this is not physical and there is a maximum limit, known as the free-streaming limit at which all electrons in the plasma are flowing at their thermal speed with this heat gradient, representing a finite limit on this term.
+Clearly this is not physical and there is a maximum limit, known as the free-streaming limit, at which all electrons in the plasma are flowing at their thermal speed with this heat gradient, representing a finite limit on this term.
 As this free-streaming limit is approached the heat flux becomes non-local and depends on the global temperature and density structure in the loop \citep{Battaglia2009}.
 \citet{Campbell1984} provides an expression for the transport coefficients used to determine the conductive flux through an ionised plasma and smoothly handles both the Spitzer-H\"{a}rm, locally limited, and non-locally limited regimes.
-This approach can be applied in numerical simulations but more frequently (such as in RADYN) the method of \citet{FISHER1985} is applied which smoothly limits the local flux to remain less than the local free-streaming limit, hence helping to stabilise this equation.
+This approach can be applied in numerical simulations but more frequently (such as in RADYN) the method of \citet{FISHER1985} is applied which smoothly limits the local flux to remain less than the local free-streaming limit, helping to stabilise this equation.
 
-Due to its parabolic nature, an explicit solution of the heat equation can be extremely costly; stability requirements provide a timestep requirement scaling with the square of the grid spacing, rather than linearly as in the case of most hyperbolic equations.
+Due to its parabolic nature, an explicit solution of the heat equation can be extremely costly; stability requirements provide a timestep requirement scaling with the inverse square of the grid spacing, rather than linearly as in the case of most hyperbolic equations.
 Any attempt to explicitly integrate the heat equation on a timestep limit set by the hydrodynamic equations will likely be met with rapid divergence of any small perturbation in the data.
 This renders the conduction term stiff compared to the hydrodynamical terms and it may therefore be advantageous to use an implicit method  to guarantee stability.
 Several alternative methods have been developed, such as expressing the parabolic equation as a hyperbolic wave equation \citep{Rempel2016}, implicit-explicit methods (which may also be used for integrating stiff source terms such as the atomic level population transition rates) \citep[e.g.][]{Ascher1995}, or accepting the cost of an explicit discretisation in exchange for simplicity and accuracy \citep{Bradshaw2003, Bradshaw2013}.
 
-Recently, discussion has emerged around the concept of turbulence suppressed conduction \citep{Bian2016}, where turbulence restricts the motion of electrons along the loop, and it has been suggested that the standard assumption of collisionally-dominated conduction may represent a significant overestimation of true conduction rates.
-Simulations using the zero-dimensional enthalpy based EBTEL code currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents an important component of this effect \citep{Bian2018}.
+Recently, discussion has emerged around the concept of turbulence suppressed conduction \citep{Bian2016}, where turbulence restricts the motion of electrons along the loop, and it has been suggested that the standard assumption of collisionally-dominated conduction may be a significant overestimation of true conduction rates.
+Simulations using the zero-dimensional enthalpy based EBTEL code \NeedRef{} currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents an important component of this effect \citep{Bian2018}.
 As part of further investigation, work is currently under way to integrate these effects in the \Radyn{} and HYDRAD codes.
 
 \section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
 
 \emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
-\Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code and many commonalities remain.
+\Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code \citep{Carlsson1992}\NeedRef{} and many commonalities remain.
 NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant level population balance equations.
 This method is designed to solve the problem of non-overlapping lines but including an underlying background continuum.
 This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
 This approach also assumed the use of a local diagonal $\Lambda^*$ operator, as discussed in the previous chapter.
 \Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
 It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but the two methods will no longer arrive at exactly equivalent numerical formulations.
-Additionally, \Radyn{} uses an efficient Feautrier formalism for its formal solver, which solves for both the up- and down-going rays simultaneously but cannot simultaneously handle overlapping lines and Doppler shifts.
+\Radyn{} also uses an efficient Feautrier formalism for its formal solver, which solves for both the up- and down-going rays simultaneously but cannot handle both overlapping lines and Doppler shifts.
 There are no lines with significant overlap considered in the standard model atoms used in \Radyn{}, and continuum emissivities and opacities rarely change sufficiently over the wavelength range of a line to need to be considered in a wavelength varying sense.
 This is likely fair trade-off for \Radyn{} given the computational benefits it can bring.
 
 The advantage of the linearisation approach in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
 Taking for example the kinetic equilibrium equation \eqref{Eq:KinEq}, \Radyn{}'s method formulates this expression such that the corrections from both the advection and population transition terms are considered simultaneously.
-This is achieved through the use of a Newton-Raphson method, where the Jacobian is computed based on an analytic derivation, including the aforementioned linearisation of the kinetic equilibrium equation.
-This same process simultaneously solves for the heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid of \citet{Dorfi1987}.
+This is achieved through the use of a Newton-Raphson method, where the Jacobian is computed based on an analytic derivation, including the aforementioned linearisation of the kinetic equilibrium equations.
+This same process simultaneously solves for the population updates, heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid of \citet{Dorfi1987}.
 
 A significant benefit of this implicit approach is a relaxation of the timestep constraints present in explicit approaches.
-This is particularly important when considering the very fine grid spacing often required by the dynamic grid, which combined with the large bulk velocities occurring in flares can lead to extremely oppressive timestep constraints.
+This is particularly important when considering the very fine grid spacing often required by the dynamic grid, which, combined with the large bulk velocities occurring in flares can lead to extremely oppressive timestep constraints.
 
 Despite its elegance, there are several major downsides to this implicit approach.
-Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically computed and included.
+Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically derived and correctly computed.
 This presents a very large barrier to entry for future developments on the platform, and this is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
 Additionally, implicit codes, whilst having less severe timestep constraints, are typically much more costly per timestep than explicit codes.
 This is somewhat offset by the majority of the cost of each step residing within the formal solver, which remains similar in both cases.
 The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
+On these scales the assumptions that allow us to treat the plasma as an ideal fluid begin to break down.
 
 \Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and through these comments we do not intend to discredit its use, but instead highlight avenues for future development within the field of RHD.
 As the different uses of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
 
 As discussed previously in respect to \Lw{} and radiative transfer, the flexibility of a framework designed for solving a class of problem can yield significant advances in productivity.
-The task of designing, constructing, and testing such a framework for a problem such as the complete quasi-one-dimensional RHD simulation flares is too significant to be undertaken here.
-Nevertheless, it may prove a convenient future development once the necessary specifications are defined.
-Here, we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigate important directions for future developments in RHD modelling of flares.
+The task of designing, constructing, and testing a framework for a problem as complex as the complete quasi-one-dimensional RHD simulation of flares is too significant to be undertaken here.
+Nevertheless, it may prove a powerful future development once the necessary specifications are defined.
+In the following we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigating important directions for future developments in RHD modelling of flares.
 
 \section{Minority Species}
 
@@ -504,6 +506,7 @@ From investigating the contents of this file we can determine the exact configur
 This file is written to for every internal timestep of the \Radyn{} simulation, and represents a limited subset of the less frequently written ``complete'' output (typically stored every \SI{0.1}{\second}).
 It contains some metadata describing the size of the simulation, then for each internal timestep, the current timestep, the elapsed time at each timestep, the current locations of the dynamic grid, the mass density profile, the electron density profile, the temperature structure, the vertical velocity, and the current hydrogen level populations.
 
+\TODO{Double check AR rates}
 For the validation of \Lw{} and this style of simulation, we also wished to compute and compare the hydrogen populations to those computed in \Radyn{}.
 Several difficulties arose due to the non-thermal collisional rates used in the kinetic equilibrium calculation for hydrogen and helium.
 The non-thermal collisional rates of \citet{1993Fang} are used to determine hydrogen ionisation, and require the beam energy deposition throughout the atmosphere at each timestep.
@@ -551,7 +554,7 @@ These regions may have high plasma flow velocities, further increasing the times
 In some cases several thousand applications of the explicit scheme were required to match one of \Radyn{}'s internal timesteps.
 With such different timestep restrictions imposed on the two components of this simulation, it is difficult to correctly treat both processes in a coupled fashion.
 
-Using this explicit approach for advection, a fair agreement with \Radyn{} was found, but as the energy deposition in simulations increased, in turn increasing the flow speeds and moving the transition region further from its starting altitude.
+Using this explicit approach for advection, a fair agreement with \Radyn{} was found, but this worsened and a greater proportion of runtime had to be spent on the advection terms, as the energy deposition in simulations increased, and in turn increased the flow speeds and moved the transition region further from its starting altitude.
 Due to \Radyn{}'s longer timesteps, during more explosive evaporative phases, the advection scheme was occasionally able to carry chromospheric material through the majority of the transition region.
 Whilst the populations quickly evolved in their new environment this process is sufficiently slow to introduce unexpected variability in the line profiles.
 A higher order splitting scheme may have helped to mitigate this but would add more computational cost to an already expensive process (due to the shear number of advection steps needed).
@@ -563,10 +566,10 @@ Thus, at the start of each timestep we advect the populations from the previous 
 This method employs a variant of the second order spatially accurate method of \citet{VanLeer1979} to reconstruct the values on either side of the interface, of which the upwind value is chosen.
 This is set within a time-centering scheme similar to that described in Dorfi \NeedRef{}.
 Under this scheme the advection stencil depends on the values of five cells, two on either side of the current one.
-Thus the Jacobian matrix for this equation is pentadiagonal.
+Thus the Jacobian matrix for this equation is pentadiagonal (and block pentadiagonal for the system of ODEs).
 For simplicity and ease of implementation we chose to not directly code the expressions for these derivatives that occur in the Jacobian matrix, but instead compute them by finite differences.
 There is an elegant technique that can be used to optimise this process when an equation's region of dependence is known.
-This approach is known as Coloured Finite Difference \citep{Curtis1974}; so long as only one point in the domain affected each output point is perturbed the gradient can be trivially attributed to the correct point.
+This approach is known as Coloured Finite Difference \citep{Curtis1974}; so long as only one point in the domain affecting each output point is perturbed the gradient can be trivially attributed to the correct point.
 In essence, we need only perform five additional evaluations of the advection residual, perturbing one point in every five to fill the Jacobian, rather than the traditional approach where each point would be perturbed in turn.
 The solution to this system is then computed by a Newton-Raphson iteration with Armijo line search \NeedRef{} to accelerate convergence.
 This technique has proven far more suited for reprocessing these simulations than the previous explicit scheme.
@@ -577,7 +580,7 @@ This approach remains harder to debug and modify due to its implicit nature, alt
 
 \emph{The content of this section is based on the work presented in \Caii{} paper \NeedRef{}.}
 
-The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of \Caii{} photoionisation on these models.
+The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of the Lyman lines on \Caii{} photoionisation in these models.
 In \Radyn{} the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
 The hydrogen Lyman lines are strongly enhanced in flares, and a two dex enhancement relative to quiet sun intensity was found by \citet{RubioDaCosta2009} using observations from the Transition Region and Coronal Explorer (TRACE).
 RHD modelling using \Radyn{} has also suggested that enhancements at least this large are to be expected in this line \citep{Brown2018, Hong2019}.
@@ -653,12 +656,13 @@ lFig.placement = 'hbtp'
 
 The hydrogen (five bound levels with H\,\textsc{ii} continuum and ten lines), helium, and calcium (five bound \Caii{} levels with \Caiii{} continuum and five lines) model atoms used in the simulations presented here are the same as those used in \Radyn{}.
 All other model atoms used in the LTE background opacities are taken from the \Lw{} standard library (and have in turn been converted from  RH distribution \citep{Uitenbroek2001}).
+Currently only the hydrogen and calcium populations are considered in the NLTE treatment.
 
 To determine the importance of the photoionisation by the Lyman lines, each \Radyn{} simulation is reprocessed twice, once including the effects of the Lyman lines on \Caii{} (henceforth Lyman inclusive (LI)), and once without these effects (Lyman exclusive (LE)).
 This is achieved through the use of two different hydrogen model atoms.
 In both cases the effects of the Lyman continuum are included, as this is commonly considered in RHD codes, and allows for direct comparison of the LE simulation against \Radyn{}.
 The simulations are performed using the CRD formalism for consistency with \Radyn{}, although the models used for the Lyman lines contain an approximation to PRD by removing radiative broadening and reducing van der Waals broadening.
-This makes line profile closer to a Doppler profile, by reducing the size of the Lorentzian wings.
+This makes line profile closer to a Doppler profile, by reducing the importance of the Lorentzian wings.
 This is one of the two more common approaches to approximating PRD effects in these transitions, the other being to truncate the line quadrature around ten Doppler widths from the line core.
 Both of these are empirical but we favour the former in flare simulations as the narrow grid used in the latter can easily ``lose'' opacity in the moderate to high Doppler shifts that occur in flare models (Carlsson 2021, \emph{private communication}).
 PRD effects are also present in the \Caii{} lines (primarily the resonance lines, although cross-redistribution effects also affect the infra-red triplet).
@@ -670,8 +674,8 @@ Comparison of these simulations should therefore enable the study of these photo
 Our \Lw{}-based tool uses the first-order splitting technique discussed in Sec.~\ref{Sec:HydroStability}.
 The complete kinetic equilibrium equations are split into radiative and advective operators that are applied sequentially.
 A Strang-splitting approach was trialled but provided no noticeable difference in the solution over this first-order technique and whilst being more computationally costly than the simpler approach.
-After solving the statistical equilibrium problem to determine an initial solution for the atomic populations in \Radyn{}'s starting atomsphere, the populations are then advected, and the thermodynamic atmospheric parameters are updated using the \Radyn{} data from the next timestep.
-This process includes the calculation of the LTE populations of all species considered and computing the resultant background opacities.
+After solving the statistical equilibrium problem to determine an initial solution for the atomic populations in the given starting atomsphere, the populations are then advected, and the thermodynamic atmospheric parameters are updated using the \Radyn{} data from the next timestep.
+This update process includes the calculation of the LTE populations of all species considered and computing the resultant background opacities.
 The atomic level populations are then advanced in time using the approach described in \NeedRef{}.
 
 \subsection{The \Radyn{} simulations}
@@ -679,9 +683,9 @@ The atomic level populations are then advanced in time using the approach descri
 For this investigation two \Radyn{} simulations were used.
 Their parameters were chosen to serve as typical simulations, and were based on those used by \citet{Kerr2019, Kerr2019a}.
 The same starting atmosphere derived from VAL3C \citep{Vernazza1981} as used in the F-CHROMA grid of simulations was used.
-As previously discussed, the ``Emslie'' beam formalism was chosen over the Fokker-Planck for ease of reconstructing non-thermal rates that might be needed.
+As previously discussed, the ``Emslie'' beam formalism was chosen over the Fokker-Planck for ease of reconstructing any non-thermal rates that might be needed.
 The spectral index used for the power-law distribution of electron energies was $\delta=5$, with a low-energy cut-off of \SI{20}{\kilo\electronvolt}.
-The two simulations differed only in energy deposition which was a constant flux for \SI{10}{\second} of $1\times 10^{6}$ or \SI{1e7}{\joule\per\square\metre\per\second} \footnote{In the cgs units that are commonly adopted for \Radyn{} simulations these represent $1\times 10^9$ and \SI{1e10}{\erg\per\square\centi\metre\per\second}}.
+The two simulations differed only in energy deposition, which was a constant flux for \SI{10}{\second} of $1\times 10^{6}$ or \SI{1e7}{\joule\per\square\metre\per\second} \footnote{In the cgs units that are commonly adopted for \Radyn{} simulations these represent $1\times 10^9$ and \SI{1e10}{\erg\per\square\centi\metre\per\second}}.
 These simulations will be referred to as F9 and F10 respectively.
 
 All of these parameters fall within the range of those used in the F-CHROMA grid, other than the beam energy flux which is lower than the peak fluxes used in the grid.
@@ -796,7 +800,7 @@ At later times there is a significant dip in the far violet wing for the LE trea
 This dip varies slowly in position and depth over the evolution of the cooling phase.
 
 We can investigate the formation of these line profiles by looking at the contribution functions, and the atomic level populations associated with these spectral lines.
-From Figs.~\ref{Fig:F9Profiles} and \ref{Fig:F10Profiles}, we estimate that the difference between the two treatments is most significant at $t=11$ and \SI{20}{\second}.
+From Figs.~\ref{Fig:F9Profiles} and \ref{Fig:F10Profiles}, we consider that the difference between the two treatments is most significant at $t=11$ and \SI{20}{\second}.
 The contribution functions and associated atomic level populations for these two times in both of the simulations are plotted in Figs.~\ref{Fig:F9ContFn11s}-\ref{Fig:F10ContFn20s}.
 
 
@@ -1046,9 +1050,9 @@ The LI and LE treatments produce significantly different populations for the upp
 The left-hand and centre panels present the contribution functions for the two different treatments with the $\tau_\nu=1$ line overlaid in red.
 The $\tau_\nu=1$ line is reliably extended to higher altitudes in the line core of the LE treatment, suggesting that this core is formed in a different location between the two treatments.
 There is a significant feature contributing to the violet wing of the LE models around the \SI{1.5}{\mega\metre} region.
-In this same region the both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
-Under the LI treatment we instead see that there is substantially more \Caiii{} in this region likely due to \Caii{} to \Caiii{} photoionisation from Lyman lines formed in the upper chromosphere and transition region.
-In the F10 simulation there is also a significant difference between the \Caiii{} populations computed in the two treatments around the temperature minimum region, this is much deeper than any of the \Caii{} spectral line cores typically form, but is likely due to the same photoionisation process and the effects of the much larger Lyman line intensity that occurs in the F10 model.
+In this same region both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
+Under the LI treatment we instead see that there is substantially more \Caiii{} in this region, likely due to \Caii{} to \Caiii{} photoionisation from Lyman lines formed in the upper chromosphere and transition region.
+In the F10 simulation there is also a significant difference between the \Caiii{} populations computed in the two treatments around the temperature minimum region; this is much deeper than any of the \Caii{} spectral line cores typically form, but is likely due to the same photoionisation process and the effects of the much larger Lyman line intensity that occurs in the F10 model.
 
 \subsection{Radiative Losses}
 %spell-checker: disable
@@ -1215,15 +1219,15 @@ The effects are quite similar in the F10 simulation.
 During energy deposition the region where the difference between the two treatments is largest is a smaller band, which is centred on $\sim$\SI{1.2}{\mega\metre}.
 This is in agreement with the line-core formation region shown in the contribution functions.
 This region expands significantly due to evaporation as the beam heating ends.
-Similarly to the F9 simulation, the region where the calcium lines represent the largest proportion of the total radiative losses is between 0.6 and \SI{1}{\mega\metre} at later times in the simulation, which is also the region where the two treatments best agree.
-In the region above this, where the difference between the two treatments is significant, the calcium line losses typically represent 5--20\% of the total radiative losses.
+Similarly to the F9 simulation, the region where the calcium lines represent the largest proportion of the total radiative losses is between 0.6 and \SI{1}{\mega\metre} at later times in the simulation, and this is once again the region where the two treatments best agree.
+In the region above this, where the difference between the two treatments is less but still significant, the calcium line losses typically represent 5--20\% of the total radiative losses.
 
-The difference between the LI and LE calcium treatments appears comparable between the two simulations presented here.
+For both of the simulations presented here there appears to be a similar difference between the LI and LE calcium treatments.
 We can obtain a clearer estimate of the effects of the calcium treatment on the total radiative losses by plotting the product of the left- and right-hand panels of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison}.
-These are plotted in Fig.~\ref{Fig:LossVariation} and confirm our conclusions from the previous figures.
+These are plotted in Fig.~\ref{Fig:LossVariation} and confirm our conclusions.
 In both cases, throughout the upper chromosphere there is a variation in total radiative losses of up to 15\%.
 Time-averaging this variation suggests that the average difference is larger in the F9 simulation than the F10 simulation, although these are both of the same order of magnitude.
-This is likely due to a larger proportion of the total radiative losses from this region being mediated by the hydrogen transitions in the more energetic simulation.
+This difference is likely due to a larger proportion of the total radiative losses from this region being mediated by the hydrogen transitions in the more energetic simulation, as a larger proportion of the calcium populations are ionised into the \Caiii{} state.
 From these simulations, we can suggest that it is likely that using a self-consistent LI treatment (where the changes in radiative losses directly affect the hydrodynamic evolution) could produce a change in energy balance in the chromosphere of 10--15\%.
 This is sufficiently large to noticeably modify the atmospheric evolution, which would further affect the outgoing calcium line profiles and formation heights, but also other chromospheric lines, such as the hydrogen Balmer series.
 
@@ -1738,7 +1742,7 @@ lFig.caption = r'Comparison of the CRD and PRD treatments of the Ca\,\textsc{ii}
 
 fig = plot_K_losses(atmost, liData, prdData)
 lFig = chRT.save_figure('F9KLossesPrd', fig, fext='.pgf')
-lFig.caption = r'Comparison of the chromospheric radiative losses under CRD and PRD treatments of the Ca\,\textsc{ii} K line in the F9 model.'
+lFig.caption = r'Comparison of the chromospheric radiative losses under CRD and PRD treatments of the Ca\,\textsc{ii} K line in the F9 model. A negative value indicates a radiative loss and a positive value a radiative gain.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9LyaProfiles')|
 \py[TimeDepRT]|chRT.get_figure('F9KProfiles')|
