@@ -1364,7 +1364,7 @@ In the NLTE problem the contribution function provides limited interpretability,
 
 The contribution function is often interpreted as a description of the location at which a spectral line forms.
 In many lines, the contribution at the line core can span a relatively large region, and thus there is a high probability that photons measured at the same wavelength have been produced in significantly different locations.
-It is therefore difficult to meaningfully ascribe mean thermodynamic parameters of line formation to a non-uniform extended region over which the line forms.
+It is difficult to meaningfully ascribe mean thermodynamic parameters of line formation to a non-uniform extended region over which the line forms.
 This problem becomes more complex still if the contribution function is double-peaked, as is the case for the blue side of the LE line core in many of the examples presented so far.
 
 It is common to use the integral form of the RTE
@@ -1374,7 +1374,7 @@ It is common to use the integral form of the RTE
 and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
 As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
 
-The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that can occur in NLTE RT as the radiation field from one region of the model atmosphere can determine the populations and thus the emissions in another.
+The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE RT as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
 These effects can instead be captured by the use of response functions.
 
 Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the coupling of these two problems.
@@ -1390,7 +1390,7 @@ The last of these is determined by charge conservation in the simulations consid
 Response functions have typically been considered in a statistical equilibrium context, as they are commonly applied as part of quiet sun inversion procedures.
 The atmosphere in our model varies hugely over the \SI{50}{\second} duration of the simulation, so the typical methods for computing response functions need to be adapted to this setting.
 Whilst computationally expensive, the ``brute force'' approach to response functions makes them simple to calculate.
-Following this approach the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the the populations are updated given the new radiation field and atmosphere.
+Following this approach, the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the populations are updated using the new radiation field and atmosphere.
 This procedure is repeated for the parameter at each depth in the atmosphere.
 The intensity response to perturbation $\delta q$ in parameter $q$ at depth point $k$ can then be computed by finite differences as
 \begin{equation}
@@ -1401,11 +1401,12 @@ The response function is then written as
 \begin{equation}
     \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
 \end{equation}
+Unfortunately, unlike the advection equation, where the stencil has a finite bandwidth, the non-local nature of the RTE means that this process must be undertaken for each depth independently.
 
-In a statistical equilibrium case, the standard statistical equilibrium procedure of formal solution and population update is updated until convergence is reached.
+In a statistical equilibrium case, the standard statistical equilibrium procedure of formal solution and population update is repeated until convergence is reached.
 For the time-dependent situation, a timestep by which to advance the system is needed.
 This should be short to compared to the hydrodynamic evolution of our system, but sufficiently long to allow the population change to rise above our convergence threshold and correctly converge to the new solution.
-\citet{Carlsson2002} note that a population out of statistical equilibrium will follow an exponential decay back to the steady state solution, further supporting the choice of a short timestep to attempt to remain within the more ``linear'' regime of this process.
+\citet{Carlsson2002} note that a population perturbed out of statistical equilibrium will follow an exponential decay back to the steady state solution, further supporting the choice of a short timestep to attempt to remain within the more ``linear'' regime of this process.
 Extreme care should therefore be taken when trying to make quantitative use of these time-dependent response functions over longer time periods, but for now we shall focus on qualitative aspects.
 
 For a parameter $q$, measured in units of Q, and specific intensity in units of I, a statistical equilibrium response function has units of $\mathrm{I}\,\mathrm{Q}^{-1}$.
@@ -1414,7 +1415,7 @@ As previously stated, care must be taken with extrapolating quantitative variati
 
 The method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
 These are plotted in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
-All of the response functions shown in these plots were computed with a timestep on \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
+All of the response functions shown in these plots were computed with a timestep of \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
 In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
 The shape of the temperature response function is immediately recognisable as similar to the contribution function shown in the first column.
 This is not surprising, as temperature is the most important atmospheric parameter in spectral line formation, and will always affect the region where the observed photons form.
@@ -1442,11 +1443,12 @@ In this way they represent a powerful, but moderately computationally expensive,
 
 \emph{The work in this section was undertaken in collaboration with P. Heinzel and J. Kašparová, in parallel with the study of \Caii{} photoionisation, as a result of the International Space Science Institute (ISSI) meeting: "Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving: led by G.S. Kerr and V. Polito.}
 
-It has been repeatedly shown that full time-dependent treatment of the hydrogen lines is necessary in RHD simulations.
+It has been repeatedly shown that a time-dependent treatment of the hydrogen populations is necessary in RHD simulations.
 This was first investigated in wave heated chromospheric simulations by \citet{Carlsson2002}, who found a settling time for hydrogen to return to equilibrium ionisation of the order of thousands of seconds.
 \citet{Brown2018} also compared the hydrogen line profiles, computed with \Radyn{}'s approximate PRD and time-dependence, and also with statistical equilibrium using a the full PRD treatment of RH (i.e. treating each atmospheric subsequent snapshot in statistical equilibrium).
 They found that the time-dependence had a more significant effect than PRD on the Lyman lines, and could not be ignored.
 More recently \citet{Kerr2019a} have investigated the effects of a time-dependent treatment of the level populations of Mg\,\textsc{ii}, and found that whilst there were differences between the statistical equilibrium and time-dependent treatments, the statistical equilibrium treatment was sufficient for most stages of the flare models investigated and for this line priority should be given to the PRD treatment.
+Similarly \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$ from three-dimensional RMHD models, only an equation of state taking into account the non-equilibrium ionisation and its effects on the electron density is necessary, and under this condition a full 3D treatment is more important than complete time-dependence.
 
 It is therefore important to assess the importance of a time-dependent treatment of \Caii{} in solar flare models.
 In the following, we shall briefly summarise our investigation of the importance of treating \Caii{} with time-dependence in the RHD model used for the comparison of the \Radyn{} and FLARIX codes presented in \citet{Kasparova2019}.
@@ -1566,22 +1568,22 @@ Instead comparing the time-dependent and statistical equilibrium line profiles, 
 For the latter of these, the line shape is correct, but the intensity of the statistical equilibrium case is a few percent lower than that of the full time-dependent treatment.
 At $t=\SI{2}{\second}$ the difference between the two different LI treatments is greater than the difference between the LE treatments, but for both the LI and LE cases the statistical equilibrium lines are narrower and less pronounced than their time-dependent counterparts.
 
-For this particular simulation, after the first few seconds of heating, the statistical equilibrium treatment is perfectly with no obvious defects.
-Obviously, this one simulation does not represent all RHD flare simulations, but we have qualitatively found this to be true when testing multiple timesteps from the simulations used in the previous sections.
+For this particular simulation, after the first few seconds of heating, the statistical equilibrium treatment is perfectly valid with no obvious defects.
+Clearly, this one simulation does not represent all RHD flare simulations, but we have qualitatively found this to be true when testing multiple timesteps from the simulations used in the previous sections.
 
 
 \section{PRD}\label{Sec:TimeDepPrd}
 
 As highlighted by \citet{Brown2018}, when considering the hydrogen Lyman lines it would be a significant improvement to simultaneously handle full time-dependence and PRD.
-It is possible that this could prove important for the energy balance of the line-forming regions, in a similar manner to the photoionisation effects discussed in the previous section.
+It is possible that this could prove important for the energy balance of the line-forming regions, in a similar manner to the photoionisation effects discussed previously.
 Indeed, any significant variation in the hydrogen Lyman series may affect the populations \Caii{} and similar species through photoionisation, and also in \Ha{} through modifications of the level populations.
-\citet{Leenaarts2012a} investigated the Doppler-like PRD approximation used in our \Radyn{} simulations and found it sufficient for the quiet Sun case.
+\citet{Leenaarts2012a} investigated the Doppler-like PRD approximation used in our \Radyn{} simulations and found it sufficient for the correct formation of H$\alpha$ in the quiet Sun case.
 The version of \Radyn{} used by \citet{Brown2018} truncated the Lyman lines at several Doppler widths from the line-core, and thus conclusions drawn about the importance of PRD may not be directly applicable to our models.
 
 The \Lw{} framework supports both time-dependence and PRD lines, thus we can attempt to modify the tool built in the previous section to also include PRD effects.
-This is achieved by restoring the damping terms on the Ly$\alpha$ and Ly$\beta$ spectral line definitions (as these were removed to approximate PRD), solving the statistical equilibrium problem for the initial atmosphere in PRD, and then updating the PRD line emission ratio $\rho$ during each timestep based on the current atmospheric parameters and radiation field.
+This is achieved by restoring the damping terms on the Ly$\alpha$ and Ly$\beta$ spectral line definitions (as these were adjusted to approximate PRD), solving the statistical equilibrium problem for the initial atmosphere in PRD, and then updating the PRD line emission ratio $\rho$ during each timestep based on the current atmospheric parameters and radiation field.
 Unfortunately, this basic approach proved to have incredibly poor convergence.
-Many timesteps fail to converge or the iteration scheme can enter a loop of repeatedly passing through the same states, getting now closer to the convergence threshold.
+Many timesteps fail to converge or the iteration scheme can enter a loop of repeatedly passing through the same states, getting no closer to the convergence threshold.
 Of the timesteps that do converge, many take an exceedingly large number of iterations.
 
 These convergence problems are somewhat unexpected due to the reliability of the methods used here when applied here to statistical equilibrium problems.
@@ -1783,32 +1785,32 @@ These tools have been used to investigate the effects of photoionisation of \Cai
 
 From the flare simulations presented here the hydrogen Lyman lines have significant effects on the \Caii{} photoionising radiation field.
 This results in substantial changes in both the outgoing \CaLine{} line profiles, and the radiative energy balance in the upper chromosphere.
-The radiative losses in this region were found to be affected by up to 15\%, which could in turn lead differences in the hydrodynamic evolution of the simulation and thus greater difference in the line profiles.
+The radiative losses in this region were found to be affected by up to 15\%, which could in turn lead to differences in the hydrodynamic evolution of the simulation and thus greater difference in the line profiles.
 We did not find a clear correlation between the magnitude of this effect and the increased heating in the F9 and F10 models; in both cases the effect was important, and therefore is likely to remain so at higher energy depositions.
 It is therefore essential that RHD simulations start to consider this in a self-consistent way to gauge its full effect.
 These photoionisation effects could also affect other species with continua overlapping the hydrogen Lyman lines.
-For instance, Mg\,\textsc{ii} line profiles are often used for chromospheric diagnostics, but these are unlikely to be as significantly affected by the hydrogen Lyman lines as \Caii{} due to the resonance continuum ending at \SI{82.46}{\nano\metre}.
+For instance, Mg\,\textsc{ii} line profiles are often used for chromospheric diagnostics, but these are unlikely to be as significantly affected by the hydrogen Lyman lines as \Caii{} due to the resonance continuum edge being located at \SI{82.46}{\nano\metre}.
 The Mg\,\textsc{ii} populations will be influenced to a lesser extent by photoionisation from the subordinate continua, some of which overlap the Lyman series.
 
-On the other hand, we found that the deviations of the calcium populations due to non-equilibrium ionisation necessitating a time-dependent treatment of were typically small in the simulations investigated.
+On the other hand, we found that the deviations of the calcium populations due to full time-dependent kinetic equilibrium over statistical equilibrium were typically small in the simulations investigated.
 This is interesting, as it theoretically allows for \Caii{} to be processed separately, but as the radiative losses from this species need to be known for the hydrodynamics of an RHD simulation, this species likely still needs to be treated in lockstep with the rest of the simulation.
 Additionally, there is typically a loss in speed by computing the statistical equilibrium solution at each timestep in the simulation (even starting close to the solution from the previous timestep's solution) over the time-dependent solution when using traditional RT methods.
 This could change with the application of machine learning, as it will be far easier to construct detailed models that provide the unique statistical equilibrium solution for a given atmosphere than determining the correct time-dependent solution.
 As the hydrogen populations would continue to require a full time-dependent treatment there is not likely to be an immediate gain from such a model in the context of RHD simulations.
-However, a nuanced analysis of the formation of H$\alpha$ in the quiet Sun by \citet{Leenaarts2012a} suggests that it may be sufficient to purely capture the effects of hydrogen non-equilibrium ionisation (i.e. the fraction of hydrogen that is fully ionised and its effects on the electron density) through the equation of state and then perform NLTE synthesis in statistical equilibrium with this given electron density.
+However, the nuanced analysis of the formation of H$\alpha$ in the quiet Sun by \citet{Leenaarts2012a} suggests that it may be sufficient to purely capture the effects of hydrogen non-equilibrium ionisation (i.e. the fraction of hydrogen that is fully ionised and its effects on the electron density) through the equation of state and then perform NLTE synthesis in statistical equilibrium with this given electron density.
 This would also need to be validated for flares models, and could be done following the approach laid out in this chapter.
-It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE RT modelling.
+It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE RT approaches.
 Parallels can be drawn between the application of machine learning to this problem and the use of interpolated rates following the method of Sollum \NeedRef{} as can be done with HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
 Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
 We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed (that can simultaneously solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios).
-It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this line to be incorporated into RHD simulations in the near future.
+It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this specie to be incorporated into RHD simulations in the near future.
 
 The effects of treating the \Caii{} resonance lines in PRD were significantly larger than those seen with the hydrogen Lyman lines.
 This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD).
 It is therefore important to investigate whether applying PRD to the H and K lines can be done efficiently.
 Empirically, we have found that the majority of convergence problems originate from the hydrogen Lyman lines, thus it may be relatively efficient to treat the \Caii{} resonance lines in PRD.
 If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that applied to the Ly$\alpha$ and Ly$\beta$.
-It has been suggested that \Radyn{}'s treatment of the \Caii{} resonance lines in CRD overestimates the radiative losses but this overestimation is compensated by not considering the Mg\,\textsc{ii}h and k lines \citep[e.g.][]{Kerr2019a}.
+It has been suggested that \Radyn{}'s treatment of the \Caii{} resonance lines in CRD overestimates the radiative losses but this overestimation is compensated by not considering the Mg\,\textsc{ii} h and k lines \citep[e.g.][]{Kerr2019a}.
 The techniques presented in this chapter should allow for a thorough investigation of this and the development of suitable PRD approximations if necessary.
