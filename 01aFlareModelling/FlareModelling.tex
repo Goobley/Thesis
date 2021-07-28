@@ -1,14 +1,29 @@
 \chapter{Flare Modelling}
 
-\begin{itemize}
-    \item Radiative Transfer Physics
-    \item Radiation hydrodynamics
-    \item Numerical approaches to RT and RHD. (combined into the previous sections)
-    \item Important optical spectral lines \Ha{}, \CaLine{}; observations thereof.
-    \item Inversions
-\end{itemize}
+% \begin{itemize}
+%     \item Radiative Transfer Physics
+%     \item Hydro and Radiation hydrodynamics
+%     \item Numerical approaches to RT and RHD. (combined into the previous sections)
+% \end{itemize}
 
-{\color{Red} Convention Positive velocity -> Upflow, all plots shown with vacuum wavelengths unless stated otherwise}
+\TODO{Convention Positive velocity -> Upflow, all plots shown with vacuum wavelengths unless stated otherwise}
+
+Simulation is a powerful scientific approach that seeks both to validate our understanding of a phenomenon, and also learn how it is influenced by various parameters.
+Contrary to its dictionary definition, which suggests deceit or merely a surface level resemblance, simulations are powerful tools in an astrophysical context.
+Astrophysical observations differ greatly to laboratory observations, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat the event.
+Simulations represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
+Numerical simulations are often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
+There will commonly be free-parameters left in these models.
+Some can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
+Due to computational or conceptual limitations simplifying assumptions are often required to make these models tractable.
+
+In the following we will describe the primary physical processes presumed to be at work in flares, and how these are modelled, including the primary approximations used.
+
+
+\section{Modelling flares and observables}
+
+To design a model of solar flares it is first necessary to understand as much as possible from the available observations, so as to ascertain reasonable approximations and the most important processes to include.
+
 
 \section{Introduction to Radiative Transfer}
 
@@ -404,12 +419,3 @@ This is a useful approximate treatment, however effects such as relativistic eff
 
 These simulations of flares therefore allow us to predict the line and continuum emission from the time-evolution of a starting atmosphere. These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,Kowalski2017,Simoes2017}). The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult, something we will address later in Chapter \ref{Chap:Radynversion}.
 
-
-\section{Important Optical Spectral Lines}
-
-Ground-based telescopes can be much larger and more complex than their space-based counterparts for an equivalent budget. In exchange for this they can only observe in limited bands (due to atmospheric effects), and suffer from the effects of atmospheric turbulence. With these telescopes we therefore focus on optical and near-infrared lines, which are the least affected.
-
-We shall focus on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\m}, and \CaLine{}. Both of these lines form in the chromosphere (albeit at different altitudes), and carry large amounts of information pertaining to the details of their formation.
-
-\subsection{CRISP observations of these}
-\subsection{DKIST, \& the future.}
