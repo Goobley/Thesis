@@ -1,4 +1,5 @@
 \chapter{RADYNVERSION}\label{Chap:Radynversion}
+% spell-checker: disable
 %TC:group pycode 0 0
 \begin{pycode}[Radynversion]
 name = 'Radynversion'
@@ -11,6 +12,7 @@ chRad = texfigure.Manager(
     data_dir=  './Data/04Radynversion'
 )
 \end{pycode}
+% spell-checker: enable
 
 % \begin{itemize}
 %     \item Introduction to inverse problems
@@ -27,11 +29,11 @@ chRad = texfigure.Manager(
 
 \section{Introduction to Inverse Problems}
 
-From the previous chapters we have an understanding of the so-called ``forwards-problem'' of RT.
+From the previous chapters we have an understanding of the so-called ``forward problem'' of RT.
 The inverse of this problem is not well-posed; there is no guarantee of uniqueness, and typically the problem is extremely underdetermined.
-The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forwards process that is needed for the inverse process.
+The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forward process that is needed for the inverse process.
 
-It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this we seek to achieve, by solving the inverse problem of radiative transfer.
+It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this we seek to achieve, by solving the inverse problem of radiative transfer, known as inversion.
 As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations and determine the structure of the atmosphere that produced the observed radiation.
 
 \begin{figure}
@@ -68,7 +70,7 @@ As observed radiation is the only vector by which information can arrive from th
     \draw[->] (x3) -- (y2.175);
     \draw[->] (x4) -- (y5.190);
 \end{tikzpicture}
-\caption{Degenerate Mapping}
+\caption{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
 \label{Fig:DegenerateMapping}
 \end{figure}
 
@@ -131,18 +133,32 @@ As observed radiation is the only vector by which information can arrive from th
 
 
 \end{tikzpicture}
-\caption{Bijective Mapping. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
+\caption{The bijective mapping $g$ can be used to resolve the problem of inversions upon the introduction of a latent space $\mathcal{Z}$ containing the information lost in the forward process. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
 \label{Fig:BijectiveMapping}
 \end{figure}
 
-The forward process can be described by the diagram in Fig.~\ref{Fig:DegenerateMapping}.
-This shows the theoretically degenerate nature of the problem; whilst the mapping from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse is not, and with the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
-We can instead frame the problem as shown in Fig.~\ref{Fig:BijectiveMapping}, where elements of $\mathcal{Z}$ represent the information lost in the forwards process and a bijective mapping $g$ may be written between these spaces.
-Clearly, $\mathcal{Z}$ is difficult to characterise, and we will discuss multiple approaches for replacing or reconstructing this information.
-In the following, we denote individual samples of the atmospheric parameters $x$, the emergent line profiles $y$ and the latent space $z$.
+The forward process is described by the diagram in Fig.~\ref{Fig:DegenerateMapping}.
+Here elements of $\mathcal{X}$ are the parameters describing an atmosphere (in this description we choose temperature $T$, mass density $\rho$, velocity $\vec{v}$, and magnetic field $\vec{B}$, although there are many other similar formulations that can be used).
+The elements of $\mathcal{Y}$ are possible forms of the outgoing radiation that may be associated with different sets of atmospheric parameters.
+Fig.~\ref{Fig:DegenerateMapping} shows the theoretically degenerate nature of the problem; whilst the mapping $f$ from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse $f^{-1}$ is not necessarily, and with only the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
+
+The problem of inversion can instead be framed as shown in Fig.~\ref{Fig:BijectiveMapping}, where elements of the newly introduced latent space $\mathcal{Z}$ represent the information lost in the forward process and a bijective mapping $g$ may be written between $\mathcal{X}$ and the cartesian product of $\mathcal{Y}$ and $\mathcal{Z}$.
+$\mathcal{Z}$ is difficult to conceptualise, and harder still to characterise; in the following we will discuss multiple approaches for replacing or reconstructing this information.
+
+As an example we can pose the simple problem of the function $f : \mathbb{R} \rightarrow \mathbb{R}^+; x \mapsto x^2$. This function is clearly not bijective, as for any $y$ in $\mathbb{R}^+$ it is ambiguous whether the expected input $x$ was $\sqrt{y}$ or $-\sqrt{y}$.
+If the domain of this function was instead $\mathbb{R}^+$, there would be no ambiguity here.
+Instead, we can introduce a latent space, the form of which is chosen by us and captures the lost information, i.e. the sign of the input ($\{1,\,-1\}$).
+With this we can define the bijective function $g : \mathbb{R}^+\times\,\{1,\,-1\} \rightarrow \mathbb{R}; (y, z) \mapsto z \sqrt{y}$.
+Discarding $z$, the forward process of $g^{-1}$ is equivalent to that described by $f$, but the invertibility of the problem is now assured.
+This example does not illustrate how to discover the correct $z$, and for a purely mathematical case such as this, there is no unambiguous solution given only $y$.
+However, the form of the latent space is known (and in this case finite), and this can allow us to infer the different possibilities for $x$.
+In complex physical systems these different possibilities may have different likelihoods of occurring that then allow us to construct a probability distribution function for $x$.
+
+For the remainder of this chapter, we denote individual samples of the atmospheric parameters $x$, the emergent line profiles $y$ and the latent space $z$.
 
 \subsection{Milne-Eddington Inversions}
 
+Milne-Eddington inversions have proven to be a simple, but very powerful tool that is often applied in solar physics.
 The loss of information can be somewhat limited by placing constraints on the solution. One of the simplest constraints that can be placed on the problem is that of a source function that changes linearly with continuum optical depth, whilst all other parameters are held constant throughout the atmosphere.
 This is a low-order approximation of the problem, and is convenient as we can express compute the outgoing intensity analytically.
 This can be done for the full Stokes polarised case of the RTE, but for illustration we choose to use only the scalar case here.
@@ -151,7 +167,7 @@ With continuum opacity $\tau_c$ the source function is then defined as
     S(\tau_c) = S_0 + S_1 \tau_c,
 \end{equation}
 where $S_0$ and $S_1$ are constants.
-In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line opacity i.e.
+In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case due to only considering a single line), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line opacity i.e.
 \begin{equation}
     \tau(\nu) = \tau_c (1 + \alpha \phi(\nu)),
 \end{equation}
@@ -168,9 +184,10 @@ This approach is rapid and works quite well for quiet photospheric lines, such a
 The linear description of source function reduces its applicability to chromospheric lines.
 However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
 
-\subsection{Generalisation}
+\subsection{Generalisation Through Response Functions}
 
-There are substantial limitations to imposing a chosen source function.
+
+It can be very limiting to impose a chosen source function, especially in regions where the temperature does not vary monotonically.
 A far more flexible approach is to attempt to fit a source function.
 From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
 \begin{equation}
@@ -181,14 +198,18 @@ If the source function is taken to be constant in each slab this becomes
 \begin{equation}\label{Eq:LinearResponse}
     I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
 \end{equation}
-and for each slab, the associated integral represents its contribution to the outgoing intensity. In fact, as the each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
+and for each slab, the associated integral represents its contribution to the outgoing intensity.
+In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
 We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
 This response function does not change with the source function due to the linearity of the problem.
-In theory we should therefore be able to infer the depth stratified form of the source function, however two primary difficulties arise.
+In theory, we should therefore be able to infer the depth stratified form of the source function.
+However, two primary difficulties arise.
 
 Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
-Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning and cannot be inverted directly.
+Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor numerical conditioning and thus cannot be inverted directly due to limited numerical precision and sensitive the inverse is to minute numerical errors.
 An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can attempt to tackle both problems at once.
+
+\TODO{Simply explain example, parameters etc.}
 % Nevertheless, this tends to produce oscillatory solutions, as shown in Fig. \NeedRef{}.
 We shall demonstrate this with a numerical example, first defining a function giving the response at each depth as per \eqref{Eq:LinearResponse}:
 
@@ -251,6 +272,9 @@ If these parameters are also allowed to vary then the solution is likely to dete
 % This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
 Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enforce smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
 Ultimately, we seek to learn information about the atmospheric structure, and not simply the source function.
+
+\TODO{Merge with basic RF description from TimeDepRT chapter.}
+
 In LTE, where the source function is set by the local atmospheric parameters, this approach has long been viable.
 The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by \citet{SanchezAlmeida1992}) to perturbations in different atmospheric parameters at the same time as the formal solution.
 These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
@@ -285,8 +309,8 @@ The RHD based methods are also comparable in terms of exploration of $z$, except
 
 As discussed previously, the assumptions that render NLTE response function based approach tractable, such as hydrostatic equilibrium, cannot be applied in flares where flows often approach the sound speed.
 We therefore need an inversion technique that can operate outside of these constraints.
-Our standard RT forwards process can be framed as a function $y = f(x)$ with atmospheric inputs $x$ and line profiles $y$.
-Clearly this function is not bijective, but if we also capture the information lost in the forward process, we can instead define a bijective function $x = g(y, z)$ such that $g^{-1}$ represents the forwards process, and $g$ the inverse process.
+Our standard RT forward process can be framed as a function $y = f(x)$ with atmospheric inputs $x$ and line profiles $y$.
+Clearly this function is not bijective, but if we also capture the information lost in the forward process, we can instead define a bijective function $x = g(y, z)$ such that $g^{-1}$ represents the forward process, and $g$ the inverse process.
 Our theory of radiative transfer does not give any immediate insight into the formulation of $g$ with so few constraints, so we instead turn to the field of machine learning.
 
 \section{Introduction to Machine Learning}
@@ -366,7 +390,7 @@ As SGD is only affected by the most recent batch of data it can have difficulty 
 
 Many improvements to SGD have been developed, such as the addition of momentum, which accelerates convergence and helps to avoid the solution being overly affected by a single batch of training data.
 Other modern algorithms based on the same principles as SGD have also been developed \citep[e.g. the Adam algorithm,][]{2014Kingma} and often converge in fewer epochs (rounds of training) to similar or better solutions.
-None of these stochastic algorithms can guarantee a global minimum in the loss space, and such a requirement is not feasible for anything other than the smallest neural networks, where more time- and memory-consuming optimisers can be used due to the much more dimensionally compact spaces over which the optimsation occurs.
+None of these stochastic algorithms can guarantee a global minimum in the loss space, and such a requirement is not feasible for anything other than the smallest neural networks, where more time- and memory-consuming optimisers can be used due to the much more dimensionally compact spaces over which the optimisation occurs.
 Nevertheless, with sufficient training data and epochs a model capable of approximating the function we wish to learn should be able to descend into sufficiently good local minimum using these techniques.
 
 Auxiliary techniques to improve model convergence have also been developed, such as minibatching, in which the network is only shown a random portion of the training data each epoch.
@@ -406,7 +430,7 @@ We wish to learn the form of the latent space, and by sampling this space suffic
 Nevertheless, we have no data on which to train which directly characterises the latent space, amd thus we turn to the technique of invertible neural networks (INNs) which naturally learn bijective functions to learn the bijective mapping \emph{and} the form of the latent space simultaneously.
 
 Our INN is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
-As the function $x = g(y, z)$ (as shown in Fig.~\ref{Fig:BijectiveMapping}) is bijective, our INN can learn the function $g^{-1}$ as the forwards process, and $g$ as the inverse process.
+As the function $x = g(y, z)$ (as shown in Fig.~\ref{Fig:BijectiveMapping}) is bijective, our INN can learn the function $g^{-1}$ as the forward process, and $g$ as the inverse process.
 ANNs can learn to approximate any function, so they can be trained to transform any distribution to any other.
 We can therefore choose to characterise the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the simulations.
 The approach to inferring atmospheric parameters using the INN therefore differs to the approach of traditional methods that take guided explorations of the latent space.
@@ -496,7 +520,7 @@ This layer shuffles the data in a random, but fixed order which is different for
     \draw[->, color=TolTeal] (Input.340 -| P1.north) -- (Input.340 -| Acl1.south);
     \draw[->, color=TolTeal] (Input.340 -| Acl1.north) -- (Input.340);
 \end{tikzpicture}
-\caption{Structure of the final RADYNVERSION network. The forwards process is shown with the {\color{TolBlue}blue} arrows, and the inverse process with {\color{TolTeal}teal} arrows.}
+\caption{Structure of the final RADYNVERSION network. The forward process is shown with the {\color{TolBlue}blue} arrows, and the inverse process with {\color{TolTeal}teal} arrows.}
 \label{Fig:RadynversionDiagram}
 \end{figure}
 
@@ -504,6 +528,10 @@ For the RADYNVERSION\footnote{RADYNVERSION is a portmanteau of \Radyn{} and ``in
 This is shown schematically in Fig. \ref{Fig:RadynversionDiagram}.
 Given the presence of four DNNs per affine coupling layer, our final model is composed of twenty DNNs.
 Each of these networks is an individual four-layer fully connected network utilising leaky ReLU activation functions after each of the first three layers, and a ReLU following the final layer.
+This architecture was developed empirically, guided both by the examples presented in \citep{2018Ardizzone} and machine-learning best practices.
+A commonly used approach that we applied extensively is to take a small subset of the the training data and attempt to find a model which can successfully overfit this mapping; a model that can memorise the mapping for a subset of inputs can demonstrably learn the problem (although it may not have enough dimensionality to generalise, depending on the range and complexity of the input data).
+Models with both three and five affine coupling layers were trialled, with the latter performing significantly better.
+Whilst it is possible to continue to increase the depth of this network, this is not without significant computational cost, and did not seem necessary given the quality of the results.
 
 The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time, in our case the temperature $T$, electron density $n_e$, and velocity $v$.
 These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
@@ -516,10 +544,12 @@ Both of these are interpolated onto fixed wavelength grids, with 30 points each 
 The intensity values of the spectral lines are scaled to cover the range [0, 1] whilst preserving the relative intensity of the two (which conveys important information regarding continuum emission).
 
 Our model then has an input dimensionality of 150 and an output dimensionality of 60.
-We choose, by experimentation, to set the size of the latent space to same as the input, however we cannot prove the opimality of such a choice as it depends on the (unknown) intrinsic dimensionality of the problem.
+We choose, by experimentation, to set the size of the latent space to the same as the input, however we cannot prove the optimality of such a choice as it depends on the (unknown) intrinsic dimensionality of the problem.
 Thus the input and total output (i.e. output and latent space) must be of length at least 210.
 To improve the generalisation performance of the network and allow it a greater dimensionality for its representation of the data we choose to set the input and output size to 384.
 The input to the network is zero-padded to this length, and the output and latent space are concatenated with zero-padding in between.
+This width was also determined empirically, as it was found that the model had difficulties converging for the minimum width of 210.
+This problem seemed to vanish upon increasing the width, a technique that was found in the examples associated with \citep{2018Ardizzone}, so no other values were trialled.
 The deep neural networks used inside the affine coupling layers have an input and output of length 192, but this is increased to 384 for the inner layers, to further increase their representational ability.
 
 The RADYNVERSION model presented here considers each set of atmospheric parameters and observables as instantaneous quantities.
@@ -531,71 +561,73 @@ The atomic populations are not considered directly with this model, and we are i
 To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{} {\color{Red} Let's see what happens to the online database}.
 These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
 All models are heated by a symmetric triangular electron beam pulse, modelled using the Fokker-Planck module (with an initial power law distribution of electron energies), of \SI{20}{\s} duration, with a peak at \SI{10}{\s}.
-The total beam deposition varies between \SI{3e10}{\erg\per\square\cm} and \SI{1e12}{\erg\per\square\cm}, the low-energy cutoff is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
+The total beam deposition varies between \SI{3e10}{\erg\per\square\cm} and \SI{1e12}{\erg\per\square\cm}, the low-energy cut-off is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
 All of these simulations last for \SI{50}{\s}, with data saved every \SI{0.1}{\s}.
 
-Not all combinations of these parameters converged, in particular some simulations with lower values for the low-energy cutoff, higher spectral indices, and high total energy deposition were not present in the grid.
+Not all of these simulations converged due to certain parameter combinations.
+In particular some simulations with lower values for the low-energy cut-off, higher spectral indices, and high total energy deposition were not present in the grid of models.
 From the 81 simulations we then have 40,500 individual timesteps of which we separate 20\% for validation purposes.
 The atmospheric parameters and line profiles are mapped onto their fixed grids and prepared as discussed in Section~\ref{Sec:RadynversionModel}.
 Our height stratification is chosen to primarily sample the chromosphere, and places 45 linearly spaced points below \SI{3.5}{\mega\metre}, with a constant spacing of \SI{79.2}{\kilo\metre}.
-The remaining 5 points are then expontially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
+The remaining 5 points are then exponentially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
 
 \subsection{Training Method}
 
-Our training method is based on the one presented in \citet{2018Ardizzone} and makes the network is constructed using their framework. \NeedRef{}
-The INN is trained in both directions to ensure the conditioning of both the forwards and inverse problems.
+Our training method is based on the one presented in \citet{2018Ardizzone} and the network is constructed using their framework. \NeedRef{}
+The INN is trained in both directions to ensure the conditioning of both the forward and inverse problems.
 The model is trained using minibatching with the same minibatch of the training set being used in both directions.
-Both training directions are also constrained by two loss functions.
-The forwards direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\mathrm{true}||_2^2$, where $y$ indicates the output of the network and $y_\mathrm{true}$ the expected output) on the output vector of line profiles and zero padding.
+Both training directions are constrained by two loss functions and a linear combination of these serves as our final loss to minimise.
+The forward direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\mathrm{true}||_2^2$, where $y$ indicates the output of the network and $y_\mathrm{true}$ the expected output) on the output vector of line profiles and zero padding.
 This latent space is constrained by a Maximum Mean Discrepancy (MMD) loss.
 The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\mathrm{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
 This is discussed in depth, along with implementation details in Section~\ref{Sec:Mmd}.
 During the forward process the MMD loss is used to ensure that the network learns to map the true latent space to our chosen form for it (the multivariate unit Gaussian distribution).
 A traditional regression loss cannot be applied here, as we would have to assign fixed ``samples'' from the latent space for each timestep in the training set, which cannot be done without understanding the true latent space.
 Its aim is instead to condition the distribution produced in the latent space.
-To this end, whilst $y$ is included in the MMD loss terms (as this is an important component of the output), the gradients on $y$ due to the MMD loss are ignored, so as not to affect the training of the forwards model.
-For both the L2 and MMD losses to converge on the forwards process ensures that samples of $z$ are correctly independent of $y$ as they must not contain copies of the same information for the reverse process to work correctly.
+To this end, whilst $y$ is included in the MMD loss terms (as this is an important component of the output), the gradients on $y$ due to the MMD loss are ignored, so as not to affect the training of the forward model i.e. whilst the elements of $y$ are considered when computing the value of the MMD loss, the MMD can only affect the weights determining $z$.
+Both the L2 and MMD losses converging ensures that samples of $z$ are correctly independent of $y$ as they must not contain copies of the same information for the reverse process to work correctly.
 
-The reverse process is trained similarly, with an additional two losses.
+The inverse process is trained similarly, with an additional two losses.
 An L2 loss is used for $x$ and the zero-padding to ensure the expected atmosphere parameters are produced (and that the padding remain 0), and an MMD loss ensuring the correct distribution of $x$ for random latent samples.
 
-Both of the forwards and backwards losses are linearly combined to produce a set of weighted gradients used to update the network.
+Both of the forward and backwards losses are linearly combined to produce a set of weighted gradients used to update the network.
 We define three hyperparameter weights for this purpose $w_\mathrm{pred}$, $w_\mathrm{latent}$, and $w_\mathrm{rev}$.
 These are combined to produce the losses
 \begin{align}
     loss_f &= w_\mathrm{pred} L2_f + w_\mathrm{latent} MMD_f,\\
     loss_b &= 0.5w_\mathrm{pred} L2_b + \xi(n)w_\mathrm{rev} MMD_b,
 \end{align}
-where $f$ and $b$ represent the forwards and backwards terms respectively, and $\xi$ is a term that gradually increases towards unity so as to limit the impact of the backwards MMD term on early epochs.
-It is parameterised as
+where $f$ and $b$ represent the forward and backwards terms respectively, and $\xi$ is a term that gradually increases towards unity.
+It is parametrised as
 \begin{equation}
     \xi(n) = \left( \min\left( \frac{n}{0.4 N_\mathrm{fade}}, 1 \right) \right)^3,
 \end{equation}
-where $n$ is the current epoch, and $N_\mathrm{fade}$ is the number of epochs needed for this term to become unity.
-To ensure that the output in the zero-padded sections remains close to zero we use $\xi$ to initialise these with a small amount of random noise, decaying over this same period.
+where $n$ is the current epoch, and $N_\mathrm{fade}$ is the fade-in period i.e. the number of epochs needed for this term to become unity.
+This terms serves to slowly increase the effect of the MMD loss, that was otherwise found to hinder the training of both the forward and inverse problems by dominating $loss_b$ and guiding the system away from a solution that minimised both terms.
+To ensure that the output in the zero-padded sections remains close to zero we also use $1-\xi$ to initialise these with a small amount of random noise, decaying over this same period.
 This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
-Empirically we found that for the fade-in period of 800 epochs (over which $\xi$ increases to 1), a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
-After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each block of these.
-From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ being increased by the same amount.
-These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forwards process would not reliably converge.
+Empirically we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
+After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each block of these to fine-tune the line profiles and atmospheric parameters which were otherwise a little noisy.
+From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ again being increased by 1000.
+These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forward process would not reliably converge.
 
-The gradients computed from these losses are used in conjunction with the Adam optimiser \citep{2014Kingma} with $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
+The weights update is computed from the gradients of the linearly combined losses using the Adam optimisation algorithm \citep{2014Kingma} with hyperparameters $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
 The $\beta_i$ terms control the decay rate for momentum of the first- and second-moment estimates of the gradients and $\epsilon$ simply prevents division by zero.
 These gradients are clipped to a range of $\pm15$ to help further mitigate problems with exploding gradients.
 This does not affect the final solution as the gradients will decrease as we approach a minimum.
 The learning rate was initialised to $1.5\times10^{-3}$ and decays by a factor of $0.004^{1/1333}$ every 12 epochs.
 Each minibatch contained 500 different samples and 20 minibatches were used per learning epoch.
-The final model was selected based on its L2 performance for the forwards and backwards results on the validation set.
+The final model was selected based on its L2 performance for the forward and backwards results on the validation set.
 In this case the best performing model was the one saved after 11,400 epochs of training.
-
 
 
 \subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}
 
-The content of this section draws primarily from \citet{Sriperumbudur2009}, \citet{2012Gretton}, \citet{Muandet2017}, and Gretton's lecture content, currently available online\footnote{\url{http://www.gatsby.ucl.ac.uk/~gretton/teaching.html}}.
+\emph{The content of this section draws primarily from \citet{Sriperumbudur2009}, \citet{2012Gretton}, \citet{Muandet2017}, and Gretton's lecture content, currently available online}\footnote{\url{http://www.gatsby.ucl.ac.uk/~gretton/teaching.html}}.
 % e.g. http://www.gatsby.ucl.ac.uk/~gretton/coursefiles/lecture1_whatIsRKHS.pdf
 
-The maximum mean discrepancy (MMD) is a statistic for comparing two distributions, based on samples drawn from these, and computes the difference in expectations over functions in the unit ball of a reporducing kernel Hilbert space (RKHS).
+The maximum mean discrepancy (MMD) is a statistic for comparing two distributions, based on samples drawn from these, and computes the difference in expectations over functions in the unit ball of a reproducing kernel Hilbert space (RKHS).
+It represents an estimate of the distance between the mean features of the sampled distributions in the space defined by a chosen kernel i.e. the greater similarity between the two sampled distributions the smaller the value of the MMD.
 
 A Hilbert space is a space in which an inner product is defined that is linear, symmetric, and the inner product of an element with itself is positive definite.
 From this inner product a norm can be defined $||f|| = \sqrt{\langle f, f \rangle}$.
@@ -633,8 +665,9 @@ We can then write
 \begin{equation}
     \langle \mu_P, \mu_P \rangle_\mathcal{H} = \langle \mathbb{E}_P [k(\cdot\, ,\, X)], \mathbb{E}_{P} [k(\cdot\, ,\, X^\prime)] \rangle_\mathcal{H} = \mathbb{E}_{P} [k(X, X^\prime)],
 \end{equation}
-where $X^\prime$ is an independently drawn copy of $X$ from $P$.
-We define $Y^\prime$ analagously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
+where $X^\prime$ is an independently drawn copy of $X$ from $P$, and $k(\cdot\, ,\, X)$ refers to the function, and not its evaluation at a particular point.
+In this case $k(\cdot,\, ,\, X)$ is the feature map $\phi(X)$.
+We define $Y^\prime$ analogously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
 \begin{equation}
     \mathrm{MMD}^2 = ||\mu_P - \mu_Q|| ^2
                    = \mathbb{E}_P [k(X, X^\prime)] + \mathbb{E}_Q [k(Y, Y^\prime)] - 2 \mathbb{E}_{P,Q}[k(X,Y)].
@@ -657,15 +690,18 @@ We choose to employ the inverse multi-quadric (IMQ) kernel as used by \citet{201
 \begin{equation}
     k_\alpha(x, y) = \frac{\alpha^2}{\alpha^2 + ||x-y||_2^2}.
 \end{equation}
-This kernel meets the strictly positive definite criterion that is necessary for a characterisic kernel of an RKHS, but contains a free parameter $\alpha$.
+This kernel meets the strictly positive definite criterion that is necessary for a characteristic kernel of an RKHS, but contains a free parameter $\alpha$.
+This equation therefore described a family of kernels, which will have different performance depending on the data and the choice of $\alpha$.
 We were unable to empirically determine a single value for $\alpha$ for which the MMD could reliably distinguish between the two distributions well enough to optimise over, however it was found that the value of the MMD for different values of $\alpha$ whilst retaining fixed $X$ and $Y$ peaked for a particular value of $\alpha$.
-This approach was used to refine the MMD losses by updating $\alpha$ to the value for which the MMD was maximal every five epochs of training.
+The kernel of the family with this value of $\alpha$ is able to better resolve the differences between our fixed samples and is therefore best suited (of the tested values) to guiding the optimisation of the weights associated with these terms.
+This approach was used to refine the MMD losses by updating the $\alpha$ parameter of the kernel to the value for which the MMD was maximal (given the fixed input samples from this epoch) every five epochs of training.
 Modifying the MMD loss in this way ensures that it is most sensitive to the scale of differing features between our current distribution samples.
 
-Minimising the forwards MMD loss then ensures the independence of data stored in the latent space and that the latent space takes a normal unit distribution form, whilst minimising the backwards MMD ensures that the distribution of atmospheres generated with different draws of the latent space is a plausible distribution when compared against the training set.
+Minimising the forward MMD loss then ensures the independence of data stored in the latent space and that the latent space takes a normal unit distribution form, whilst minimising the backwards MMD ensures that the distribution of atmospheres generated with different draws of the latent space is a plausible distribution when compared against the training set.
 
 \subsection{Validation}
 
+% spell-checker: disable
 \begin{pycode}[Radynversion]
 def logvel_to_vel(v):
     vSign = v / np.abs(v)
@@ -792,18 +828,21 @@ ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
 
 fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf', dpi=500)
-latexFig.caption = r'Validation of the Radynversion reverse process from the ground truth line profiles shown in Fig.~\ref{Fig:RadynversionValidationForwards}. The two-dimensional histograms show the probability density of the solution in each altitude node, and the black dashed lines the expected solution.'
+latexFig.caption = r'Validation of the RADYNVERSION reverse process from the ground truth line profiles shown in Fig.~\ref{Fig:RadynversionValidationForwards}. The two-dimensional histograms show the probability density of the solution in each altitude node, and the black dashed lines the expected solution.'
 \end{pycode}
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
-During and after training, the RADYNVERSION model is validated against the unseed validation data separated from the training set.
-An example taken from the validation set showing the forwards process is presented in Fig.~\ref{Fig:RadynversionValidationForwards}.
+% spell-checker: enable
+
+During and after training, the RADYNVERSION model is validated against the unseen validation data separated from the training set.
+An example taken from the validation set showing the forward process is presented in Fig.~\ref{Fig:RadynversionValidationForwards}.
+The upper row shows that atmosphere inserted into the model whilst the lower row shows the expected output (solid lines) and the output of the forward process (dashed lines).
 The mean squared error in the scaled intensity at each wavelength point for the validation set is $5.74\times10^{-5}$ showing that the model can very accurately predict the scaled line profiles based on the atmospheric parameters for unseen atmospheres.
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationReverse')|
 
-Due to possible degeneracies it is harder to numerically evaluate the performance of the model's reverse process.
-For each pair of line profiles we draw a large number of samples from the latent space and infer the predicted line profile from each latent space draw combined with the pair of line profiles.
+Due to the model's inherent non-uniqueness and possible degeneracies it is harder to numerically evaluate the performance of the model's reverse process.
+For each pair of line profiles we draw a large number of samples from the latent space and infer the predicted atmosphere from each latent space draw combined with the pair of line profiles.
 This gives a large number of possible sets of atmospheric parameters which we plot on a two dimensional histogram to show the probability density of the solution in each altitude node.
 This method then allows us to gauge possible degeneracies and establish the relative probabilities of different solutions.
 An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process.
@@ -814,6 +853,9 @@ This effect is most visible on the velocity plot, but despite the increase in un
 
 \subsection{Proof of Concept Results}
 
+\emph{The proof of concept application of the RADYNVVERSION model was primarily undertaken by my co-authors. I will briefly summarise the primary results in this section, but the methodology is more fully described in the associated paper.}
+
+% spell-checker: disable
 \begin{pycode}[Radynversion]
 from astropy.io import fits
 ca_file = chRad.data_file('crisp_l2_20140906_152724_8542_r00459.fits')
@@ -883,7 +925,7 @@ ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
 
 lFig = chRad.save_figure('CrispPlot', fig, fext='.pgf', dpi=600)
-lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off ribbon) and circle (on ribbon). Wavelengths in this figure use their values in air.'
+lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off-ribbon) and circle (on-ribbon). Wavelengths in this figure use their values in air.'
 \end{pycode}
 
 \begin{pycode}[Radynversion]
@@ -910,7 +952,7 @@ fig, ax = plt.subplots(2,2,
 figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7),
 constrained_layout=True)
 ax[0,0].plot(new_ca_1[0]/10 - ca_centre_wvl/10,new_ca_1[1])
-ax[0,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the circlular point")
+ax[0,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the circular point")
 ax[0,0].set_ylabel("Normalised Intensity")
 ax[0,1].plot(new_ha_1[0]/10 - ha_centre_wvl/10,new_ha_1[1])
 ax[0,1].set_title(r"H$\alpha$ for the circular point")
@@ -937,15 +979,16 @@ with open(chRad.data_file('InversionResults.pickle'), 'rb') as f:
 
 fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsFlare', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Inversion results for the on ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
+lFig.caption = r'Inversion results for the on-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 
 fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsQuiet', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Inversion results for the off ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
+lFig.caption = r'Inversion results for the off-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 \end{pycode}
+% spell-checker: enable
 
 As a proof of concept the RADYNVERSION model was applied to the two-ribbon M1.1 flare SOL 20140906T17:09 observed with the CRISP instrument in \Ha{} and \CaLine{}.
-This event ocurred in NOAA AR 12157 with heliocentric coordinates (-732", -302").
+This event occurred in NOAA AR 12157 with heliocentric coordinates (-732", -302").
 This data was preprocessed using the CRISPRED pipeline \citep{2015dlcr} and is publicly available in the F-CHROMA database.
 
 \py[Radynversion]|chRad.get_figure('CrispPlot')|
@@ -955,7 +998,7 @@ Fig.~\ref{Fig:CrispPlot} shows CRISP images in the blue wing, line core, and red
 These images were taken just after flare onset.
 Two pixels are marked, a circle on the flare ribbon, and a square far from the flare, in a much quieter region.
 The spectral line profiles from these two pixels are shown in Fig.~\ref{Fig:LineProfilesToInvert}.
-For the circular point both lines are strongly in emssion whereas they are broad absorption lines for the square point.
+For the circular point both lines are strongly in emission whereas they are broad absorption lines for the square point.
 These lines from these pixels have then been inverted using RADYNVERSION, with 20,000 latent space draws each.
 The results of these inversions are shown in Figs~\ref{Fig:InversionResultsFlare}~and~
 \ref{Fig:InversionResultsQuiet} for the circular and square points respectively.
@@ -966,22 +1009,22 @@ As there is no ground truth solution for this data we instead overplot the media
 \py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
 \py[Radynversion]|chRad.get_figure('InversionResultsQuiet')|
 
-Substantial analysis, detailed in the original paper, was undertaken by my co-authors, which I will briefly summarise here.
+The following is a brief summary of the analysis undertaken by my co-authors.
 The inverted pixels were found to be consistent with previous analyses.
 For example, forward modelling by \citet{Kuridze2015} suggests that the \Ha{} line profile forms below \SI{1.2}{\mega\metre}, with the core forming towards the top of this region, and the line wings forming below \SI{0.95}{\mega\metre}.
 In this observation the \Ha{} line profile is asymmetric in favour of the red wing, and from the inversions we see that there is a slight upflow in the region where the wings are formed.
 This is likely chromospheric evaporation in this region causing an increase in the opacity of the blue wing, leading in turn to more intensity in the red wing.
 For the off-ribbon pixel we note that both line profiles are very broad.
-The inverted velocity field contains a significant number of small magnitude oscillations which we believe are due to RADYN's conservative assumption of a \SI{2}{\kilo\metre\per\second} microturbulent velocity throughout the atmosphere.
-If the network has learnt that bulk plasma flows can shift the position of the line core (i.e. the majority of the opacity in a line), then it is reasonable to suggest that these represent our model's attempt to broaden th line profiles.
-Recent studies have shown that significantly higher microturbulent velocities are needed to explain the nonthermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
+The inverted velocity field contains a significant number of small magnitude oscillations which we believe are due to RADYN's conservative assumption of a \SI{2}{\kilo\metre\per\second} microturbulent velocity throughout the atmosphere, as this is insufficient to produce line profiles as broad as those observed here.
+If the network has learned that bulk plasma flows can shift the position of the line core (i.e. the majority of the opacity in a line), then it is reasonable to suggest that these represent our model's attempt to broaden the line profiles.
+Recent studies have shown that significantly higher microturbulent velocities are needed to explain the non-thermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
 
 \subsection{Discussion}
 
 The RADYNVERSION invertible neural network presented in this chapter represents a novel method for investigating the atmospheric properties of observed events and lifts many of the restrictions that previously made inversions of flaring line profiles infeasible.
 This is achieved by the union of machine learning and a large body of RHD simulations.
 The implementation is currently a proof of concept but shows much promise, agreeing with previous investigations, and can easily be extended to other spectral lines and atmospheric parameters.
-With the addition of more advanced forwards models this technique could be applied to inference of the chromospheric magnetic field from full Stokes observations.
+With the addition of more advanced forward models this technique could be applied to inference of the chromospheric magnetic field from full Stokes observations.
 Inversions using this method are fast and robust; the effort of ``exploring'' the latent space that is common in regression based codes has effectively been replaced with an up-front cost in the training process.
 Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due the previous training effort, which is then shared between every application of the model (in the traditional 1.5D inversion technique, where every column is treated independently, a lot of this work is replicated).
 These latent draws additionally serve to provide an estimate of the uncertainty on the inferred parameters.

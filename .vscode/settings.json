@@ -138,13 +138,21 @@
         "NLTE",
         "RADYN",
         "RADYN's",
+        "RKHS",
         "Radynversion",
+        "broadenings",
         "collisionality",
         "color",
         "discretisations",
         "flare's",
+        "hyperparameters",
         "interpolant",
+        "invertibility",
         "leftgoing",
+        "microturbulent",
+        "minibatch",
+        "minibatches",
+        "overplot",
         "overplotted",
         "photoionisation",
         "photoionising",
@@ -157,7 +165,8 @@
         "timeslices",
         "timestep",
         "timesteps",
-        "unpolarised"
+        "unpolarised",
+        "upflow"
     ],
     "cSpell.enabled": true
 }
