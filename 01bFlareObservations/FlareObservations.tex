@@ -1,4 +1,19 @@
 \chapter{Flare Observations}
+% spell-checker: disable
+%TC:group pycode 0 0
+%TC:group tikzpicture 0 0
+\begin{pycode}[FlareObs]
+name = 'FlareObs'
+chRad = texfigure.Manager(
+    pytex,
+    './01bFlareObservations',
+    number=4,
+    python_dir='./01bFlareObservations/python',
+    fig_dir=   './01bFlareObservations/Figs',
+    data_dir=  './Data/01bFlareObservations'
+)
+\end{pycode}
+% spell-checker: enable
 
 \begin{itemize}
     \item How flares are observed.
@@ -16,3 +31,428 @@ We shall focus on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\
 
 \subsection{CRISP observations of these}
 \subsection{DKIST, \& the future.}
+
+\section{Introduction to Inverse Problems}\label{Sec:InverseProblems}
+
+From the previous chapters we have an understanding of the so-called ``forward problem'' of RT.
+The inverse of this problem is not well-posed; there is no guarantee of uniqueness, and typically the problem is extremely underdetermined.
+The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forward process that is needed for the inverse process.
+
+It is, of course, of great value to constrain the atmospheric parameters associated with a particular observation, and it is this we seek to achieve, by solving the inverse problem of radiative transfer, known as inversion.
+As observed radiation is the only vector by which information can arrive from the Sun, it is important to maximally exploit the information that can be gleaned from observations and determine the structure of the atmosphere that produced the observed radiation.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[line width=1pt, >=latex]
+    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+
+    \node[above right=0.5cm and 4cm of x1] (y1) {$\vec{I}_1$};
+    \node[below=of y1] (y2) {$\vec{I}_2$};
+    \node[below=of y2] (y3) {$\vec{I}_3$};
+    \node[below=of y3] (y4) {$\vec{I}_4$};
+    \node[below=of y4] (y5) {$\vec{I}_5$};
+    % \node[right=4cm of x4] (aux2) {};
+
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(x1) (x4)}] (xSet) {};
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(y1) (y5)}] (ySet) {};
+
+    \node[below=2cm of y5,font=\bfseries, align=center] (yLabel) {$\mathcal{Y}$\\Observed Intensity};
+    % \node[left=3cm of ylabel.center,font=\bfseries, align=center] {$\mathcal{X}$\\Atmospheric Parameters};
+    \node[font=\bfseries, align=center] (xLabel) at (xSet |- yLabel){$\mathcal{X}$\\Atmospheric Parameters};
+
+    % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
+    % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
+    \draw[->, out=50, in=150] (xSet.90) to node[below] {$f(x)$} (ySet.90);
+    \draw[->, dotted, out=210, in=310] (ySet.270) to node[above] {$f^{-1}(y)$} (xSet.270);
+
+    \draw[->] (x1) -- (y2.170);
+    \draw[->] (x2) -- (y4.190);
+    \draw[->, dotted] (y2.150) -- (x1.5) node[midway, above] {?};
+    \draw[->, dotted] (y2.200) -- (x3.20) node[midway, below] {?};
+    \draw[->] (x3) -- (y2.175);
+    \draw[->] (x4) -- (y5.190);
+\end{tikzpicture}
+\caption{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
+\label{Fig:DegenerateMapping}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[line width=1pt, >=latex]
+    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(x1) (x4)}] (xSet) {};
+
+    \node[above right=1cm and 3.5cm of xSet.center] (y1) {$(\vec{I}_2, z_1)$};
+    \node[below=of y1] (y2) {$(\vec{I}_4, z_1)$};
+    \node[below=of y2] (y3) {$(\vec{I}_5, z_1)$};
+    \node[right=0.5cm of y1] (y4) {$(\vec{I}_2, z_2)$};
+    \node[below=of y4] (y5) {$(\vec{I}_4, z_2)$};
+    \node[below=of y5] (y6) {$(\vec{I}_5, z_2)$};
+    \node[right=0.5cm of y4] (y7) {$(\vec{I}_2, z_3)$};
+    \node[below=of y7] (y8) {$(\vec{I}_4, z_3)$};
+    \node[below=of y8] (y9) {$(\vec{I}_5, z_3)$};
+    % \node[right=4cm of x4] (aux2) {};
+
+    \node[shape=ellipse,draw=black,minimum size=3cm,fit={(y1) (y5) (y9)}] (ySet) {};
+
+    \node[shape=circle, draw=black, right=2cm of y8] (prod) {$\times$};
+    \draw[->, ultra thick] (prod.180) -- (ySet.0);
+
+    \node[above=2cm of prod] (yy3) {$\vec{I}_5$};
+    \node[above=0.5cm of yy3] (yy2) {$\vec{I}_4$};
+    \node[above=0.5cm of yy2] (yy1) {$\vec{I}_2$};
+    \node[shape=ellipse,draw=black,minimum size=1cm,fit={(yy1) (yy3)}] (yySet) {};
+    \draw[->, ultra thick] (yySet.270) -- (prod.90);
+
+    \node[below=2cm of prod] (z1) {$z_1$};
+    \node[below=0.5cm of z1] (z2) {$z_2$};
+    \node[below=0.5cm of z2] (z3) {$z_3$};
+    \node[shape=ellipse,draw=black,minimum size=1cm,fit={(z1) (z3)}] (zSet) {};
+    \draw[->, ultra thick] (zSet.90) -- (prod.270);
+
+    \node[below=6cm of ySet.center,font=\bfseries, align=center] (yLabel) {$\mathcal{Y}\times\mathcal{Z}$\\Observed Intensity $\times$ Latent Space};
+    \node[font=\bfseries, align=center] (xLabel) at (xSet |- yLabel){$\mathcal{X}$\\Atmospheric Parameters};
+    \node[font=\bfseries, align=center] (zLabel) at (zSet |- yLabel){$\mathcal{Z}$\\Latent Space};
+    \node[font=\bfseries, align=center, above=0.2cm of yySet.north] (yyLabel) {$\mathcal{Y}$\\Observed Intensity};
+
+    % \node[below=2cm of y5,font=\bfseries, align=center] (ylabel) {$\mathcal{Y}$\\Observed Intensity};
+    % \node[left=3cm of ylabel.center,font=\bfseries, align=center] {$\mathcal{X}$\\Atmospheric Parameters};
+
+    % \draw[->] (xSet.90) to [out=50, in=150] (ySet.90) node[midway] {aa $f(\vec{x})$};
+    % \draw[->, dotted] (ySet.270) to [out=210, in=310] (xSet.270) node[midway] {a $f^{-1}(\vec{x})$};
+    \draw[->, out=50, in=100] (xSet.90) to node[below] {$g^{-1}(x)$} (ySet.90);
+    \draw[->, dotted, out=260, in=310] (ySet.270) to node[above] {$g(y, z)$} (xSet.270);
+
+    \draw[<->] (x1) -- (y4);
+    \draw[<->] (x2) -- (y2);
+    % \draw[->, dotted] (y2.150) -- (x1.5) node[midway, above] {?};
+    % \draw[->, dotted] (y2.200) -- (x3.20) node[midway, below] {?};
+    \draw[<->] (x3) -- (y7);
+    \draw[<->] (x4.350) -- (y6.190);
+
+
+\end{tikzpicture}
+\caption{The bijective mapping $g$ can be used to resolve the problem of inversions upon the introduction of a latent space $\mathcal{Z}$ containing the information lost in the forward process. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
+\label{Fig:BijectiveMapping}
+\end{figure}
+
+The forward process is described by the diagram in Fig.~\ref{Fig:DegenerateMapping}.
+Here elements of $\mathcal{X}$ are the parameters describing an atmosphere (in this description we choose temperature $T$, mass density $\rho$, velocity $\vec{v}$, and magnetic field $\vec{B}$, although there are many other similar formulations that can be used).
+The elements of $\mathcal{Y}$ are possible forms of the outgoing radiation that may be associated with different sets of atmospheric parameters.
+Fig.~\ref{Fig:DegenerateMapping} shows the theoretically degenerate nature of the problem; whilst the mapping $f$ from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse $f^{-1}$ is not necessarily, and with only the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
+
+The problem of inversion can instead be framed as shown in Fig.~\ref{Fig:BijectiveMapping}, where elements of the newly introduced latent space $\mathcal{Z}$ represent the information lost in the forward process and a bijective mapping $g$ may be written between $\mathcal{X}$ and the cartesian product of $\mathcal{Y}$ and $\mathcal{Z}$.
+$\mathcal{Z}$ is difficult to conceptualise, and harder still to characterise; in the following we will discuss multiple approaches for replacing or reconstructing this information.
+
+As an example we can pose the simple problem of the function $f : \mathbb{R} \rightarrow \mathbb{R}^+; x \mapsto x^2$. This function is clearly not bijective, as for any $y$ in $\mathbb{R}^+$ it is ambiguous whether the expected input $x$ was $\sqrt{y}$ or $-\sqrt{y}$.
+If the domain of this function was instead $\mathbb{R}^+$, there would be no ambiguity here.
+Instead, we can introduce a latent space, the form of which is chosen by us and captures the lost information, i.e. the sign of the input ($\{1,\,-1\}$).
+With this we can define the bijective function $g : \mathbb{R}^+\times\,\{1,\,-1\} \rightarrow \mathbb{R}; (y, z) \mapsto z \sqrt{y}$.
+Discarding $z$, the forward process of $g^{-1}$ is equivalent to that described by $f$, but the invertibility of the problem is now assured.
+This example does not illustrate how to discover the correct $z$, and for a purely mathematical case such as this, there is no unambiguous solution given only $y$.
+However, the form of the latent space is known (and in this case finite), and this can allow us to infer the different possibilities for $x$.
+In complex physical systems these different possibilities may have different likelihoods of occurring that then allow us to construct a probability distribution function for $x$.
+
+For the remainder of this chapter, we denote individual samples of the atmospheric parameters $x$, the emergent line profiles $y$ and the latent space $z$.
+
+\subsection{Milne-Eddington Inversions}
+
+Milne-Eddington inversions have proven to be a simple, but very powerful tool that is often applied in solar physics.
+The loss of information can be somewhat limited by placing constraints on the solution. One of the simplest constraints that can be placed on the problem is that of a source function that changes linearly with continuum optical depth, whilst all other parameters are held constant throughout the atmosphere.
+This is a low-order approximation of the problem, and is convenient as we can express compute the outgoing intensity analytically.
+This can be done for the full Stokes polarised case of the RTE, but for illustration we choose to use only the scalar case here.
+With continuum opacity $\tau_c$ the source function is then defined as
+\begin{equation}
+    S(\tau_c) = S_0 + S_1 \tau_c,
+\end{equation}
+where $S_0$ and $S_1$ are constants.
+In this situation where we are dealing with the source function directly, rather than atomic parameters (as we are effectively in an two-level atom case due to only considering a single line), we can define the line strength $\alpha$ as the ratio between the continuum opacity and the line opacity i.e.
+\begin{equation}
+    \tau(\nu) = \tau_c (1 + \alpha \phi(\nu)),
+\end{equation}
+where $\phi$ is the line profile.
+
+Now, by integrating the RTE directly and assuming as semi-infinite atmosphere with no light entering the boundary at $\infty$ we obtain the outgoing intensity
+\begin{equation}
+I(\tau=0, \nu) = S_0 + \frac{S_1}{1 + \alpha\phi(\nu)}.
+\end{equation}
+
+Thanks to the analytic nature of this solution, it is easy to attempt to fit this to observations, and effects such as constant atmospheric velocity, and magnetic field can be included in the line profile.
+This approach is rapid and works quite well for quiet photospheric lines, such as Fe I 6301 \AA{} and Fe I 6173 \AA{} as used in Hinode SOT and HMI \citep[e.g.][]{Centeno2014}.
+
+The linear description of source function reduces its applicability to chromospheric lines.
+However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
+
+\subsection{Generalisation Through Response Functions}
+
+
+It can be very limiting to impose a chosen source function, especially in regions where the temperature does not vary monotonically.
+A far more flexible approach is to attempt to fit a source function.
+From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
+\begin{equation}
+    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau}\, d\tau,
+\end{equation}
+whereby we have once again assumed that $I(\tau=\infty)=0$.
+If the source function is taken to be constant in each slab this becomes
+\begin{equation}\label{Eq:LinearResponse}
+    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
+\end{equation}
+and for each slab, the associated integral represents its contribution to the outgoing intensity.
+In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
+We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
+This response function does not change with the source function due to the linearity of the problem.
+In theory, we should therefore be able to infer the depth stratified form of the source function.
+However, two primary difficulties arise.
+
+Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
+Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning (is extremely sensitive to errors in the input) and thus cannot be inverted directly.
+An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can attempt to tackle both problems at once.
+
+Applying this method to a simple example with a quadratically varying source function stratified across 101 depth points using a constant line strength and line profile with 101 wavelength points we find the result shown in Fig.~\ref{Fig:InferredSourceFn}.
+The poor quality of the pseudoinverse solution is apparent from the large oscillations and poor agreement with the true source function, and this example showcases the simple case of a static atmosphere with constant line strength.
+If these parameters are also allowed to vary then the solution is likely to deteriorate further.
+
+%spell-checker: disable
+\begin{pycode}[FlareObs]
+import lightweaver as lw
+def linear_response_fn(tau, alpha, phi):
+    dtau = np.gradient(tau)
+    lineDepthIncrease = 1.0 + alpha * phi[None, :]
+
+    responseFn = np.exp(-tau[:, None] * lineDepthIncrease) \
+                  * dtau[:, None] * lineDepthIncrease
+    return responseFn
+
+Ndepth = 101 # Number of depth points in the stratification
+tau = 10**np.linspace(-5, 1, Ndepth) # Optical depth stratification
+alpha = 30 # Line strength relative to continuum
+x = np.linspace(-20, 20, 101) # Line spectral grid in Doppler units
+phi = lw.voigt_H(1.0, x) / np.sqrt(np.pi) # Voigt line profile
+
+# Quadratic Source function peaking at logTau = -1,
+# strictly positive and normalised.
+S = -(np.log10(tau) + 1)**2
+S -= 1.2*S.min()
+S /= S.max()
+
+# Compute response function
+responseFn = linear_response_fn(tau, alpha, phi)
+# Compute outgoing intensity as per equation
+Iout = np.sum(S[:, None] * responseFn, axis=0)
+# Inferred source function from outgoing intensity and
+# response function (via pseudoinverse)
+Sinferred = np.linalg.pinv(responseFn.T) @ Iout
+
+fig = plt.figure()
+ax = plt.gca()
+plt.plot(np.log10(tau), S, label='True source function')
+plt.plot(np.log10(tau), Sinferred, label='Pseudoinverse inferred source function')
+plt.xlabel(r'$\log\tau_c$')
+plt.ylabel(r'S')
+plt.legend(frameon=False, loc='lower right')
+
+lFig = chRad.save_figure('InferredSourceFn', fig, fext='.pgf')
+lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
+\end{pycode}
+%spell-checker: enable
+
+\py[FlareObs]|chRad.get_figure('InferredSourceFn')|
+
+% Therefore, there is a need for \emph{regularisation} of the solution, penalising deviations from smooth solutions.
+% This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
+Whilst this problem can be overcome (to some extent) by regularisation of the solution, to enforce smoothness in the ill-posed problem, we are also left with a problem of interpretation for NLTE problems.
+Ultimately, we seek to learn information about the atmospheric structure from the outgoing radiation, and not simply the source function.
+A natural solution to this is to take a model atmosphere and attempt to fit the synthetic spectrum generated from this model to the observations, but to do this the parameters of the model need to be connected to the synthetic spectrum.
+
+The contribution function discussed previously is often interpreted as a description of the location at which a spectral line forms.
+If this can be used to understand how and where the line forms then it seems reasonable to use this as the basis of an inversion scheme.
+However, there are several problems that would arise from this approach.
+In many lines, the contribution at the line core can span a relatively large region, and thus there is a high probability that photons measured at the same wavelength have been produced in significantly different locations.
+It is difficult to meaningfully ascribe mean thermodynamic parameters of line formation to a non-uniform extended region over which the line forms.
+This problem becomes more complex still if the contribution function is double-peaked, as is relatively common for lines forming in the complex atmospheres produced by flare models.
+
+It is common to use the integral form of the RTE
+\begin{equation}
+    I(\nu) = \int_0^\infty S(\nu, t_\nu) e^{-t_\nu}\, dt_\nu,
+\end{equation}
+and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
+As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
+
+The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE RT as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
+These effects can instead be captured by the use of response functions.
+
+Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
+A response function tells us how the outgoing intensity changes \emph{in response} to a change in an atmospheric parameter.
+These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
+In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
+
+To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
+This will depend on the parametrisation of the model atmosphere used, but it is common to see response functions to temperature, electron density, velocity, and in the case of spectropolarimetry magnetic field.
+
+In LTE, where the source function is set by the local atmospheric parameters, the response functions can be computed with relative ease.
+The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by \citet{SanchezAlmeida1992}) to perturbations in different atmospheric parameters at the same time as the formal solution.
+These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ and assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
+
+For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations is significantly more arduous.
+The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilibrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
+Whilst computationally expensive, this ``brute force'' approach to response functions makes them simple to calculate.
+Following this approach, the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the populations are updated using the new radiation field and atmosphere.
+This procedure is repeated for the parameter at each depth in the atmosphere.
+The intensity response to perturbation $\delta q$ in parameter $q$ at depth point $k$ can then be computed by finite differences as
+\begin{equation}
+    \mathcal{R}_q(k) = \frac{I(q_k + \delta q) - I(q_k)}{\delta q}.
+\end{equation}
+Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}), and has proven more robust.
+The response function is then written as
+\begin{equation}
+    \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
+\end{equation}
+This process must be undertaken for each depth (or node in the model) and atmospheric parameter independently, leading to its significant computational cost.
+In a statistical equilibrium case, the standard procedure of formal solution and population update is repeated until convergence is reached.
+
+Whilst this process is computationally expensive, it has been used reliably since the NICOLE code \citep[developed from \citet{SocasNavarro2000} but no longer using fixed departure coefficients]{Socas-Navarro2015}.
+The Stockholm Inversion Code (STiC) also follows this procedure, using a modified form of RH, allowing for the application of PRD \citep{2019dlcr}.
+
+Analytic response functions for the multi-level NLTE problem were first derived by \citet{Milic2017}, and are now implemented in the SNAPI code \citep{Milic2018}.
+These response functions should significantly reduce the computational cost of NLTE inversions, a necessity for inverting the large fields of view in current and next generation solar observations.
+
+An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH. \NeedRef{} {\color{Red} This paper seems to be in limbo?}
+
+All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
+Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
+It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seed as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
+Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
+
+\subsection{Forward Modelling}
+
+A technique related to inversions that has commonly been applied to flares in the last decade is that of forward modelling through the use of RHD codes.
+Where possible the energy input parameters are constrained from observations, via techniques such as X-ray spectroscopy to deduce the non-thermal electron flux and spectral index.
+A challenging manual iteration then follows to attempt to obtain an agreement between the time-dependent simulation and the observations.
+This is extremely time-consuming both due to the manual aspect of the inversions and the computational requirements of the RHD simulations.
+Clearly, the human intervention necessary to optimise and analyse these simulations cannot scale to the large volumes of data coming already present and coming from future telescopes.
+This technique has nevertheless yielded many interesting developments in our understanding of the structure of the flaring chromosphere from the investigation of both spectral line shapes and continuum variations \citep{Kuridze2015,RubioDaCosta2016, Kowalski2017,Simoes2017}.
+
+\subsection{In the Context of the Latent Space}
+
+Returning now to the mathematical description of an inversion we can start to discuss the meaning of $\mathcal{Z}$ in practice.
+With the response function based inversions described previously, the size of $\mathcal{Z}$ is limited by the constraints placed on the atmospheric stratification, and the regularisation thereof.
+It then becomes feasible to ``explore'' this space ($\mathcal{Z}$ coupled with $\mathcal{Y}$ as no explicit distinction is made) using the gradient information from the response functions to guide the solution.
+It is worth noting that this approach does not guarantee the global minimum solution; whilst the Levenberg-Marquadt algorithm is extremely efficient at finding local minima, it provides no further guarantees and the final solution may therefore be substantially influenced by the choice of starting atmosphere, which is typically picked based on intuition from the ``standard'' semi-empirical models.
+The RHD based forward fitting methods are also comparable in terms of exploration of $\mathcal{Z}$, except here the optimisation is done manually and the gradient information is replaced by intuition.
+
+
+\section{Introduction to Machine Learning}
+
+Machine learning describes a family of generic algorithms that are used to make sense of data without being explicitly programmed.
+A model is defined by the researcher, but its final behaviour is determined by patterns in the data it is fed.
+The abundance of both observational and simulated solar data continues to increase and new approaches, such as machine learning, are needed to make use of this vast quantity of information in a computationally tractable manner, helping to highlight patterns that can be further investigated by researchers.
+
+There are three primary varieties of machine learning algorithms: supervised, semi-supervised, and unsupervised learning.
+Supervised algorithms are the most common.
+The model is provided with a set of of examples (typically produced or preprocessed manually) and is then trained so that it represents an approximate transformation between the input and output data defined by the training data.
+We can further divide this class into classification and regression models.
+Classification associates each class with a discrete input, possibly labelling an image based on its contents, whereas regression approximates a continuous mathematical function.
+In both of these cases the model approximates a function which is learnt entirely from the training data.
+
+Unsupervised learning does not require the manually prepared set of examples, but instead organises data based on generic programmed criteria.
+Two commonly used examples of unsupervised learning are clustering and dimensionality reduction techniques.
+Clustering algorithms extract groups of similar objects (where similar is defined given a particular basis and metric determined by the choice of algorithm), and can be used to find patterns in large datasets.
+There are many kinds of dimensionality reduction techniques, but one of the most common and general choices is principal component analysis, where an orthogonal basis spanning the data is constructed and then sorted by the variance of the factors of each of these axes (i.e. the eigenvalues of the covariance matrix).
+For data of dimensionality $m$, keeping $m$ principal components allows for a perfect reconstruction, as this is simply a basis transformation, however, we can often discard terms with small variance and produce accurate approximate reconstructions of the data with substantially fewer than $m$ components.
+It is necessary to ensure that sufficient components are chosen for the reconstruction to be accurate, but such techniques can reveal patterns that are otherwise difficult to discern in the original high-dimensional spaces.
+
+Finally, as implied by the name, semi-supervised learning lies in between the two previously discussed classes.
+It still requires preprocessed training data which is used for some training, however unsupervised learning processes may be used internally to the model, or in some cases data generated by a model is used in conjunction with this training data.
+This form of machine learning exists only within the realm of deep learning, built on neural networks.
+
+\subsection{Artificial Neural Networks}
+
+Artificial Neural Networks (ANNs) loosely follow the principle of biological neuronal systems, consisting of layers of interconnected neurons, the output of which is summed in synapses and then has a non-linear activation function applied to determine if the signal is passed on through the network.
+ANNs consists of multiple layers of neurons and synapses whereby we designate any layer that is neither the input nor the output a \emph{hidden layer}.
+If an ANN consists of more than one hidden layer it is termed a deep neural network (DNN), and these are considered to be the standard building blocks of modern machine learning \citep{Raschka2015}.
+
+There are many different architectures for ANNs, used for solving different problems.
+ANNs can vary in number of hidden layers, interconnectedness of neurons within these layers, connectedness of the layers to each other, and the activation function used in each layer.
+We distinguish two primary forms of layers, based on their interconnectivity; these are fully connected (FC) where each neuron in a layer is the linear combination of its inputs (typically the activation function applied to the neurons of the previous layer), and the convolutional layers of convolutional neural networks (CNNs, \citet{1998Lecun,2003Simard}) which connect only nearby neurons to exploit local structure in the input (in one or more dimensions).
+These convolutional layers can then be described as a set of filters learned during the training process which are cross-correlated with the input, the output of which is then passed through the activation function.
+CNNs are somewhat inspired by the neuronal structure of the visual cortex, and have been applied with great success in the fields of image analysis, processing, and generation \citep{Raschka2015}.
+A fully connected layer rarely works well for these tasks as a slight movement of an object within an image can easily invalidate its training whereas the smaller layers of a CNN sweep across the image (are applied to each region in turn) and are far less affected by this.
+
+There are many common forms of activation function.
+Due to the backpropagation method used for training ANNs it is highly advantageous if these non-linear activation functions be trivially differentiable.
+Some common choices are the sigmoid function
+\begin{equation}
+    \mathrm{S}(x) = \frac{1}{1+e^{-x}},
+\end{equation}
+inverse tangent $\tan^{-1}(x)$, and variants of the rectified linear unit (ReLU; \citet{2010Nair}).
+\begin{equation}
+    \mathrm{ReLU}(x) = \mathrm{max}(0, x).
+\end{equation}
+All of these functions are used in the creation of ANN based models, but the ReLU family is key to modern machine learning for reasons of sparsity in its output.
+Here sparsity refers to the presence of zeros in the output of a layer creating clearer pathways through the network.
+Classification ANNs will typically employ an activation function on the output layer (most frequently a normalised exponential to select a single discrete class), whereas ANNs employed in regression problems will rarely do so.
+
+\subsection{General Function Approximations}
+
+ANNs are universal function approximators; they can learn arbitrarily complex classification and regression problems \citep{Rumelhart1986,1989Cybenko}.
+This was theoretically proven for shallow neural networks (with only one hidden layer) using sigmoidal activation functions by \citet{1989Cybenko}.
+Increasing the precision to which a function is approximated may however require exponential increases in layer width and training.
+A similar proof for the commonly used ReLU activation function was provided by \citet{Lu2017}, who investigated the bounded expressions for the layer width and network depth needed to approximate functions to arbitrary precision.
+Unfortunately these results can be difficult to apply to many real world scenarios where the intrinsic dimensionality of the function being approximated is not known (these results are also affected by any imperfections in the training data).
+
+It is also possible to increase the approximation capability of an ANN by increasing its depth (the number of stacked layers), these stacked layers then represent the composition of functions, and each additional layer increases the complexity of the representation of its input, allowing for very complex tasks to be approximated \citep{Raschka2015}.
+The approximation power of stacked layers explains why the DNN is core to modern machine learning, however care must be taken when designing a model to select appropriate width and depth for the problem at hand \citep{Lu2017}.
+
+\subsection{Training via backpropagation}
+
+ANNs are trained via a process known as backpropagation \citep{Rumelhart1986}.
+The networks are composed of linear combinations and (by our original requirements) differentiable activation functions.
+The entire network can then be differentiated by repeated applications of the chain rule (from output to input) to find the gradients of the output with respect to each weight (the coefficients of the linear combinations in each layer) and input, which then describes how each weight affects the output.
+Typically the output of the network when fed with data from the training set is compared against the expected output via a loss function, and then the gradient information from this loss is combined with the previous gradient of the network output to each weight and used to minimise the magnitude of the loss by modifying the weights.
+
+Updating the weights in the network can be carried out in a variety of ways, but it is a similar minimisation process to that used in inversions.
+The basic method is that of stochastic gradient descent (SGD) which takes a step through the loss space guided by the gradients for each batch of training data.
+The size of this step is known as the learning rate, and is a \emph{hyperparameter}\footnote{Hyperparameters are tunable parameters that are often set by the researcher, or optimised by a process external to the training of the INN} of the ANN.
+It can be kept constant, vary following a prescribed evolution with epoch, or even be modified based on the rate of convergence of the training procedure.
+As SGD is only affected by the most recent batch of data it can have difficulty escaping local minima and traversing plateaus in the loss space.
+
+Many improvements to SGD have been developed, such as the addition of momentum, which accelerates convergence and helps to avoid the solution being overly affected by a single batch of training data.
+Other modern algorithms based on the same principles as SGD have also been developed \citep[e.g. the Adam algorithm,][]{2014Kingma} and often converge in fewer epochs (rounds of training) to similar or better solutions.
+None of these stochastic algorithms can guarantee a global minimum in the loss space, and such a requirement is not feasible for anything other than the smallest neural networks, where more time- and memory-consuming optimisers can be used due to the much more dimensionally compact spaces over which the optimisation occurs.
+Nevertheless, with sufficient training data and epochs a model capable of approximating the function we wish to learn should be able to descend into sufficiently good local minimum using these techniques.
+
+Auxiliary techniques to improve model convergence have also been developed, such as minibatching, in which the network is only shown a random portion of the training data each epoch.
+Clearly this can reduce the computational cost of an epoch, as fewer calculations are performed on this training set, but minibatching can also improve the convergence by avoiding the stagnation that arises in the traditional batched gradient descent where the entire training set is used to direct the step.
+
+A technique known as autodifferentiation has become prominent in the field of machine learning.
+It allows users to easily design custom blocks and compose these without the need to consider the implementation of the derivatives needed for training as these are computed by the framework.
+Frameworks (e.g. TensorFlow, PyTorch \NeedRef{}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
+This automatic nature of this approach has enabled the rate of development seen in machine learning in the last decade, as it allows researchers to spend longer thinking about design than low-level engineering.
+
+\subsection{Difficulties training DNNs}
+
+As the number of layers in an ANN increases the networks can become much harder to train; the gradient of the output with respect to the weights in early layers can easily become vanishingly small due to the repeated multiplication of small gradients in the deeper layers.
+The use of ReLU activation functions often minimises this effect, but can instead lead to exploding gradients due to their high dynamic range.
+\citet{2015He} developed residual networks (ResNets), which have greatly increased the depth and complexity of networks that can be effectively trained, and now networks with many hundreds of layers are frequently used \citep[e.g.][]{Jegou2017}.
+The residual blocks of these networks contain so-called skip connections, which take the output from a layer and sum or concatenate it with the output of layer one or more levels deeper.
+These skip connections provide a path for gradients to propagate through the network, helping to avoid both vanishing and exploding gradients.
+Variants of the ReLU function are almost uniquely used in ResNets as these additionally provide sparsity to the representation (i.e. their output is 0 for all input less than or equal to 0), which can improve the expressiveness\footnote{The expressive power of a neural network is its ability to approximate functions.} of the representation and aid in disentangling information propagating through the network \citep{Glorot2011}.
+These variants include the leaky ReLU \citep[$\max(0.01x, x)$;][]{Maas2013} which still produces a small amount of gradient information for negative inputs, helping to prevent neurons with ReLU activation from ``dying'', and exponential linear units \citep[ELUs;][]{Clevert2015} which achieve a similar result in a smoothly varying fashion.
+
+Like all regression models with a large number of free parameters, ANNs can very easily enter a regime of overfitting their training set.
+In this situation the ANN has learnt to match its training set so closely that it is unlikely to perform reliably on inference of unseen data.
+This can often manifest as memorisation, where the network has learnt to produce the expected output for a training sample, but not the relationship between the two.
+ANNs must therefore be trained with care and diligent use of validation data, prepared in the same way as the training set, but never shown to the network during training.
+The network's performance can be judged by how well it performs in inference on the validation set in between training epochs.
+If the performance on the training data continues to improve over time, but the performance on the validation set stagnates or worsens then the network has entered an overfitting regime.
+
+There are additional techniques that can be employed to mitigate overfitting, such as regularisation, which will attempt to prevent a model's weights from minimising the loss function too perfectly, for example by penalising overly large weights with a modified loss function, or randomly deactivating neurons in each layer during training (this approach is known as \emph{dropout}).
+
+Selecting hyperparameters for a model can be a challenging process of manual optimisation but is essential to training, and many advanced optimisers like Adam require additional hyperparameters that can drastically influence the rate of convergence.
+Approaches such as grid searches can be applied here, but given the computational requirements of training these models, an intuitive approach is often applied.

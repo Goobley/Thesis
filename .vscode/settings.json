@@ -129,9 +129,11 @@
     "python.pythonPath": "/home/goobley/miniconda3/envs/LightweaverDev/bin/python",
     "workbench.colorTheme": "Default Dark+",
     "cSpell.words": [
+        "ANNs",
         "BESSER",
         "Centeno",
         "DKIST",
+        "DNNs",
         "FALC",
         "Hinode",
         "Lightweaver",
