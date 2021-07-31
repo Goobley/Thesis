@@ -438,9 +438,8 @@ The electron density in the RADYN atmosphere is model is loaded from the RADYN o
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
 In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
 As these points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart.
+The use of this grid is justified in Sec.~\ref{Sec:HorizontalResolution}.
 Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square.
-\TODO{Justify this.}
-This does not appear to have affected the results, as a temporally shortened version of one of the simulations was run with the $x$ grid spacing halved, and no substantial change in outgoing intensity was found.
 Unlike the model in the previous chapter, we do not consider advection here; the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small, as well as allowing more flexibility in the $z$ stratification, as a grid that is stable for radiative transfer may not be so for advection.
 
 The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in RT simulations.
@@ -1176,6 +1175,78 @@ It is not easy to disentangle the effects of the population changes in the flare
 Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
 From the figures shown in this section it becomes clear that the the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
 It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation, thus without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
+
+\subsection{Horizontal Resolution}\label{Sec:HorizontalResolution}
+
+% spell-checker: disable
+\begin{pycode}[2DRT]
+statEq2d = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t10_1stColCopy_besser_MsLw2d_thesis.zip'))
+statEq2d_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t10_1stColCopy_besser_MsLw2d_thesis.zip'))
+
+def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
+    wavelength = dataRad['SimParams/wavelength']
+    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
+    x = dataRad['SimParams/xAxis'][...] / 1e6
+    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
+
+    timeIdx = 1
+
+    Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
+    Itowards81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 5, ::2]
+    Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
+    Iaway81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 11, ::2]
+
+    Imax = 1.3
+    Imin = 0.7
+    spec = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1, 1, 0.1])
+    waveCentreA = 0.5 * (waveRangeA[0] + waveRangeA[1])
+    waveCentreB = 0.5 * (waveRangeB[0] + waveRangeB[1])
+
+    ax = fig.add_subplot(spec[0])
+    mesh = ax.pcolormesh(wavelengthEdges - waveCentreA, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentreA, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.set_xlim(*[w-waveCentreA for w in waveRangeA])
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
+    ax.set_ylabel('$x$ [Mm]')
+    ax.set_title(r'H$\alpha$')
+
+    ax = fig.add_subplot(spec[1])
+    mesh = ax.pcolormesh(wavelengthEdges - waveCentreB, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentreB, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.set_xlim(*[w-waveCentreB for w in waveRangeB])
+    ax.set_yticklabels([])
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
+    ax.set_title(r'Ca\,\textsc{ii} 854.2\,nm')
+
+    ax = fig.add_subplot(spec[2])
+    fig.colorbar(mesh, cax=ax)
+
+fig = plt.figure()
+plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$.'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison')|
+% spell-checker: enable
+
+Whilst it would be nice to evaluate the radiation to arbitrary horizontal precision, the limitations of computer performance do not allow this.
+Clearly, we want to investigate the problem at a resolution similar or better than that provided by our observations.
+If the problem produces smoothly varying solutions then it is not necessarily necessary to run the simulation at the same resolution as the observations; however from observations we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
+This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observation against which our results will be compared.
+
+To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire observation) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the simulation and compare the outgoing radiation.
+The incident radiation at the $x=\SI{0}{\kilo\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
+In Fig.~\ref{Fig:HorizontalResolutionComparison} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\SI{10}{\second}$.
+The maximum difference is found to be an enhancement of around 12\% in both line cores at $\sim$\SI{0.5}{\mega\metre} from the flare for the lower resolution simulation over the higher resolution one.
+\TODO{Verify this}
+This is not an insignificant variation, but it does not appear to vary too dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
+
+The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
+Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate lambda operator takes longer to cross the grid.
+For this reason the 81 point simulation takes $\sim$3x longer than the 41 point simulation, and we opt to use the 41 point spatial grid in all models presented in this chapter.
 
 \subsection{Importance of Time-Dependence}
 
