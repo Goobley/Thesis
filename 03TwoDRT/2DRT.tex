@@ -24,7 +24,7 @@ ch2DRT = texfigure.Manager(
 It is clear that the world around us is multi-dimensional, but until this point we have only considered radiative transfer in one-dimensional atmospheres.
 
 All of the theory of radiative transfer discussed in previous chapters remains valid when applied to higher dimensional systems, with the exception of the description of the formal solver.
-This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes to each other.
+This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by the formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes to each other.
 Once the radiation field has been computed it is then used as a local parameter in the rest of the iteration.
 In fact, if the storage for the atmosphere is ``flattened'' into a one-dimensional form, the code from the plane-parallel case can (and should) be used to implement the iteration scheme.
 
@@ -104,12 +104,12 @@ Due to the large differences in optical depth between adjacent regions (e.g. $\t
 
 The spline interpolant over the $[UO]$ interval is described by
 \begin{equation}
-    f(u) = (1-u)^2f_U + 2u(1-u)c_U + u^2f_O,\hspace{3em}u\in[0,1],
+    f(a) = (1-a)^2f_U + 2a(1-a)c_U + a^2f_O,\hspace{3em}a\in[0,1],
 \end{equation}
 
-where $f$ is the value of the parameter to be interpolated, $c_U$ is the functional value of the spline's control point, and $u$ is the normalised coordinate for the distance along $[UO]$.
+where $f_U$ and $f_O$ are the values of $f$ at points $U$ and $O$ respectively, $c_U$ is the functional value of the spline's control point, and $a$ is the normalised coordinate for the distance along $[UO]$.
 The control points are points half way along an interval, defining the tangent to the spline at each end of the range i.e. $c_U O$ defines the tangent to the spline at $O$ and $U c_U$ defines the tangent to the spline at $U$.
-If we denote the coordinates of our points along the ray $s_U$, $s_O$, and $s_D$ then we have $u = (s - s_U) / h_U$, where $h_U = s_U - s_O$.
+If we denote the coordinates of our points along the ray $s_U$, $s_O$, and $s_D$ then we have $a = (s - s_U) / h_U$, where $h_U = s_U - s_O$.
 An equivalent interpolation can be defined over the $[OD]$ segment.
 The monotonicity (for monotonic $f_U$, $f_O$, $f_D$) and continuous first derivative of the interpolating functions at $O$ is ensured by
 \begin{enumerate}
@@ -134,7 +134,7 @@ This interpolation method can be used to compute $\tau_{UO}$ and $\tau_{OD}$ by
 Note that a linear approximation was used for $\tau_{OD}$, as the previous process does not guarantee the calculation of $c_D$.
 This could be modified to also use the quadratic spline method, which may be more robust, however the value of $\tau_{OD}$ rarely affects the final solution dramatically.
 
-This method can now be applied to the source function but parametrised along $\tau$ rather that $s$.
+This method can now be applied to the source function but parametrised along $\tau$ rather than $s$.
 The BESSER quadratic spline method is then used to compute the value of the source function control point $S_{c_U}$.
 The integral in \eqref{Eq:MiniScDefinition} can now be evaluated, by using the prescribed quadratic spline variation of $S$ over the interval $[\tau_{U}, \tau_{O}]$.
 Working through the maths we arrive at
@@ -459,7 +459,7 @@ For the reflected atmosphere, the blue arrow shown is equivalent to the magenta 
 \begin{figure}
 \centering
 \subimport{03TwoDRT/}{SimFlipped}
-\caption{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the blue arrow from the reflected atmosphere is the same as that from the magenta arrow in the simulated atmosphere.}
+\caption{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere.}
 \label{Fig:2DSimFlipped}
 \end{figure}
 
@@ -1196,8 +1196,8 @@ def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
     Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
     Iaway81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 11, ::2]
 
-    Imax = 1.3
-    Imin = 0.7
+    Imax = 1.2
+    Imin = 0.8
     spec = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1, 1, 0.1])
     waveCentreA = 0.5 * (waveRangeA[0] + waveRangeA[1])
     waveCentreB = 0.5 * (waveRangeB[0] + waveRangeB[1])
@@ -1225,11 +1225,30 @@ def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
 
 fig = plt.figure()
 plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
-lFig = ch2DRT.save_figure('HorizontalResolutionComparison', fig, fext='.pgf', dpi=500)
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$.'
+
+statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopy_besser_MsLw2d_thesis.zip'))
+statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t05_1stColCopy_besser_MsLw2d_thesis.zip'))
+
+fig = plt.figure()
+plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{5}{\second}$.'
+
+statEq2d15 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
+statEq2d15_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
+
+fig = plt.figure()
+plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{15}{\second}$.'
+
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison05s')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison10s')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison15s')|
 % spell-checker: enable
 
 Whilst it would be nice to evaluate the radiation to arbitrary horizontal precision, the limitations of computer performance do not allow this.
@@ -1239,14 +1258,13 @@ This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observa
 
 To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire observation) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the simulation and compare the outgoing radiation.
 The incident radiation at the $x=\SI{0}{\kilo\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
-In Fig.~\ref{Fig:HorizontalResolutionComparison} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\SI{10}{\second}$.
+In Figs.~\ref{Fig:HorizontalResolutionComparison05s}-\ref{Fig:HorizontalResolutionComparison15s} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\{5, 10, \SI{15}{\second}\}$ respectively.
 The maximum difference is found to be an enhancement of around 12\% in both line cores at $\sim$\SI{0.5}{\mega\metre} from the flare for the lower resolution simulation over the higher resolution one.
-\TODO{Verify this}
 This is not an insignificant variation, but it does not appear to vary too dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
 
 The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
 Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate lambda operator takes longer to cross the grid.
-For this reason the 81 point simulation takes $\sim$3x longer than the 41 point simulation, and we opt to use the 41 point spatial grid in all models presented in this chapter.
+For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation, and we opt to use the 41 point spatial grid in all models presented in this chapter.
 
 \subsection{Importance of Time-Dependence}
 
@@ -1260,7 +1278,7 @@ If these effects are not important then the style of simulation presented here c
 # to other preprocessed ones.
 statEq2d = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t10_1stColCopy_besser_MsLw2d_thesis.zip'))
 
-def plot_stat_eq_comparison(fig, dataRadTd, dataRad, waveRange):
+def plot_stat_eq_comparison(fig, dataRadTd, dataRad, waveRange, timeTd=10.0):
     wavelength = dataRad['SimParams/wavelength']
     wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
     x = dataRad['SimParams/xAxis'][...] / 1e6
@@ -1270,7 +1288,6 @@ def plot_stat_eq_comparison(fig, dataRadTd, dataRad, waveRange):
     xEdgesTd = np.concatenate(([xTd[0]], 0.5 * (xTd[1:] + xTd[:-1]), [xTd[-1]]))
 
     timeIdx = 1
-    timeTd = 10.0
     timeIdxTd = np.searchsorted(dataRadTd['time'][...], timeTd)
 
     Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
@@ -1285,28 +1302,29 @@ def plot_stat_eq_comparison(fig, dataRadTd, dataRad, waveRange):
     spec = gridspec.GridSpec(nrows=1, ncols=2)
     ax = fig.add_subplot(spec[0])
 
-    ax.pcolormesh(wavelengthEdges, xEdges, Itowards.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
-    ax.pcolormesh(wavelengthEdges, -xEdges, Iaway.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    waveCentre = 0.5 * (waveRange[0] + waveRange[1])
+    ax.pcolormesh(wavelengthEdges - waveCentre, xEdges, Itowards.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentre, -xEdges, Iaway.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
     ax.axhline(0, c='r', alpha=0.6)
-    ax.set_xlim(*waveRange)
+    ax.set_xlim(*[w - waveCentre for w in waveRange])
     ax.set_title('Statistical Equilibrium')
-    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
     ax.set_ylabel('$x$ [Mm]')
 
     ax = fig.add_subplot(spec[1])
-    ax.pcolormesh(wavelengthEdges, xEdgesTd, ItowardsTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
-    ax.pcolormesh(wavelengthEdges, -xEdgesTd, IawayTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentre, xEdgesTd, ItowardsTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentre, -xEdgesTd, IawayTd.T, vmin=Imin, vmax=Imax, cmap='Greys_r', rasterized=True)
     ax.axhline(0, c='r', alpha=0.6)
-    ax.set_xlim(*waveRange)
+    ax.set_xlim(*[w - waveCentre for w in waveRange])
     ax.set_title('Time-Dependent')
-    ax.set_xlabel('$\lambda$ [nm]')
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
     ax.set_yticklabels([])
 
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_stat_eq_comparison(fig, dataRad, statEq2d, (656.376, 656.576))
 
 lFig = ch2DRT.save_figure('2dCompareStatEqTimeDep', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for two-dimensional slab case.'
+lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for the H$\alpha$ line in the two-dimensional slab case.'
 
 from scipy.integrate import trapezoid
 import astropy.units as u
@@ -1418,9 +1436,42 @@ The effect is less significant here, but nevertheless easily visually resolvable
 In the wave-heated \Radyn{} simulation of \citet{Carlsson2002} the settling time for hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
 The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but given the large difference between these treatments at both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$ it seems prudent to adopt the time-dependent treatment by default when exploring the present phenomenon in flares.
 
-From the discussions in Sec.~\ref{Sec:TimeDepSE} it is reasonable to investigate whether these discrepancies between the time-dependent and statistical equilibrium treatments can be overcome by applying statistical equilibrium given the electron density computed from the time-dependent situation, without applying charge conservation.
+From the discussions in Sec.~\ref{Sec:TimeDepSE} it is reasonable to investigate whether these discrepancies between the time-dependent and statistical equilibrium treatments can be overcome by applying statistical equilibrium by fixing the electron density computed from the time-dependent situation (under the effects of charge conservation).
 
-\TODO{Put the graphs in and discuss this.}
+%spell-checker: disable
+\begin{pycode}[2DRT]
+
+statEq2dNe = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_LoadNe_t15_1stColCopy_besser_MsLw2d_thesis.zip'), 'r')
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_stat_eq_comparison(fig, dataRad, statEq2dNe, (656.376, 656.576), timeTd=15.0)
+
+lFig = ch2DRT.save_figure('2dCompareStatEqTimeDepLoadNe', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments with electron density provided taken from time-dependent model at $t=\SI{15}{\second}$ for the H$\alpha$ line in the two-dimensional slab case.'
+lFig.placement = 'htbp'
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_stat_eq_comparison(fig, dataRad, statEq2dNe, (854.3444, 854.5444), timeTd=15.0)
+
+lFig = ch2DRT.save_figure('2dCompareStatEqTimeDepLoadNeCa', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments with electron density provided taken from time-dependent model at $t=\SI{15}{\second}$ for the \CaLine{} line in the two-dimensional slab case.'
+lFig.placement = 'htbp'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDepLoadNe')|
+\py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDepLoadNeCa')|
+%spell-checker: enable
+
+Figs.~\ref{Fig:2dCompareStatEqTimeDepLoadNe} and \ref{Fig:2dCompareStatEqTimeDepLoadNeCa} show the \Ha{} and \CaLine{} line profiles respectively at $t=\SI{15}{\second}$ using the electron density loaded from the time-dependent model.
+There remains a significant difference in the \Ha{} line profiles between the two treatments, this is particularly visible in the gradual widening of the line core from 0.5 - \SI{2}{\mega\metre} present in the time-dependent treatment that is barely visible in the statistical equilibrium treatment.
+We note that the line-core narrowing around \SI{0.5}{\mega\metre} in the statistical equilibrium case here is not present in Fig.~\ref{Fig:2dCompareStatEqTimeDep} and must be due to the use of the electron density from the time-dependent model.
+The \Ha{} line profile is therefore closer to that expected from the time-dependent case, but significant differences remain, and a it appears that a full time-dependent treatment is necessary to capture the evolution of the hydrogen populations.
+\CaLine{} on the other hand, agrees well with the expected solution when computed in statistical equilibrium with the provided electron density.
+This is not surprising following the analysis undertaken in Sec.~\ref{Sec:TimeDepSE}, but the conclusions.
+
+These treatments were only compared at one time-step; the process of converging a statistical equilibrium solution with the fixed electron density provided from the time-dependent model proved to
+
+\TODO{See if proper 1stColCopy fixes.}
 
 
 \section{Observational Comparison}

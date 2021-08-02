@@ -1358,50 +1358,8 @@ for i, t in enumerate(timesToPlot):
 %spell-checker: enable
 
 In Section~\ref{Sec:TimeDep8542Profiles} the contribution function was used to investigate the effects of the LI treatment on the \CaLine{} line.
-In the NLTE problem the contribution function provides limited interpretability, for reasons we will explore.
+It may be possible to obtain greater interpretability through the use of response functions, but so far these have only been defined for a model in statistical equilibrium.
 
-The contribution function is often interpreted as a description of the location at which a spectral line forms.
-In many lines, the contribution at the line core can span a relatively large region, and thus there is a high probability that photons measured at the same wavelength have been produced in significantly different locations.
-It is difficult to meaningfully ascribe mean thermodynamic parameters of line formation to a non-uniform extended region over which the line forms.
-This problem becomes more complex still if the contribution function is double-peaked, as is the case for the blue side of the LE line core in many of the examples presented so far.
-
-It is common to use the integral form of the RTE
-\begin{equation}
-    I(\nu) = \int_0^\infty S(\nu, t_\nu) e^{-t_\nu}\, dt_\nu,
-\end{equation}
-and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
-As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
-
-The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE RT as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
-These effects can instead be captured by the use of response functions.
-
-Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the coupling of these two problems.
-A response function tells us how the outgoing intensity changes \emph{in response} to a change in atmospheric parameters.
-These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
-In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
-
-To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
-In a traditional semi-empirical statistical equilibrium model, many parameters can be adjusted freely, and thus the response to them computed.
-Here, the most important atmospheric parameters that describe our model are temperature, plasma bulk velocity, and electron density.
-The last of these is determined by charge conservation in the simulations considered here, and we will therefore compute the response to the first two.
-
-Response functions have typically been considered in a statistical equilibrium context, as they are commonly applied as part of quiet sun inversion procedures.
-The atmosphere in our model varies hugely over the \SI{50}{\second} duration of the simulation, so the typical methods for computing response functions need to be adapted to this setting.
-Whilst computationally expensive, the ``brute force'' approach to response functions makes them simple to calculate.
-Following this approach, the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the populations are updated using the new radiation field and atmosphere.
-This procedure is repeated for the parameter at each depth in the atmosphere.
-The intensity response to perturbation $\delta q$ in parameter $q$ at depth point $k$ can then be computed by finite differences as
-\begin{equation}
-    \mathcal{R}_q(k) = \frac{I(q_k + \delta q) - I(q_k)}{\delta q}.
-\end{equation}
-Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}), and has proven more robust.
-The response function is then written as
-\begin{equation}
-    \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
-\end{equation}
-Unfortunately, unlike the advection equation, where the stencil has a finite bandwidth, the non-local nature of the RTE means that this process must be undertaken for each depth independently.
-
-In a statistical equilibrium case, the standard statistical equilibrium procedure of formal solution and population update is repeated until convergence is reached.
 For the time-dependent situation, a timestep by which to advance the system is needed.
 This should be short to compared to the hydrodynamic evolution of our system, but sufficiently long to allow the population change to rise above our convergence threshold and correctly converge to the new solution.
 \citet{Carlsson2002} note that a population perturbed out of statistical equilibrium will follow an exponential decay back to the steady state solution, further supporting the choice of a short timestep to attempt to remain within the more ``linear'' regime of this process.
@@ -1412,7 +1370,11 @@ In the time-dependent case, we can further divide by the timestep used to obtain
 As previously stated, care must be taken with extrapolating quantitative variations of outgoing intensity from the time-dependent response function, but in both cases the simple units present allow for easy comparison of the magnitude of the line's response to different effects.
 
 The method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
-These are plotted in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
+These properties were chosen due to the most common choices for response functions are temperature, velocity, electron density, microturbulent velocity and magnetic field.
+The last three of these are not free parameters in the model presented here.
+Following \Radyn{}, the microturbulence is assumed to be constant both in time and throughout the atmosphere, and this model does not consider any effects of the magnetic field.
+The electron density is dependent on the rest of the atmosphere through charge conservation, and is therefore not a free parameter.
+Our contribution are response functions are shown in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
 All of the response functions shown in these plots were computed with a timestep of \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
 In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
 The shape of the temperature response function is immediately recognisable as similar to the contribution function shown in the first column.
@@ -1433,7 +1395,7 @@ The structure in the line core is far more complex, and has a non-trivial respon
 This is most pronounced in the F10 response function at \SI{11}{\second} (Fig.~\ref{Fig:F10RfComp11s}).
 There are also responses due to changes in velocity from well below the $\tau_\nu=1$ line in the line core due to changes in opacity in these regions affecting the radiation field in the line forming region.
 
-Here we have presented a brief introduction to the concept and application of response functions to the simulations investigating the effects of the LI and LE treatments.
+We have presented a brief introduction to the concept and application of response functions to the simulations investigating the effects of the LI and LE treatments.
 Response functions can provide additional information on line formation and how it is affected by the model atmosphere.
 In this way they represent a powerful, but moderately computationally expensive, supplement to the traditional contribution function, allowing for additional insight into the formation of NLTE spectral lines and their domains of sensitivity.
 
