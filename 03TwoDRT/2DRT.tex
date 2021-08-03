@@ -333,7 +333,6 @@ Niter2d = i
 wave = np.linspace(853.9444, 854.9444, 501)
 wave -= CaII_atom().lines[-1].lambda0
 \end{pycode}
-\setpythontexautoprint{true}
 
 \begin{pycode}[2DValidation]
 fig, ax = plt.subplots(2, 1, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
@@ -343,12 +342,14 @@ for j in range(ctx.spect.I.shape[-1]):
     ax[0].plot(wave, Iwave[:, j], '--', label=('2D, $x={:.0f}$\,\si{{\kilo\metre}}'.format(atmos.x[j] / 1e3)))
 ax[0].legend()
 ax[0].set_ylabel(r'Specific Intensity [SI]')
+ax[0].set_xlim(wave[0], wave[-1])
 
 ax[1].plot(wave, (Iwave[:, 2] - Iwave1d) / Iwave[:, 2])
 ax[1].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
 ax[1].set_ylabel(r'Relative Error')
+ax[1].set_xlim(wave[0], wave[-1])
 lFig = ch2DRT.save_figure('2DValidation', fig, fext='.pgf')
-lFig.caption = r'Validation of 2D formal solver.'
+lFig.caption = r'Validation of 2D formal solver in static FALC atmosphere with periodic $x$ boundary conditions.'
 \end{pycode}
 
 \begin{pycode}[2DValidation]
@@ -381,8 +382,230 @@ lFig = ch2DRT.save_figure('2DErrChange', fig, fext='.pgf')
 lFig.caption = r'Differences between the 1 and 2D Formal Solvers (including ALI iteration procedure).'
 \end{pycode}
 
+\begin{pycode}[2DValidation]
+from copy import copy
+from weno4 import weno4
+
+atmos1d = Falc82()
+atmos1d.vlos[:] = -np.sin(atmos1d.height / atmos1d.height[0] * 2 * np.pi) * 20e3
+atmos1d.vlos[-3:] = 0.0
+atmos1d.vlos[:3] = 0.0
+atmos1d.quadrature(5)
+x = (np.arange(5) * 5_000).astype(np.float64)
+Nx = x.shape[0]
+z = np.copy(atmos1d.height)
+Nz = z.shape[0]
+temperature = np.zeros((Nz, Nx))
+temperature[...] = atmos1d.temperature[:, None]
+vx = np.zeros((Nz, Nx))
+vz = np.zeros((Nz, Nx))
+vz[...] = atmos1d.vlos[:, None]
+vturb = np.zeros((Nz, Nx))
+vturb[...] = atmos1d.vturb[:, None]
+ne = np.zeros((Nz, Nx))
+ne[...] = atmos1d.ne[:, None]
+nHTot = np.zeros((Nz, Nx))
+nHTot[...] = atmos1d.nHTot[:, None]
+atmos = lw.Atmosphere.make_2d(height=z, x=x, temperature=temperature, vx=vx, vz=vz, vturb=vturb, ne=ne, nHTot=nHTot)
+atmos.quadrature(6)
+
+wave = np.linspace(853.9444, 854.9444, 501)
+rayDir = 0.9
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(), Fe_atom(), He_atom(), Mg_atom(), N_atom(), Na_atom(), S_atom()])
+aSet.set_active('Ca')
+spect = aSet.compute_wavelength_grid()
+
+eqPops1d = aSet.compute_eq_pops(atmos1d)
+ctx1d = lw.Context(atmos1d, spect, eqPops1d, Nthreads=16, conserveCharge=False)
+
+
+for i in range(2):
+    ctx1d.formal_sol_gamma_matrices()
+dPops = [1.0]
+for i in range(2000):
+    ctx1d.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx1d.stat_equil())
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+
+eqPops = aSet.compute_eq_pops(atmos)
+start = time.time()
+bgProvider = lambda *args: FastBackground(*args, Nthreads=16)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=16, conserveCharge=False, backgroundProvider=bgProvider)
+
+for i in range(2):
+    ctx.formal_sol_gamma_matrices()
+dPops = [1.0]
+currentStop = 0
+for i in range(2000):
+    ctx.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx.stat_equil())
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+
+IwaveVlos = ctx.compute_rays(wave, rayDir)
+Iwave1dVlos = ctx1d.compute_rays(wave, rayDir)
+
+
+class FixedXBc(lw.BoundaryCondition):
+    def __init__(self, ctx1d):
+        self.ctx1d = ctx1d
+        self.I = None
+        self.Nrays = 0
+        self.anglesDirty = False
+        self.muz = None
+
+    def set_bc(self, I1d):
+        self.I = I1d.reshape(I1d.shape[0], -1, I1d.shape[-1])
+
+    def set_required_angles(self, mux, muy, muz, indexVector):
+        if self.muz is None \
+           or self.muz.shape[0] != muz.shape[0] \
+           or np.any(self.muz != muz):
+            self.anglesDirty = True
+        return super().set_required_angles(mux, muy, muz, indexVector)
+
+    def compute_bc(self, atmos, spect):
+        if self.I is None or self.anglesDirty:
+            self.anglesDirty = False
+            atmos1d = copy(self.ctx1d.atmos.pyAtmos)
+            singleRay = False
+            if len(atmos.muz) == 1:
+                atmos1d.rays(np.array([atmos.muz[0]]), wmu=np.array([1.0]))
+                self.Nrays = 1
+                singleRay = True
+            else:
+                Nrays = len(atmos.muz)//2
+                atmos1d.rays(atmos.muz[:Nrays], wmu=2.0*atmos.wmu[:Nrays])
+                self.Nrays = Nrays
+
+            updateSpect = spect.wavelength.shape == self.ctx1d.spect.wavelength.shape \
+                          and np.all(spect.wavelength == self.ctx1d.spect.wavelength)
+            if updateSpect:
+                spectToUse = self.ctx1d.kwargs['spect']
+            else:
+                spectToUse = self.ctx1d.kwargs['spect'].subset_configuration(spect.wavelength)
+
+            ctxRays = lw.Context(atmos1d, spectToUse, self.ctx1d.eqPops, Nthreads=16)
+            if updateSpect:
+                ctxRays.spect.J[...] = self.ctx1d.spect.J
+            else:
+                for k in range(atmos1d.Nspace):
+                    ctxRays.spect.J[:, k] = weno4(spect.wavelength, self.ctx1d.spect.wavelength,
+                                                                    self.ctx1d.spect.J[:, k])
+            ctxRays.depthData.fill = True
+            print('----Recomputing 1d BC rays----')
+            for i in range(50):
+                dJ = ctxRays.formal_sol_gamma_matrices()
+                if singleRay or dJ < 1e-3:
+                    break
+            I = np.copy(ctxRays.depthData.I)
+            if singleRay:
+                downUp = np.argmax(self.indexVector[0] == 0)
+                self.set_bc(np.copy(I[:, :, downUp, :]))
+            else:
+                self.set_bc(I)
+            print('-'*30)
+        result = np.copy(self.I)
+        return result
+
+atmos1d = Falc82()
+atmos1d.vlos[:] = -np.sin(atmos1d.height / atmos1d.height[0] * 2 * np.pi) * 5e3
+atmos1d.vlos[-3:] = 0.0
+atmos1d.vlos[:3] = 0.0
+atmos1d.quadrature(5)
+x = (np.arange(5) * 5_000).astype(np.float64)
+Nx = x.shape[0]
+z = np.copy(atmos1d.height)
+Nz = z.shape[0]
+temperature = np.zeros((Nz, Nx))
+temperature[...] = atmos1d.temperature[:, None]
+vx = np.zeros((Nz, Nx))
+vz = np.zeros((Nz, Nx))
+vz[...] = atmos1d.vlos[:, None]
+vturb = np.zeros((Nz, Nx))
+vturb[...] = atmos1d.vturb[:, None]
+ne = np.zeros((Nz, Nx))
+ne[...] = atmos1d.ne[:, None]
+nHTot = np.zeros((Nz, Nx))
+nHTot[...] = atmos1d.nHTot[:, None]
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(), Fe_atom(), He_atom(), Mg_atom(), N_atom(), Na_atom(), S_atom()])
+aSet.set_active('Ca')
+spect = aSet.compute_wavelength_grid()
+
+eqPops1d = aSet.compute_eq_pops(atmos1d)
+ctx1d = lw.Context(atmos1d, spect, eqPops1d, Nthreads=16, conserveCharge=False)
+
+atmos = lw.Atmosphere.make_2d(height=z, x=x, temperature=temperature, vx=vx, vz=vz, vturb=vturb, ne=ne, nHTot=nHTot, xLowerBc=FixedXBc(ctx1d), xUpperBc=FixedXBc(ctx1d))
+atmos.quadrature(6)
+
+
+for i in range(2):
+    ctx1d.formal_sol_gamma_matrices()
+dPops = [1.0]
+for i in range(2000):
+    ctx1d.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx1d.stat_equil())
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+
+eqPops = aSet.compute_eq_pops(atmos)
+start = time.time()
+bgProvider = lambda *args: FastBackground(*args, Nthreads=16)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=16, conserveCharge=False, backgroundProvider=bgProvider)
+
+for i in range(2):
+    ctx.formal_sol_gamma_matrices()
+dPops = [1.0]
+for i in range(2000):
+    ctx.formal_sol_gamma_matrices(lambdaIterate=False)
+    dPops.append(ctx.stat_equil())
+    if dPops[-1] < 1e-4:
+        print(i)
+        break
+
+rayDir = 0.99999
+IwaveFixedX = ctx.compute_rays(wave, rayDir)
+Iwave1dFixedX = ctx1d.compute_rays(wave, rayDir)
+\end{pycode}
+\setpythontexautoprint{true}
+
+\begin{pycode}[2DValidation]
+wave -= CaII_atom().lines[-1].lambda0
+
+fig, ax = plt.subplots(2, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+ax[0,0].plot(wave, Iwave1dVlos)
+ax[0,0].plot(wave, IwaveVlos, '--')
+ax[0,0].set_ylabel('Specific Intensity [SI]')
+ax[0,0].set_xlim(wave[0], wave[-1])
+
+ax[1,0].plot(wave, (IwaveVlos[:, 2] - Iwave1dVlos) / IwaveVlos[:, 2])
+ax[1,0].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
+ax[1,0].set_ylabel(r'Relative Error')
+ax[1,0].set_xlim(wave[0], wave[-1])
+
+ax[0,1].plot(wave, Iwave1dFixedX)
+ax[0,1].plot(wave, IwaveFixedX, '--')
+# ax[0,1].set_ylabel('Specific Intensity [SI]')
+ax[0,1].set_xlim(wave[0], wave[-1])
+
+ax[1,1].plot(wave, (IwaveFixedX[:, 2] - Iwave1dFixedX) / IwaveFixedX[:, 2])
+# ax[1,1].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
+# ax[1,1].set_ylabel(r'Relative Error')
+ax[1,1].ticklabel_format(axis='y', scilimits=(0,0))
+ax[1,1].set_xlim(wave[0], wave[-1])
+lFig = ch2DRT.save_figure('2DValidationVlosFixedX', fig, fext='.pgf')
+lFig.caption = r'Validation of 2D formal solver in FALC atmosphere with \SI{20}{\kilo\metre\per\second} sinusoidal vertical velocity field and periodic $x$ boundary conditions in the left-hand column and \SI{5}{\kilo\metre\per\second} vertical sinusoidal velocity field and fixed $x$ boundary conditions computed from a one-dimensional plane-parallel model in the right-hand column. The left-hand column is again synthesised and $\mu_z=0.9$ whereas the right-hand column is synthesised at $\mu_z=0.99999$ to include transverse effects, without simply sampling the fixed boundary condition that would give the plane-parallel result directly.'
+\end{pycode}
+
 \py[2DValidation]|ch2DRT.get_figure('2DValidation')|
 \py[2DValidation]|ch2DRT.get_figure('2DErrChange')|
+\py[2DValidation]|ch2DRT.get_figure('2DValidationVlosFixedX')|
 % spell-checker: enable
 
 It is necessary to validate both the two-dimensional formal solver and its integration into the \Lw{} framework.
@@ -405,6 +628,22 @@ We find that the two-dimensional formal solver performs well, both in terms of a
 Both of these simulations were run with 16 threads on \TODO{machine name}.
 
 Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
+These are shown in Fig.~\ref{Fig:2DValidationVlosFixedX} and utilise the same configuration other than the parameters discussed below.
+The left-hand column shows the effects of a vertical velocity field on a simulation with periodic boundary conditions.
+This velocity field was uniform in $x$ and defined by the additive inverse of a single period sine wave spanning the entire FALC atmosphere, with the first and last three points set to \SI{0}{\kilo\metre\per\second}.
+The amplitude of this wave was set to \SI{30}{\kilo\metre\per\second}.
+The lower row of this column shows that there is once again good agreement between the plane-parallel and two-dimensional models, with differences peaking around 5\% in the line core, but the line shape being accurately reproduced.
+This difference could likely be reduced by the use of the previously discussed subgridding technique, but as the simulations that are presented later in this chapter do not use velocity fields within the 2D slab, this work was not undertaken.
+
+In the right-hand column a model with fixed $x$ boundary conditions is presented.
+This model also applies an equivalent velocity field, albeit with a smaller \SI{5}{\kilo\metre\per\second} amplitude.
+The boundary conditions are computed from the associated one-dimensional simulation; the radiation along each ray of the two-dimensional quadrature needed for the boundary condition at each depth used in the two-dimensional simulation is synthesised from the plane-parallel simulation for both the minimum and maximum boundary conditions along the $x$ axis.
+The radiation presented here is synthesised along a ray at $\mu_z=0.99999$ (\SI{0.25}{\degree}) so that the ray through central $x$ cell at the top of the model does not intersect directly with either of these boundary conditions (as this would simply be sampling the plane-parallel simulation) whilst still testing the two-dimensional nature of the formal solver.
+The agreement here is once again very good, with the error peaking once again around 1.5\%.
+
+The coupling between the two-dimensional and plane-parallel models shown here is facilitated by the design of the \Lw{} framework, and will be leveraged extensively in the following sections.
+A plane-parallel boundary condition can be updated and synthesise its output dynamically in response to the rays requested from the two-dimensional model, without the need to precompute these values and go through a multi-step saving and loading process that is prone to error when simulation parameters change; especially for cases where the incoming radiation field from a fixed boundary condition is allowed to be anisotropic, requiring agreement between the rays in both models.
+The boundary condition radiation for the ray at $\mu_z=0.99999$ is computed automatically due to the design of the class that describes it, and the coupling allowed by the framework, which allows easy manipulation and coupling of multiple radiative transfer contexts within the same program.
 
 \section{2D Simulation Configuration}
 
@@ -1223,7 +1462,7 @@ def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
     ax = fig.add_subplot(spec[2])
     fig.colorbar(mesh, cax=ax)
 
-fig = plt.figure()
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$.'
@@ -1231,7 +1470,7 @@ lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 an
 statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopy_besser_MsLw2d_thesis.zip'))
 statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t05_1stColCopy_besser_MsLw2d_thesis.zip'))
 
-fig = plt.figure()
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{5}{\second}$.'
@@ -1239,7 +1478,7 @@ lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 an
 statEq2d15 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
 statEq2d15_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
 
-fig = plt.figure()
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{15}{\second}$.'
