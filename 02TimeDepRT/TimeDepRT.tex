@@ -108,339 +108,11 @@ chRT = texfigure.Manager(
 Modern Radiation Hydrodynamic (RHD) codes are highly complex, and contain many specialised features as discussed in the previous chapter.
 In the following discussion we will focus primarily on \Radyn{}, the most widely used code of its ilk, and how using additional tools can facilitate new avenues of investigation.
 
-\section{Introduction to Hydrodynamics and Conservation Laws}
-\emph{The majority of the basic theory in this section follows the two texts by Leveque \NeedRef{}}
-
-In the previous chapter we have explained the basis of the radiative transfer methods used throughout this work.
-The difficulty in radiative transfer primarily lies in the nuance of the various integration terms.
-To provide a clear understanding of RHD we also need a numerical description of hydrodynamics, and an explanation of solving the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
-
-The scalar radiative transfer equation, solved via the formal solver (presented in the previous chapter) is a good example of an ordinary differential equation.
-It is relatively easy to solve via a variety of methods, typically striving for a balance of speed, reliability, and accuracy.
-In general, PDEs are difficult to solve numerically in a general way.
-
-A generic second-order PDE of a quantity $q$ depending on two independent variables $x$ and $y$ can be written as
-\begin{equation}
-    aq_{xx} + bq_{xy} + cq_{yy} + dq_x + eq_y + fq = g,
-\end{equation}
-wherein the subscripts represent partial derivatives with respect to these variables.
-The sign of the discriminant ($\Delta = b^2-4ac$) of this equation determines the class of the problem:
-\begin{itemize}
-    \item $\Delta < 0$: Elliptic problem (e.g. Poisson equation).
-    \item $\Delta = 0$: Parabolic problem (e.g. Heat equation).
-    \item $\Delta > 0$: Hyperbolic problem (e.g. Advection equation).
-\end{itemize}
-Here, we will focus primarily on hyperbolic problems, with a brief discussion of parabolic terms.
-Hyperbolic problems take the form
-\begin{equation}\label{Eq:ConsLaw}
-    q_t + f(q)_x = 0,
-\end{equation}
-where $f$ is a function describing the the flux of $q$ at each location in the domain, $t$ indicates a temporal coordinate, and $x$ a spatial coordinate.
-There is an inherent assumption that the flux function is local, and acts only on the local state variables $q$.
-
-Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant in time.
-This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
-The simplest equation of this form is advection, which simply arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $u$ as
-\begin{equation}\label{Eq:Advection}
-    \rho_t + (\rho u)_x = 0.
-\end{equation}
-
-The advection equation can be augmented with two further equations to form the Euler equation set.
-These three equations are the conservation of mass, momentum, and energy.
-Together they describe the evolution of ideal fluids.
-The complete set is written
-\begin{equation}\label{Eq:EulerEqns}
-\begin{split}
-    \rho_t + (\rho u)_x &= 0,\\
-    (\rho u)_t + (\rho u^2 + p)_x &= 0,\\
-    E_t + (u(E + p))_x &= 0,
-\end{split}
-\end{equation}
-where $E$ is the total energy and $p$ is the gas pressure.
-As our three conserved quantities are the mass density, momentum density, and energy, the pressure must be expressed as a combination of these so as to be able to write this system in the form of \eqref{Eq:ConsLaw}.
-The simplest way to achieve this is to use the equation of state for an ideal gas
-\begin{equation}
-    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho u^2.
-\end{equation}
-Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, as considered in the case of solar plasma.
-
-The Euler equations \eqref{Eq:EulerEqns} describe the evolution of an ideal fluid without any energy losses.
-In practice we often need to model some loss terms.
-Ignoring radiative effects for now, the most important of these is heat conduction\footnote{In the plasmas considered here there is additional nuance to heat conduction, which we will return to in Sec.~\ref{Sec:NumericalConduction}.}, which is typically described by parabolic equations.
-This adds a second spatial derivative term to the right-hand side of the energy conservation equation.
-It is also common to need source and sink terms when modelling real world problems, these can account for fluids entering and leaving a volume, the non-local emission and absorption of energy, or simply the effects of gravity.
-These terms are also added to the right-hand side of the equations of \eqref{Eq:EulerEqns}, and together with the effects of viscosity, these describe the Navier-Stokes equations.
-
-\subsection{Numerical Approaches}
-
-The typical first choice for numerically solving differential equations is to apply a finite difference method.
-In this class of method, the problem is discretised, similarly to the approach taken in radiative transfer, and the values associated with each grid point represent the local pointwise value.
-The local gradient of the conserved quantities can then be estimated from pointwise difference between in the quantity between adjacent cells.
-This method can be applied to discrete problems in both space and time.
-Applying a basic one-sided method to the advection equation \eqref{Eq:Advection} gives
-\begin{equation}\label{Eq:FdmAdvection}
-    \frac{q^{t+1}_i - q^t_i}{\Delta t} + u\left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
-\end{equation}
-where the subscript refers to the location of the conserved quantity, the superscript the discrete timestep, with $\Delta x$ and $\Delta t$ being the local grid spacing and timestep duration respectively.
-
-It is clear that without loss of generality we could have also chosen to spatially difference our problem in the other direction (i.e. $q^t_i - q^t_{i-1}$).
-From the infinitesimal definition of the derivative, these two formulations are equivalent.
-This is not the case in discretised problems.
-It is better to locally use the formulation such that information from points ``upwind'' in terms of the fluid velocity are used to update the points downwind of themselves.
-In this sense the information used to update points is following the fluid flow.
-Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the approximate value of the quantity at the next timestep,
-\begin{equation}
-    q^{t+1}_i = q^t_i - \frac{u \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
-\end{equation}
-
-This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
-
-Many other spatial and temporal discretisations can be devised for conservation laws, and it is important to choose a discretisation that introduces minimal error.
-In general, we term discretisations where $q^{t+1}$ depends only on $q^{t}$ as \emph{explicit}, and those also depending on $q^{t+1}$ as \emph{implicit}, necessitating the solution of a system of typically non-linear equations.
-
-Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
-Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell.
-Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
-This implies
-\begin{equation}
-    q_i^t \approx \frac{1}{\Delta x}\int_{x_i}^{x_{i+1}} q^t(x)\, dx.
-\end{equation}
-Rewriting the conservation law \eqref{Eq:ConsLaw} in an integral form then gives
-\begin{equation}
-    \int_{x_i}^{x_{i+1}} q^{t+1}(x)\, dx = \int_{x_i}^{x_{i+1}} q^{t}(x)\, dx
-                                         + \int_{t_t}^{t_{t+1}} q_i(t)\, dt
-                                         - \int_{t_t}^{t_{t+1}} q_{i+1}(t)\, dt,
-\end{equation}
-which can then be written as the flux-differencing form
-\begin{equation}\label{Eq:FiniteVolumeMethod}
-    q_i^{t+1} = q_i^t - \frac{\Delta t}{\Delta x}\left( F^t_{i+1} - F^t_{i} \right),
-\end{equation}
-where $F_i$ represents the flux due between cells $i$ and $i-1$, and $F_{i+1}$ the flux between cells $i$ and $i+1$.
-In the case of an explicit method with a correctly chosen timestep for the grid, where information cannot move further than one cell in a timestep, each of these flux functions depends only on cell $i$ and one of its neighbours.
-An important strength of this method for solving conservation law problems is that if $F_i$ and $F_{i+1}$ are respectively the left and right edge fluxes for cell $i$, then $F_{i+1}$ will be the left edge flux for cell $i+1$, and $F_{i}$ will be the right edge flux for cell $i-1$.
-Thus the numerical integration of $q^{t+1}$ is conserved with respect to $q^t$ as all numerical fluxes, other than the left- and right-most, will cancel due to the formulation of \eqref{Eq:FiniteVolumeMethod}.
-These left- and right-most fluxes will need to consider the boundary conditions of the finite simulation volume to ensure the correctness of the conservation law.
-
-
-\subsection{Riemann Problems}
-
-% spell-checker: disable
-\begin{pycode}[TimeDepRT]
-from shocktubecalc import sod
-from matplotlib.ticker import MaxNLocator
-
-gamma = 1.4
-positions, regions, values = sod.solve(left_state=(1.0, 1.0, 0.0), right_state=(0.1, 0.125, 0.0),
-                                       geometry=(0.0, 1.0, 0.5), t=0.2, gamma=gamma, npts=500)
-fig, ax = plt.subplots(2, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6),
-                       constrained_layout=True)
-ax = ax.ravel()
-grid = values['x']
-pressure = values['p']
-density = values['rho']
-velocity = values['u']
-totE = pressure / (gamma - 1.0) + 0.5 * density * velocity**2
-
-ax[0].plot(grid, density)
-ax[0].set_xticklabels([])
-ax[1].plot(grid, velocity)
-ax[1].set_xticklabels([])
-ax[2].plot(grid, pressure)
-ax[3].plot(grid, totE)
-
-ax[0].set_ylabel(r'$\rho$')
-ax[1].set_ylabel(r'$u$')
-ax[2].set_ylabel(r'$p$')
-ax[3].set_ylabel(r'$E$')
-
-ax[2].set_xlabel(r'$x$')
-ax[3].set_xlabel(r'$x$')
-
-lFig = chRT.save_figure('SodTubeAnalytic', fig, fext='.pgf')
-lFig.caption = r'Solution to the classic Sod shock tube problem at $t=\SI{0.2}{\second}$.'
-
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-ax = plt.gca()
-ax.plot(grid, density)
-ax.set_ylabel(r'$\rho$', c='C0')
-ax.set_xlabel(r'$x$')
-
-ax2 = ax.twinx()
-# ax2.plot([0.5, 0.7], [0, 0.2], c='#222222')
-for i, p in enumerate(positions.values()):
-    ax2.axvline(p, c='k')
-    if i != 1:
-        ax2.plot([0.5, p], [0, 0.2], c='#555555')
-regionLims = np.array([0, *positions.values(), 1])
-regionCentres = 0.5 * (regionLims[1:] + regionLims[:-1])
-labels = [r'$\alpha$', r'$\beta$', r'$\gamma$', r'$\delta$', r'$\epsilon$']
-for i, c in enumerate(regionCentres):
-    ax2.text(c, 0.02, labels[i])
-
-ax2.set_ylabel(r'$t$')
-ax2.yaxis.set_major_locator(MaxNLocator(5))
-lFig = chRT.save_figure('RiemannFan', fig, fext='.pgf')
-lFig.caption = r'Riemann fan of different wave speeds and associated regions for the Sod shock tube problem.'
-\end{pycode}
-
-\py[TimeDepRT]|chRT.get_figure('SodTubeAnalytic')|
-\py[TimeDepRT]|chRT.get_figure('RiemannFan')|
-% spell-checker: enable
-
-The finite volume method we have described therefore depends on finding expressions for the numerical flux between two adjacent cells.
-This is often framed as a Riemann problem at the cell interface.
-A Riemann problem consists of solving a conservation law with an initial parameter distribution consisting of two constant states meeting at a discontinuity.
-Without loss of generality this discontinuity can be placed at $x=0$, and the value of $q$ for $x<0$ is termed $q_l$ and $q_r$ for $x>0$.
-
-A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics, is that of the Sod shock tube \citep{Sod1978}.
-The problem is a single Riemann problem, with gas at a different pressure and density on each side of a membrane.
-At $t=0$ the membrane is removed, and multiple waves with different velocities are launched in both directions.
-A solution to the classic Sod shock tube with states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
-At this time, a complex pressure and density structure has formed in the shock tube.
-The Riemann problem is often considered in terms of the propagating waves.
-In Fig.~\ref{Fig:RiemannFan} we show the same density profile, but divided into regions by black lines, with grey lines showing a time-distance plot of the different waves in the system.
-This plot, and manner of considering the waves in the system is known as a Riemann fan.
-
-The left- and right-most regions of density ($\alpha$ and $\epsilon$) shown in Fig.~\ref{Fig:RiemannFan}, are simply the initial left and right states of the fluid, as these are currently unperturbed by the waves propagating from the initial discontinuity.
-Starting from the initial discontinuity, a rarefaction wave (reduction in density) moves into the high density region (to the left), and a shock wave propagates into the low density region (to the right).
-The rarefaction wave is present in region $\beta$, with the shock front being the boundary between $\delta$ and $\epsilon$.
-There is an additional front between regions $\beta$ and $\gamma$, which we note is not visible on either the velocity or pressure panels of Fig.~\ref{Fig:SodTubeAnalytic}.
-This is a contact discontinuity and represents the boundary between two regions of different entropy.
-This is the original interface between the two gases at $t=0$, and it is advected along with the flow at the velocity $u$, so there is no mixing between the two sides of this contact discontinuity (in the case of an ideal gas).
-
-From analysis of the Jacobian of the flux function of the Euler equations, the structure of this solution can be revealed.
-There are three waves, associated with the eigenvalues of this Jacobian.
-The contact discontinuity propagates at the fluid velocity $u$ (as the fluid expands into the low density region), the other two eigenvalues are $u\pm c_s$, where $c_s$ is the sound speed of the fluid.
-Unfortunately these waves are non-linear and do not necessarily propagate at the characteristic velocity given by their associated eigenvalue.
-Instead it is necessary to apply the Rankine-Hugoniot jump conditions, at both the shock front and the contact discontinuity (given that the pressure and velocity do not vary across the latter), and solve the resultant transcendental equation to determine the parameters of regions $\gamma$ and $\delta$.
-These problems can be solved using iterative methods and knowledge of the expected wave form of the solution.
-
-As the complexity of the system and the equation of state increases, it becomes harder (or impossible) to compute this solution in an efficient manner.
-Fortunately, it is rarely necessary to compute the exact solution to the Riemann problem, but it is important to understand the the structure originating from this simple case to interpret and validate the numerical methods described later.
-
-% N.B. The characteristic of a system like this is a line for which the the solution q is constant. i.e. for advection this is x(t) = x0 + ut
-% For linear systems we can transform to characteristic variables, for which the coefficient matrix is diagonal and we have a system of independent scalar advection equations.
-% The velocity is time/space varying along the rarefaction wave.
-% The characteristic field of an equation is an eigenvector, if this is linearly
-% degenerate then we can only have contact discontinuities.
-% Integral curves are curves which connect two points by an integral of one of the eigenvectors of the system.
-% A function of q that is invariant along any integral curve is called a Riemann invariant, these are used for solving problems related to rarefaction waves.
-% These Riemann invariants are conserved along the characteristic. For the u eigenvector, we have u and p as invariant, hence only the pressure can change => contact discontinuity.
-% Characteristics on each side of shock linked by Hugoniot locus
-
-\subsection{Godunov's Method and Higher Order Reconstructions}
-
-Godunov's method \citep{Godunov1959} consists of assuming that the data $q$ is piecewise constant in each cell of our simulation domain.
-At this point the values on the left- and right-hand side of each interface are known and the flux through this interface can be determined by solving a Riemann problem.
-The Riemann problem at each interface can be treated independently under the assumption that the fastest wave from one interface not carry information to the next.
-This is a fundamental requirement of stability and will be discussed in more detail in Sec.~\ref{Sec:HydroStability}.
-
-This method provides a basic framework for solving conservation laws.
-It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for some of the most accurate numerical methods for conservation laws.
-\citet{VanLeer1979} provided one of the first higher order extension to Godunov's method.
-It is tempting to attempt to estimate the value of $q$ at cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
-The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under- or over-shoots to the data.
-This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
-If the current cell is an extremum then the slope is set to 0.
-Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as Leveque \NeedRef{}.
-This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
-
-There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984} providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
-WENO methods are a cornerstone of reconstruction\footnote{The properties that make WENO methods a good choice for reconstruction also render them applicable to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
-
-WENO methods were first proposed by \citet{Liu1994}, and formalised for arbitrary order by \citet{Jiang1996}.
-These methods form a convex combination of polynomials over overlapping regions.
-For example, in the case of the commonly used fifth-order WENO method of \citet{Jiang1996}, three parabolae are constructed over five adjacent points, i.e. the first uses the stencil $\{x_1, x_2, x_3\}$ the second $\{x_2, x_3, x_4\}$, and the third $\{x_3, x_4, x_5\}$.
-We can equivalently define a fifth-order polynomial over the stencil $\{x_1, \ldots, x_5\}$, which can also be written as a linear combination of our interpolating parabolae at each point in this region.
-These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities or similar effects.
-
-The process of computing these initial interpolating functions is somewhat complex due to the finite volume framework often applied in hydrodynamics.
-These should be computed such that the integral over the interpolating polynomial in each cell is close to the average value, rather than simply taking it as a pointwise value.
-For a fixed uniform grid, the integration weights for each interface can be computed analytically, and the lack of conditional branches in the calculation of the final weighted value renders the method highly performant.
-For non-uniform grids, the weights can be precalculated if the grid remains fixed, or computed on the fly if necessary.
-There are also a number of approximate methods for handling non-uniform grids at low computational cost such as WENO-NM \citep{Huang2018}.
-The WENO method has been extended many times to provide increased accuracy or meet certain requirements; its strong reconstructive ability and reliable behaviour around shocks makes it a workhorse of modern hydrodynamics and enables simpler flux functions to be reliably used, as will be discussed in the next section.
-
-
-\subsection{Numerical Fluxes}
-
-Whilst there are many approximate Riemann solvers that can accurately and efficiently solve the Riemann problems arising from the Euler equations including the addition of source terms, it does not appear feasible to express the evolution of the RHD system in this way.
-Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces is used.
-For implicit methods we can instead use a Newton iterative scheme to minimise the residual of the discretised conservation law across the cell interfaces with the fluxes typically computed from the upwind value of the reconstructed parameter.
-
-With high-order reconstructions, simple expressions for the fluxes can be used and give accurate results.
-An obvious first choice would be the average flux from the reconstructed states left and right of the interface.
-Unfortunately, this leads to numerical instabilities, and some artificial damping (numerical viscosity) is needed.
-This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{Rusanov1962}
-\begin{equation}
-    F_{\mathrm{LLF}} = \frac{1}{2}(f(q_{i+1}^L) + f(q_i^R)) - \frac{1}{2}\alpha(q_i^R - q_{i+1}^L).
-\end{equation}
-Here $q_i^L$ and $q_i^R$ represent the left and right hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
-Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.
-General symmetric fluxes like this are simple and efficient, but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
-This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available, a specialised Riemann solver for the current problem is likely a better choice.
-
-\subsection{Time Integration and Stability}\label{Sec:HydroStability}
-
-Explicit schemes are only stable (i.e. do not diverge or introduce spurious oscillations) if the Courant-Friedrichs-Lewy (CFL) condition is met.
-The CFL condition states that the numerical domain of dependence of the the equation (i.e. the terms used in the computation of a value in the next timestep) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
-This is a necessary, but not sufficient condition, and the exact requirements of each scheme can often be derived analytically, although it is common to apply an additional safety margin to the maximum permitted value of the CFL condition.
-
-For explicit methods the CFL condition sets the maximum timestep that can be used based on the current simulation conditions.
-In a hyperbolic system the CFL condition takes the form
-\begin{equation}
-    C = \frac{u\Delta t}{\Delta x},
-\end{equation}
-and will be constrained to a maximum value ($\leq 1$) for stability of an explicit method.
-Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
-This is discussed \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost ratio despite the method being nominally stable for large CFL values.
-
-It is difficult to achieve better than second order accuracy due to the temporal discretisations discussed so far, but by viewing $F_i^t$ as the flux at time $t$, we can achieve higher order accuracy by applying a multi-step method to more accurately integrate these fluxes (and any associated source terms) over time.
-A good choice for this is a method in the family of total-variation diminishing Runge-Kutta methods \citep[e.g.][]{Shu1988}.
-These multi-step time integration methods can be combined with fractional step methods that allow us to perform \emph{operator splitting}.
-That is, splitting an equation into two subproblems that can solved independently.
-An example of this would be the radioactive decay of an isotope transported by advection.
-Splitting this into an advection and a reaction problem allows for standard methods to be used in both of these problems, but clearly their results need to be coupled to each other.
-A naive first approach is to solve one of the subproblems over the timestep, and then solve the other, but this method cannot be better than first order accurate in time for coupled subproblems.
-A commonly used approach that is second order is known at Strang splitting \citep{Strang1968}, which consists of time-advancing the first subproblem by half the timestep, then the second by the whole timestep, before once again advancing the first subproblem by a timestep.
-This method can provide second-order accuracy.
-Many more advanced splitting procedures have been developed, but Strang splitting remains widely used due to its ease of implementation.
-
-LeVeque \NeedRef{} comments that in many situations the first-order splitting described above performs better than would be commonly expected from its formal first-order accuracy.
-This is because the errors introduced are equivalent to solving the problem at a slightly different time, differing by up to a single timestep.
-Whilst this renders the method first-order accurate, the quality of the solution is still primarily controlled by the quality of the methods used to solve the subproblems, and this exceedingly simple splitting scheme can often be applied with no problems.
-
-There are many nuances to each of the techniques needed to accurately and robustly solve conservation laws numerically, and no single \emph{correct} method to use.
-The above is intended to serve as an introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
-It is hoped that this introduction will improve general understanding of this aspect of RHD codes.
-
-\section{Conduction}\label{Sec:NumericalConduction}
-
-When expressed in terms of energy the heat equation in a plasma along a magnetic field line is given by
-\begin{equation}
-    \frac{\partial E}{\partial t} = \frac{\partial}{\partial z}\left( \kappa_0 T^{5/2} \frac{\partial T}{\partial z} \right),
-\end{equation}
-with spatial coordinate $z$, and coefficient $\kappa_0$ varying, but typically taken to be approximately \SI{1e-6}{\erg\per\centi\metre\per\second\per\kelvin\tothe{7/2}} \citep{Spitzer1953,Braginskii1965} based on deviations from a fully ionised hydrogen plasma.
-The form of this equation poses several problems, the most significant being that in regions of sufficiently steep temperature gradients, the conductive flux approaches infinity.
-Clearly this is not physical and there is a maximum limit, known as the free-streaming limit, at which all electrons in the plasma are flowing at their thermal speed with this heat gradient, representing a finite limit on this term.
-As this free-streaming limit is approached the heat flux becomes non-local and depends on the global temperature and density structure in the loop \citep{Battaglia2009}.
-\citet{Campbell1984} provides an expression for the transport coefficients used to determine the conductive flux through an ionised plasma and smoothly handles both the Spitzer-H\"{a}rm, locally limited, and non-locally limited regimes.
-This approach can be applied in numerical simulations but more frequently (such as in RADYN) the method of \citet{FISHER1985} is applied which smoothly limits the local flux to remain less than the local free-streaming limit, helping to stabilise this equation.
-
-Due to its parabolic nature, an explicit solution of the heat equation can be extremely costly; stability requirements provide a timestep requirement scaling with the inverse square of the grid spacing, rather than linearly as in the case of most hyperbolic equations.
-Any attempt to explicitly integrate the heat equation on a timestep limit set by the hydrodynamic equations will likely be met with rapid divergence of any small perturbation in the data.
-This renders the conduction term stiff compared to the hydrodynamical terms and it may therefore be advantageous to use an implicit method  to guarantee stability.
-Several alternative methods have been developed, such as expressing the parabolic equation as a hyperbolic wave equation \citep{Rempel2016}, implicit-explicit methods (which may also be used for integrating stiff source terms such as the atomic level population transition rates) \citep[e.g.][]{Ascher1995}, or accepting the cost of an explicit discretisation in exchange for simplicity and accuracy \citep{Bradshaw2003, Bradshaw2013}.
-
-Recently, discussion has emerged around the concept of turbulence suppressed conduction \citep{Bian2016}, where turbulence restricts the motion of electrons along the loop, and it has been suggested that the standard assumption of collisionally-dominated conduction may be a significant overestimation of true conduction rates.
-Simulations using the zero-dimensional enthalpy based EBTEL code \NeedRef{} currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents an important component of this effect \citep{Bian2018}.
-As part of further investigation, work is currently under way to integrate these effects in the \Radyn{} and HYDRAD codes.
-
 \section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
 
 \emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
-\Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code \citep{Carlsson1992}\NeedRef{} and many commonalities remain.
+\Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code \citep{Carlsson1992} and many commonalities remain.
 NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant level population balance equations.
 This method is designed to solve the problem of non-overlapping lines but including an underlying background continuum.
 This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
@@ -467,15 +139,15 @@ This is somewhat offset by the majority of the cost of each step residing within
 The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
 On these scales the assumptions that allow us to treat the plasma as an ideal fluid begin to break down.
 
-\Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and through these comments we do not intend to discredit its use, but instead highlight avenues for future development within the field of RHD.
-As the different uses of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
+\Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and these comments merely intend to highlight avenues for future development within the field of RHD.
+As the different applications of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
 
 As discussed previously in respect to \Lw{} and radiative transfer, the flexibility of a framework designed for solving a class of problem can yield significant advances in productivity.
 The task of designing, constructing, and testing a framework for a problem as complex as the complete quasi-one-dimensional RHD simulation of flares is too significant to be undertaken here.
 Nevertheless, it may prove a powerful future development once the necessary specifications are defined.
 In the following we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigating important directions for future developments in RHD modelling of flares.
 
-\section{Minority Species}
+\section{Minority Species Modelling}
 
 For flares, \Radyn{}'s primary focus is on the major spectral lines and continua of hydrogen, helium, and calcium.
 These typically represent the bulk of the radiative energy lost in the chromosphere.
@@ -506,7 +178,6 @@ From investigating the contents of this file we can determine the exact configur
 This file is written to for every internal timestep of the \Radyn{} simulation, and represents a limited subset of the less frequently written ``complete'' output (typically stored every \SI{0.1}{\second}).
 It contains some metadata describing the size of the simulation, then for each internal timestep, the current timestep, the elapsed time at each timestep, the current locations of the dynamic grid, the mass density profile, the electron density profile, the temperature structure, the vertical velocity, and the current hydrogen level populations.
 
-\TODO{Double check AR rates}
 For the validation of \Lw{} and this style of simulation, we also wished to compute and compare the hydrogen populations to those computed in \Radyn{}.
 Several difficulties arose due to the non-thermal collisional rates used in the kinetic equilibrium calculation for hydrogen and helium.
 The non-thermal collisional rates of \citet{1993Fang} are used to determine hydrogen ionisation, and require the beam energy deposition throughout the atmosphere at each timestep.
@@ -1233,6 +904,7 @@ This is sufficiently large to noticeably modify the atmospheric evolution, which
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
+from matplotlib.ticker import MaxNLocator
 
 def rf_sym_range(rf):
     vmin = rf.min()
