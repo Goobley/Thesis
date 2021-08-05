@@ -29,6 +29,8 @@ Ground-based telescopes can be much larger and more complex than their space-bas
 
 We shall focus on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\m}, and \CaLine{}. Both of these lines form in the chromosphere (albeit at different altitudes), and carry large amounts of information pertaining to the details of their formation.
 
+\TODO{Discuss spectral line shapes (from templates) and nomenclature of various features.}
+
 \subsection{CRISP observations of these}
 \subsection{DKIST, \& the future.}
 
@@ -290,6 +292,7 @@ These effects can instead be captured by the use of response functions.
 Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
 A response function tells us how the outgoing intensity changes \emph{in response} to a change in an atmospheric parameter.
 These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
+A similar approach (built on framing the intensity perturbations as a Fredholm integral equation and using the finite difference method to evaluate necessary terms) for the scalar RTE was employed in the inversions of \citet{Metcalf1990a}, but their focus was on the direct application to inversions and not interpretation of the response functions produced.
 In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
 
 To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
@@ -328,6 +331,10 @@ All of the codes discussed here use the Levenberg-Marquadt regression method wit
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
 It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seed as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
 Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
+The integral approach of \citep{Metcalf1990a} was also applied to flares and differs from the others discussed here, and constructs a matrix of kernels which is solved for temperature and electron density perturbations using a regularised method.
+The kernels presented cannot capture the complete response to perturbations in parameters affecting NLTE spectral lines without an approach that can find the new source function (which can be affected non-locally).
+A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, that would need to be compared against SNAPI for both quality of solution and performance.
+It is likely that both methods perform similarly as SNAPI's differential formal solver has commonalities with the kernels presented by \citet{Metcalf1990a}, but it is possible that one of the two methods has advantages in stability of solution.
 
 \subsection{Forward Modelling}
 

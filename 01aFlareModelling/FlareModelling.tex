@@ -25,7 +25,7 @@ Contrary to its dictionary definition, which suggests deceit or merely a surface
 Astrophysical observations differ greatly to laboratory observations, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat the event.
 Simulations represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
 Numerical simulations are often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
-There will commonly be free-parameters left in these models.
+There will commonly be free parameters left in these models.
 Some can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
 Due to computational or conceptual limitations simplifying assumptions are often required to make these models tractable.
 
@@ -65,44 +65,46 @@ The nuance typically occurs in ensuring that all terms are solved in a self-cons
 
 The first generation of hydrodynamic flare models \citet{Nagai1980,Mariska1982,McClymont1983} focused on capturing the gas dynamics of the flaring event, using simplified radiative treatment.
 These early models were much more limited in general due to computational constraints. \citet{Nagai1980} and \citet{Mariska1982} both employ optically thin losses with ad hoc corrections to avoid over-cooling the lower atmosphere.
-\citet{McClymont1983} employ an escape probability formalism for determining the radiative rates of hydrogen, which is a faster, less precise method than the previously described MALI approach. Escape probability methods are also unable to take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for solar optical transitions.
+\citet{McClymont1983} employ an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer. Escape probability methods are also unable to take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for solar optical transitions.
 
-The current generation of RHD codes consists of RADYN \citep{Carlsson1992,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses some escape probability-like approximations for these (Sollum \NeedRef{}).
+The current generation of RHD codes consists of RADYN \citep{Carlsson1992,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses partially precomputed radiative rates for hydrogen (based on the treatment of Sollum \NeedRef{}) and radiative losses interpolated following the method of \citet{Carlsson2012}.
 HYDRAD originally aimed more at the investigation on non-equilibrium radiative losses in the corona, with less focus on the chromosphere than the other two, however, recent development has also moved in the direction of an improved chromospheric treatment.
 
-RADYN is derived from the MULTI RT code \NeedRef{}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
-RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \NeedRef{} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment, in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on beam energy deposition \citep{Allred2005, Allred2015}.
+RADYN is derived from the MULTI RT code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
+RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \citet{Abbett1999} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment, in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on beam energy deposition \citep{Allred2005, Allred2015}.
 
 
-FLARIX, on the other hand consists primarily of three separate modules. The hydrodynamics is solved by a variant of the NRL Solar Flux Tube Model described in \citet{Mariska1982,Mariska1989}, extended with a MALI module (considering non-overlapping lines with constant background continuum as described in \citet{Rybicki1991}) for detailed radiation transfer, and a test-particle code for determining heating and electron deposition \NeedRef{}.
+FLARIX, on the other hand consists primarily of three separate modules. The hydrodynamics is solved by a variant of the NRL Solar Flux Tube Model described in \citet{Mariska1982,Mariska1989}, extended with a MALI module (considering non-overlapping lines with constant background continuum as described in \citet{Rybicki1991}) for detailed radiation transfer, and a test-particle code for determining heating and electron deposition \citep{Varady2010, Heinzel2015}.
 
-RADYN and FLARIX have recently been tested against each other and shown to provide remarkable agreement, despite their different heritage \NeedRef{}.
-
-{\color{Red} Expand. RADYN was ``converted'' for flares by Abbett \& Hawley.}
+RADYN and FLARIX have recently been tested against each other and shown to provide remarkable agreement, despite their different heritage \citep{Kasparova2019}, and early tests also show good consistency with HYDRAD when enabling its recent extensions\footnote{Initial comparisons undertaken following the International Space Science Institute meeting: ``Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving'' led by G.S. Kerr and V. Polito.}.
 
 \section{An eye to the future: Radiative Magnetohydrodynamics}
 
-Much scientific effort is being invested into the creation of three-dimensional radiative MHD models, which aim to accurately describe all of the physics of a flaring system through the use of supercomputers. The two leading codes are \textit{Bifrost} \citep{Gudiksen2011}, and MURaM \citep{Rempel2009,Rempel2016}. MURaM was originally focused on photospheric magnetoconvection, but has been extended into the corona. It adopts a grey radiative transfer technique that treats all outgoing radiation as a single bin, but has successfully demonstrated the ability to drive self-consistent flare-like eruptions from time-dependent photospheric magnetograms \NeedRef{}.
+Much scientific effort is being invested into the creation of three-dimensional radiative MHD models, which aim to accurately describe all of the physics of a flaring system through the use of supercomputers. The two leading codes are \textit{Bifrost} \citep{Gudiksen2011}, and MURaM \citep{Rempel2009,Rempel2016}. MURaM was originally focused on photospheric magnetoconvection, but has been extended into the corona. It adopts a grey radiative transfer technique that treats all outgoing radiation as a single bin, but has successfully demonstrated the ability to drive self-consistent flare-like eruptions from time-dependent photospheric magnetograms \citep{Cheung2019}.
+
 \textit{Bifrost} is more focused on a detailed chromospheric treatment, and currently uses multi-group opacities and the Sollum model for hydrogen \NeedRef{} to better treat the radiative losses from this region.
+It has been used to investigate solar enhanced networks \citep{Carlsson2016}, the generation of spicules \citep{Martinez-Sykora2017}, and magnitude of magnetic energy present in the chromosphere \citep{Martinez-Sykora2019}.
+
 Currently, neither code simultaneously handle the raw energy injection investigated in the field-aligned flare models on an equivalent spatial resolution, or providing equivalent diagnostics, but this is an area of very active development.
 
-\TODO{More Bifrost and Muram papers}
 
 \section{Solar Flare Heating}
 
-The previously discussed modern RHD codes are designed to simulate the response of a tube of initially quiet solar atmosphere to heating, typically presumed to be due to a beam of energetic electrons precipitating from the corona.
+The previously discussed modern RHD codes are primarily designed to simulate the response of a tube of initially quiet solar atmosphere to heating, typically presumed to be due to a beam of energetic electrons precipitating from the corona.
 
 The direct effects of these electrons must also be considered, as their flux is sufficiently large that their collisions with particles in the lower atmosphere can substantially change the distribution of these particles, exciting and ionising them.
 The evolution of the atmosphere will also affect how and where it interacts with these precipitating electrons, coupling an additional problem to the extant RHD system.
 
 There are different methods of solving this problem, the simplest of which is the analytic solution of \citet{Emslie1978} which provides a simple analytic solution to beam energy deposition along the column under the assumption that all electron energy is lost due to Coulomb collisions with the plasma acting as a cold target.
-This is a useful approximate treatment, however effects such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module, whereas RADYN solves the Fokker-Planck equation \NeedRef{}, but both also include the option to use the simpler Emslie formulation.
+This is a useful approximate treatment, however effects such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module, whereas RADYN solves the Fokker-Planck equation, but both also include the option to use the the simpler analytic Emslie formulation.
 
 These simulations of flares therefore allow us to predict the line and continuum emission from the time-evolution of a starting atmosphere.
 These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,Kowalski2017,Simoes2017}).
 The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult and lies close to the field of automated inversions, which we will address later in Chapters~\ref{Chap:FlareObservations} and \ref{Chap:Radynversion}.
 
-\TODO{Need to couple here}
+\TODO{Alfven heating}
+
+\TODO{Need to flow into RT here}
 
 
 \section{Introduction to Radiative Transfer}
@@ -142,11 +144,12 @@ I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_
 for $\tau_0$ the optical depth at the observer and $\tau_1 > \tau_0$ along the line of sight.
 
 The solution in equation \ref{Eq:IntegratedRte} prescribes nothing about the form of the source function in the atmosphere, and assumes that it varies continuously.
-Whilst there are approaches such as Feautrier's \NeedRef{} that involve casting the problem as a second order differential equation we shall focus on the so-called short-characteristic method consisting of solving the RTE directly between discrete points by prescribing a functional form for its variation between these points. Due to the Feautrier method solving the problem for both an up-going and a down-going ray simultaneously, it cannot handle both Doppler shifts and overlapping lines, for these reasons, we will not discuss it further.
+Whilst there are approaches such as Feautrier's \citep{Feautrier1964} that involve casting the problem as a second order differential equation we shall focus on the so-called short-characteristic method consisting of solving the RTE directly between discrete points by prescribing a functional form for its variation between these points. Due to the Feautrier method solving the problem for both an up-going and a down-going ray simultaneously, it cannot handle both Doppler shifts and overlapping lines, for these reasons, we will not discuss it further.
 
 \subsection{Short-Characteristics Methods}\label{Sec:ShortChar}
 
 If a functional form with an analytic integral is chosen for the variation of the source function between defined points then an atmosphere can be treated as a sum of analytic integrals. We shall consider the simplest useful functional form, a linear variation as an illustrative example.
+This approach was first presented by \citet{Olson1987}.
 
 The RTE for one slab of a plane-parallel atmosphere (in the case of outgoing radiation (i.e. $\mu > 0$)) can then be written
 
@@ -444,7 +447,7 @@ Ignoring bulk plasma flows, the integrals over angle and frequency can then be s
 \section{Determining Numerical Convergence}
 \section{The \Lw{} Framework}
 
-\TODO{Fill me.}
+\TODO{Description of the structure of \Lw{}, its advantages, and validation.}
 
 
 
