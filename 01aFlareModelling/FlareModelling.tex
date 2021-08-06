@@ -20,31 +20,32 @@ chFlareModelling = texfigure.Manager(
 %     \item Numerical approaches to RT and RHD. (combined into the previous sections)
 % \end{itemize}
 
-Simulation is a powerful scientific approach that seeks both to validate our understanding of a phenomenon, and also learn how it is influenced by various parameters.
-Contrary to its dictionary definition, which suggests deceit or merely a surface level resemblance, simulations are powerful tools in an astrophysical context.
-Astrophysical observations differ greatly to laboratory observations, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat the event.
-Simulations represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
-Numerical simulations are often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
-There will commonly be free parameters left in these models.
-Some can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
+Simulation is a powerful scientific approach that seeks both to validate our understanding of a phenomenon and also learn how it is influenced by various parameters.
+Contrary to its dictionary definition, which suggests deceit or merely a surface level resemblance, simulations are essential tools in an astrophysical context.
+Astrophysical observations differ greatly from laboratory experiments, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat particular events.
+They represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
+A numerical approach is often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
+There will commonly be free parameters left in these models, some of which can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
 Due to computational or conceptual limitations simplifying assumptions are often required to make these models tractable.
 
-In the following we will describe the primary physical processes presumed to be at work in flares, and how these are modelled, including the primary approximations used.
+% In the following we will describe the primary physical processes assumed to be at work in solar flares, and how these are modelled, including the primary approximations used.
 
 
-\section{Modelling Flares and Observables}
+% \section{Modelling Flares and Observables}
 
 To design a model of solar flares it is first necessary to understand as much as possible from the available observations, so as to ascertain reasonable approximations and the most important processes to include.
-By the same, it is necessary to understand which observables vary from flare to flare, so as to understand their sensitivity and choose those that are sufficiently variable to describe the processes at work and distinguish between flares.
-A more detailed description of flare observations will be undertaken in Chap.~\ref{Chap:FlareObservations}.
+By the same, it is necessary to understand which observables between flares, to be able to exploit their specific sensitivities and choose those that are sufficiently variable to describe the processes at work and distinguish between flares.
+A more detailed description of flare observations and some of the ways these are exploited is undertaken in Chap.~\ref{Chap:FlareObservations}.
 
-\section{Radiation hydrodynamics}
+\section{Radiation Hydrodynamics}
 
 % In our discussion of radiative transfer thus far we have treated the thermodynamic structure of the atmosphere as something constant, however given the short timescales flares evolve over, we know that this is a poor approximation.
 
-It is common to treat a semi-ionised plasma as a single compressible fluid, obeying the equations of hydrodynamics. The influence of the magnetic field can also be included, at which point the equations of magnetohydrodynamics (MHD) are used to describe the motion of the fluid.
-Due to the complexity, and resultant numerical difficulties in investigating the widely varying spatial scales that occur in flares with a three-dimensional MHD treatment, it is common to use one-dimensional field-aligned hydrodynamic code.
-The assumption here is that as most observed fluid motions in a flare are along the magnetic field lines, then a single flaring loop can be approximated by a quasi-one-dimensional simulation describing the movement of a fluid through a tube, and the propagation of energy through this medium.
+It is common to treat flares as a semi-ionised plasma consisting of a single compressible fluid, obeying the equations of hydrodynamics. The influence of the magnetic field can also be included, at which point the equations of magnetohydrodynamics (MHD) are used to describe the motion of the fluid.
+Due to the complexity, and resultant numerical difficulties in investigating the widely varying spatial scales (the entire atmosphere, but requiring a dense sampling of the chromosphere and transition region) that occur in flares with a three-dimensional MHD treatment, it is common to use one-dimensional field-aligned hydrodynamic code.
+The assumption here is that the vast majority of observed fluid motions in a flare are along the magnetic field lines, so a single flaring loop can be approximated by a quasi-one-dimensional simulation describing the movement of a fluid through a tube, and the propagation of energy through this medium.
+This is due to the strength of the magnetic field, effectively locking the fluid within flux tubes to the field lines.
+These are therefore known as field-aligned radiation hydrodynamic codes.
 
 This gas dynamic system can be described by
 
@@ -60,52 +61,60 @@ where $\rho$ is the mass density of the gas, $v$ is the bulk velocity, $z$ is th
 In these models the plasma is typically assumed to behave as an ideal gas, and therefore uses the equation of state
 $P = n_{\mathrm{tot}} k_B T$, where $n_{\mathrm{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa=\kappa_0 T^{5/2}$ is the coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
 
-All of the quasi-one dimensional codes solve a variant the RHD equations in \eqref{Eq:RhdEquations}. The first of these described mass continuity, the second conservation of momentum, and the third conservation of energy.
+All of the quasi-one dimensional codes solve a variant the RHD equations in \eqref{Eq:RhdEquations}. The first of these describes mass continuity, the second conservation of momentum, and the third conservation of energy.
 The nuance typically occurs in ensuring that all terms are solved in a self-consistent fashion and the treatment of the optically thick radiation source and sink terms appearing in the energy equation.
 
 The first generation of hydrodynamic flare models \citet{Nagai1980,Mariska1982,McClymont1983} focused on capturing the gas dynamics of the flaring event, using simplified radiative treatment.
 These early models were much more limited in general due to computational constraints. \citet{Nagai1980} and \citet{Mariska1982} both employ optically thin losses with ad hoc corrections to avoid over-cooling the lower atmosphere.
-\citet{McClymont1983} employ an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer. Escape probability methods are also unable to take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for solar optical transitions.
+\citet{McClymont1983} employ an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer, but vastly more accurate than assuming the chromosphere to be optically thin (or an ad hoc modulation thereof).
+Escape probability methods are unable to take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for strong solar optical transitions used to diagnose atmospheric properties.
 
-The current generation of RHD codes consists of RADYN \citep{Carlsson1992,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses partially precomputed radiative rates for hydrogen (based on the treatment of Sollum \NeedRef{}) and radiative losses interpolated following the method of \citet{Carlsson2012}.
-HYDRAD originally aimed more at the investigation on non-equilibrium radiative losses in the corona, with less focus on the chromosphere than the other two, however, recent development has also moved in the direction of an improved chromospheric treatment.
+The current generation of RHD codes consists of RADYN \citep{Carlsson1992a,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2003, Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses partially precomputed radiative rates for hydrogen (based on the treatment of Sollum \NeedRef{}) and radiative losses interpolated following the method of \citet{Carlsson2012}.
+HYDRAD originally focused more on the investigation of non-equilibrium optically thin radiative losses in the corona, and less on the chromosphere, however, recent development has also moved in the direction of an improved chromospheric treatment.
+It also differs in its use of a two-fluid model, treating electrons and ions as separate, but coupled, fluids but in current applications this does not appear to provide significantly different results when applied to flare modelling.
 
 RADYN is derived from the MULTI RT code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
-RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \citet{Abbett1999} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment, in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on beam energy deposition \citep{Allred2005, Allred2015}.
+RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \citet{Abbett1999} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on electron beam energy deposition \citep{Allred2005, Allred2015}.
 
 
-FLARIX, on the other hand consists primarily of three separate modules. The hydrodynamics is solved by a variant of the NRL Solar Flux Tube Model described in \citet{Mariska1982,Mariska1989}, extended with a MALI module (considering non-overlapping lines with constant background continuum as described in \citet{Rybicki1991}) for detailed radiation transfer, and a test-particle code for determining heating and electron deposition \citep{Varady2010, Heinzel2015}.
+FLARIX, on the other hand consists primarily of three separate modules. The hydrodynamics is solved by a variant of the NRL Solar Flux Tube Model described in \citet{Mariska1982,Mariska1989}, extended with a MALI module (considering non-overlapping spectral lines with constant background continuum as described in \citet{Rybicki1991}) for detailed radiation transfer, and a test-particle code for determining heating and electron deposition \citep{Varady2010, Heinzel2015}.
 
 RADYN and FLARIX have recently been tested against each other and shown to provide remarkable agreement, despite their different heritage \citep{Kasparova2019}, and early tests also show good consistency with HYDRAD when enabling its recent extensions\footnote{Initial comparisons undertaken following the International Space Science Institute meeting: ``Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving'' led by G.S. Kerr and V. Polito.}.
 
-\section{An eye to the future: Radiative Magnetohydrodynamics}
+\section{An Eye to the Future: Radiative Magnetohydrodynamics}
 
-Much scientific effort is being invested into the creation of three-dimensional radiative MHD models, which aim to accurately describe all of the physics of a flaring system through the use of supercomputers. The two leading codes are \textit{Bifrost} \citep{Gudiksen2011}, and MURaM \citep{Rempel2009,Rempel2016}. MURaM was originally focused on photospheric magnetoconvection, but has been extended into the corona. It adopts a grey radiative transfer technique that treats all outgoing radiation as a single bin, but has successfully demonstrated the ability to drive self-consistent flare-like eruptions from time-dependent photospheric magnetograms \citep{Cheung2019}.
+Much scientific effort is being invested into the creation of three-dimensional radiative MHD (RMHD) models, which aim to accurately describe all of the physics of a flaring system through the use of large models on supercomputers. The two leading codes are \textit{Bifrost} \citep{Gudiksen2011}, and MURaM \citep{Rempel2009,Rempel2016}. MURaM was originally focused on photospheric magnetoconvection, but has been extended into the corona. It adopts a grey radiative transfer technique that treats all outgoing radiation using a wavelength averaged approach, but has successfully demonstrated the ability to drive self-consistent flare-like eruptions with time-dependent photospheric magnetograms as a boundary condition \citep{Cheung2019}.
 
-\textit{Bifrost} is more focused on a detailed chromospheric treatment, and currently uses multi-group opacities and the Sollum model for hydrogen \NeedRef{} to better treat the radiative losses from this region.
-It has been used to investigate solar enhanced networks \citep{Carlsson2016}, the generation of spicules \citep{Martinez-Sykora2017}, and magnitude of magnetic energy present in the chromosphere \citep{Martinez-Sykora2019}.
+\textit{Bifrost} is more focused on a detailed chromospheric treatment; it currently uses multi-group opacities for wavelength dependent radiation transport and the Sollum model for hydrogen \NeedRef{} to better treat the radiative losses from this region.
+It has been used to investigate solar enhanced networks \citep{Carlsson2016}, the generation of spicules \citep{Martinez-Sykora2017}, and the magnitude of magnetic energy present in the chromosphere \citep{Martinez-Sykora2019} \TODO{Should probably reference the 2021 Martinez-Sykora on spicules too}.
 
-Currently, neither code simultaneously handle the raw energy injection investigated in the field-aligned flare models on an equivalent spatial resolution, or providing equivalent diagnostics, but this is an area of very active development.
+Currently, neither code can handle the scale of the energy deposition used in the field-aligned flare models, or provide an equivalent chromospheric spatial resolution, but this is an area of very active development.
+The field-aligned models remain complementary to these much more complex and computationally intensive models allowing for more rapid investigation of the relative importance of phenomena to be implemented within the RMHD models, the use wider parameter spaces and higher energy inputs, whilst also remaining usable by smaller teams of researchers.
 
 
 \section{Solar Flare Heating}
 
-The previously discussed modern RHD codes are primarily designed to simulate the response of a tube of initially quiet solar atmosphere to heating, typically presumed to be due to a beam of energetic electrons precipitating from the corona.
+The aforementioned modern field-aligned RHD codes are primarily designed to simulate the response of a tube of initially quiet solar atmosphere to heating, typically presumed to be due to a beam of energetic electrons precipitating from the corona due to magnetic reconnection.
 
 The direct effects of these electrons must also be considered, as their flux is sufficiently large that their collisions with particles in the lower atmosphere can substantially change the distribution of these particles, exciting and ionising them.
 The evolution of the atmosphere will also affect how and where it interacts with these precipitating electrons, coupling an additional problem to the extant RHD system.
 
-There are different methods of solving this problem, the simplest of which is the analytic solution of \citet{Emslie1978} which provides a simple analytic solution to beam energy deposition along the column under the assumption that all electron energy is lost due to Coulomb collisions with the plasma acting as a cold target.
-This is a useful approximate treatment, however effects such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module, whereas RADYN solves the Fokker-Planck equation, but both also include the option to use the the simpler analytic Emslie formulation.
+There are different methods of solving this problem, the simplest of which is the analytic solution of \citet{Emslie1978} which provides a simple solution to beam energy deposition along the column of plasma under the assumption that all electron energy is lost due to Coulomb collisions with the plasma acting as a cold target.
+This is a useful approximate treatment, however terms such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here, and ignored in this model. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module \NeedRef{}, whereas RADYN solves the Fokker-Planck equation \citep[e.g.][]{Hamilton1990}, but both also include the option to use the the simpler analytic Emslie formulation.
 
-These simulations of flares therefore allow us to predict the line and continuum emission from the time-evolution of a starting atmosphere.
-These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,Kowalski2017,Simoes2017}).
+Another proposed model for the energy transport and heating in flares is Alfvén heating \citep{Emslie1982, Fletcher2007}, which suggests that energy is transported by Alfvén waves\footnote{These  are transverse waves that propagate along the magnetic field \citep{TandbergHanssen1988}.} from the corona to the denser layers at the base of a flaring loop where electrons are locally accelerated.
+One argument for this is the so-called ``number problem'' which expresses the difficulty in resupplying the acceleration site in the low density coronal plasma with sufficient electrons to reflect the number observed at their chromospheric impact (this number can be bounded from hard X-ray observations \citep[e.g.][]{Simoes2013}).
+The denser regions closer to the electrons' impact location do not suffer from this same scarcity of electrons, and thus represent a possible resolution to this problem.
+
+A simplified variant of this Alfvénic heating model has been investigated by \citet{Kerr2016} inside the \Radyn{} code, and produced notably different spectral line profiles which may agree better with observations than those from an electron beam model, however further investigation of the implementation of this method and its results are needed.
+This approach was also incorporated into HYDRAD by \citet{Reep2016}, which showed the viability of these waves heating the deep chromosphere and triggering explosive chromospheric evaporation.
+It is non-trivial to incorporate a full treatment of this phenomenon into RHD codes as it is coupled to the magnetic field, and future improvements are needed to more accurately model these effects and investigate to what extent Alfvénic and electron beam heating occurs simultaneously.
+
+The simulations of flares discussed here allow us to predict the line and continuum emission from the time-evolution of heating a starting atmosphere.
+These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,RubioDaCosta2016,Kowalski2017,Simoes2017}).
 The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult and lies close to the field of automated inversions, which we will address later in Chapters~\ref{Chap:FlareObservations} and \ref{Chap:Radynversion}.
 
-\TODO{Alfven heating}
-
-\TODO{Need to flow into RT here}
-
+We will now present a more detailed overview of the physics involved in the most important terms of the RHD equations \eqref{Eq:RhdEquations}, starting with complexities of radiative transfer outside of local thermodynamic equilibrium.
 
 \section{Introduction to Radiative Transfer}
 
@@ -122,7 +131,7 @@ In addition to the obvious spontaneous emission and absorption processes, there 
 
 In the following we will discuss how to obtain the frequency- and direction-dependent outgoing radiation given the emissivity and opacity of the plasma, and how to obtain a self-consistent radiation field and populations for the atomic species outside of the approximations of local thermodynamic equilibrium.
 
-\section{The Formal Solution}
+\subsection{The Formal Solution}
 
 For a one-dimensional planar atmosphere the radiative transfer equation (RTE) can be written as
 \begin{equation}
@@ -181,11 +190,11 @@ All of these methods can be derived analagously to the linear formal solver pres
 
 \subsection{Other Formal Solvers}
 
-\citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. Most inversions use fewer than 7 nodes in each atmospheric parameter, and the modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
-As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed.
+\citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
+As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed, but such an accurate treatment of steep gradients and discontinuities is important to all RT modelling, as a reduction in the necessary spatial resolution can lead to significant reductions in computational requirements, making more complex simulations possible.
 
 
-\section{LTE vs NLTE}
+\subsection{LTE vs NLTE}
 
 With the formal solvers discussed in the previous section, and knowledge of the emissivity and opacity throughout an atmospheric model, the outgoing radiation can be computed directly. As the emissivity and opacity of the plasma depend primarily on the atomic level populations, knowledge of these is sufficient for computing the radiation.
 This is the case if the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, for example in the photosphere. The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not know \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.} On a microscopic view, LTE occurs when the atomic processes are in detailed balance (i.e. for every transition there is an equivalent opposing transition).
@@ -326,7 +335,7 @@ Taking the example of the linear short characteristic formal solver presented in
 \end{equation}
 The approximate operator can be computed analogously for other formal solvers.
 
-\section{Solving the multilevel NLTE problem}
+\subsection{Solving the multilevel NLTE problem}
 
 Starting from the radiative transfer equation \eqref{Eq:1DRte} and the kinetic equilibrium equation \eqref{Eq:KinEq} we can construct a framework with which to solve the multilevel NLTE problem. We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, and present the problem in statistical equilibrium, although it generalises directly to non-zero left-hand sides on \eqref{Eq:KinEq}.
 
@@ -380,9 +389,9 @@ for $l\neq l^\prime$. The problem is now represented by a system of linear equat
     \Gamma_{ll} = -\sum_{m\neq l} \Gamma_{ml}.
 \end{equation}
 
-Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework. More detail on the implementation are provided in the associated technical report \NeedRef{} and in the documentation \NeedRef{}.
+Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework. More detail on the implementation are provided in the associated technical report \citep{Osborne2021} and in the documentation \NeedRef{}.
 
-\section{Time-Dependent Population Updates}
+\subsection{Time-Dependent Population Updates}
 
 As discussed previously an update to the populations solving for statistical equilibrium can be phrased as $\Gamma \vec{n} = \vec{0}$. A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations. We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere).
 We can, however, discretise $\partial n / \partial t = \Gamma \vec{n}$ as
@@ -398,13 +407,13 @@ $\vec{n}^{t+1}$ can then be found by rewriting \eqref{Eq:ThetaDisc} as
 \end{equation}
 with $\mathbb{I}$ the identity matrix, and iterating until $\vec{n}^{t+1}$ converges, for a new evaluation of $\Gamma^{t+1}$ at each iterate.
 
-\section{Collisional Rates}
+\subsection{Collisional Rates}
 
 There are many collisional processes by which electrons can transition between levels in a plasma, including ionisation and recombination processes. These include excitation of ions by electrons, ionisation and excitation of neutral by electrons, excitation by protons and neutral hydrogen, as well as charge exchange with these species. There are other more advanced formulations too. Typically these are all empirical functional fits from laboratory and observational data, and are simply provided in a tabulated form. They are assumed to only depend on local plasma properties, such as the temperature, total particle density and electron density.
 
 \NeedRef{}
 
-\section{Partial Frequency Redistribution}
+\subsection{Partial Frequency Redistribution}
 
 Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds. That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission. In this case the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal. In lower density regions with strong (typically resonance) lines, where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level; a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
 In this case the emission and absorption profiles for the line differ and this coherent scattering must be treated explicitly. This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into MALI following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
@@ -444,7 +453,12 @@ as per \citet{Gouttebroze1986} and \citet{Uitenbroek1989} wherein fast approxima
 
 Ignoring bulk plasma flows, the integrals over angle and frequency can then be split, providing an angle-averaged form of $\rho$ that is much easier to compute. The hybrid PRD method of \citet{Leenaarts2012} provides an approximate solution to the angle-dependent PRD problem with bulk flows, by interpolating the radiation field to the rest frame of the plasma where this simpler form approximately holds.
 
-\section{Determining Numerical Convergence}
+\subsection{Charge Conservation}
+\subsubsection{Statistical Equilibrium}
+\subsubsection{Time-Dependent}
+
+\subsection{Determining Numerical Convergence}
+
 \section{The \Lw{} Framework}
 
 \TODO{Description of the structure of \Lw{}, its advantages, and validation.}
@@ -452,7 +466,7 @@ Ignoring bulk plasma flows, the integrals over angle and frequency can then be s
 
 
 \section{Introduction to Hydrodynamics and Conservation Laws}
-\emph{The majority of the basic theory in this section follows the two texts by Leveque \NeedRef{}}
+\emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997}}
 
 In the previous sections we have explained the basis of the radiative transfer methods used throughout this work.
 The difficulty in radiative transfer primarily lies in the nuance of the various integration terms.
@@ -685,7 +699,7 @@ It is tempting to attempt to estimate the value of $q$ at cell interfaces with h
 The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under- or over-shoots to the data.
 This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
 If the current cell is an extremum then the slope is set to 0.
-Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as Leveque \NeedRef{}.
+Different slope-limiters have been designed and present different trade-offs in terms of accuracy in smooth regions against the risk of introducing spurious oscillations in the solution, these are discussed at length in introductory texts, such as \citet{LeVeque1997}.
 This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
 
 There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984} providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
@@ -749,7 +763,7 @@ A commonly used approach that is second order is known at Strang splitting \cite
 This method can provide second-order accuracy.
 Many more advanced splitting procedures have been developed, but Strang splitting remains widely used due to its ease of implementation.
 
-LeVeque \NeedRef{} comments that in many situations the first-order splitting described above performs better than would be commonly expected from its formal first-order accuracy.
+\citet{LeVeque1997} comments that in many situations the first-order splitting described above performs better than would be commonly expected from its formal first-order accuracy.
 This is because the errors introduced are equivalent to solving the problem at a slightly different time, differing by up to a single timestep.
 Whilst this renders the method first-order accurate, the quality of the solution is still primarily controlled by the quality of the methods used to solve the subproblems, and this exceedingly simple splitting scheme can often be applied with no problems.
 

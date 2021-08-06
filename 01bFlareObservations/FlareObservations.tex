@@ -333,8 +333,8 @@ It is common to allow line-of-sight velocity as a parameter, which technically v
 Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
 The integral approach of \citep{Metcalf1990a} was also applied to flares and differs from the others discussed here, and constructs a matrix of kernels which is solved for temperature and electron density perturbations using a regularised method.
 The kernels presented cannot capture the complete response to perturbations in parameters affecting NLTE spectral lines without an approach that can find the new source function (which can be affected non-locally).
-A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, that would need to be compared against SNAPI for both quality of solution and performance.
-It is likely that both methods perform similarly as SNAPI's differential formal solver has commonalities with the kernels presented by \citet{Metcalf1990a}, but it is possible that one of the two methods has advantages in stability of solution.
+A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, but would likely be found lacking due to the small perturbation range of validity of the kernel functions, requiring a starting atmosphere that matches the observed spectrum quite well, due to the first order nature of this method.
+
 
 \subsection{Forward Modelling}
 

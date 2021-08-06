@@ -233,7 +233,7 @@ However, limiting \Radyn{}'s performance is a poor solution to this problem; the
 To improve the agreement with \Radyn{}, reduce the number of interpolations, and leverage rather than fight its adaptive grid we instead decided to apply its technique for advection, but keep it separate from the radiative transfer.
 Thus, at the start of each timestep we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
 This method employs a variant of the second order spatially accurate method of \citet{VanLeer1979} to reconstruct the values on either side of the interface, of which the upwind value is chosen.
-This is set within a time-centering scheme similar to that described in Dorfi \NeedRef{}.
+This is set within a time-centering scheme similar to that described in \citet{A.Dorfi1997}.
 Under this scheme the advection stencil depends on the values of five cells, two on either side of the current one.
 Thus the Jacobian matrix for this equation is pentadiagonal (and block pentadiagonal for the system of ODEs).
 For simplicity and ease of implementation we chose to not directly code the expressions for these derivatives that occur in the Jacobian matrix, but instead compute them by finite differences.
@@ -1041,12 +1041,21 @@ For a parameter $q$, measured in units of Q, and specific intensity in units of 
 In the time-dependent case, we can further divide by the timestep used to obtain a response function in units of $\mathrm{I}\,\mathrm{Q}^{-1}\,\mathrm{s}^{-1}$.
 As previously stated, care must be taken with extrapolating quantitative variations of outgoing intensity from the time-dependent response function, but in both cases the simple units present allow for easy comparison of the magnitude of the line's response to different effects.
 
-The method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
-These properties were chosen due to the most common choices for response functions are temperature, velocity, electron density, microturbulent velocity and magnetic field.
-The last three of these are not free parameters in the model presented here.
+This method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
+These properties were chosen due as they important relatively free parameters in the system.
+It is also common to compute the response functions to electron density, microturbulent velocity and magnetic field, however these parameters are either not considered or truly free.
 Following \Radyn{}, the microturbulence is assumed to be constant both in time and throughout the atmosphere, and this model does not consider any effects of the magnetic field.
 The electron density is dependent on the rest of the atmosphere through charge conservation, and is therefore not a free parameter.
-Our contribution are response functions are shown in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
+We note that the radiative response to the electron density could likely be computed using the method \citet{Metcalf1990a} who present the following method for computing the response to electron density $n_e$
+\begin{equation}
+    \frac{\partial I}{\partial n_e} = \left( \frac{dI}{dT} - \frac{\partial I}{\partial T} \right)\left( \frac{d n_e}{dT} \right)^{-1},
+\end{equation}
+where these terms are defined as follows, the total derivative of $I$ with respect to $T$ can be computed from computing the response with charge conservation enabled, the partial derivative of $I$ with respect to $T$ from computing the response with $n_e$ fixed, and the derivative of $n_e$ with respect to $T$ can simply be computed from the change in $n_e$ during computation of the response function with charge conservation.
+This method was originally presented for computing the response of an intermediate parameters such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.
+In the context of inversions, this is very useful, however our RHD models should remain self-consistent.
+Nevertheless, this could be useful for interpretation, but is $\sim2$x more computationally costly than other parameters due to the requirement of additional derivatives.
+
+Our contribution and response functions are shown in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
 All of the response functions shown in these plots were computed with a timestep of \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
 In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
 The shape of the temperature response function is immediately recognisable as similar to the contribution function shown in the first column.
@@ -1084,7 +1093,7 @@ Similarly \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$
 
 It is therefore important to assess the importance of a time-dependent treatment of \Caii{} in solar flare models.
 In the following, we shall briefly summarise our investigation of the importance of treating \Caii{} with time-dependence in the RHD model used for the comparison of the \Radyn{} and FLARIX codes presented in \citet{Kasparova2019}.
-This simulation utilises a set of features common to both codes, considering only hydrogen and calcium in detailed radiative transfer, and using an analytic ``Emslie'' beam formalism \NeedRef{} (Hawley \& Fisher 1994).
+This simulation utilises a set of features common to both codes, considering only hydrogen and calcium in detailed radiative transfer, and using an analytic ``Emslie'' beam formalism.
 The beam flux is modulated to have a symmetric triangular time profile, lasting \SI{20}{\second} and peaking at \SI{10}{\second} depositing a total of \SI{1e8}{\joule\per\square\metre} \footnote{\SI{1e11}{\erg\per\square\centi\metre}}.
 A spectral index of 3 and low-energy cut-off of \SI{20}{\kilo\electronvolt} was also chosen, and similarly to the models shown previously the initial atmosphere was based on the VAL3C model of \citet{Vernazza1981}.
 
