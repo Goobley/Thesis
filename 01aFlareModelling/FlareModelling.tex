@@ -173,7 +173,8 @@ Now, assuming a linear variation of $S$ with $\tau$ in this slab gives
     S(t) = S_{\tau_0} \frac{\tau_1-t}{\tau_1-\tau_0} + S_{\tau_1} \frac{t-\tau_0}{\tau_1-\tau_0},
 \end{equation}
 
-which can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau_1 - \tau_0$) giving
+where $S_{\tau_i}$ indicates the value of the source function at optical depth $\tau_i$.
+This can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau_1 - \tau_0$) giving
 
 \begin{equation}
     I(\tau_0) = I(\tau_1) \exp(- |\tau_1 - \tau_0|) +
@@ -181,24 +182,27 @@ which can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \ta
     \frac{1 - \exp(-\Delta) - \Delta\exp(-\Delta)}{\Delta} S_{\tau_1}.
 \end{equation}
 
-In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, it overestimates intensity, and underestimates it for negative curvature. These effects can become quite significant in more sparsely sampled atmospheres.
+In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, the intensity is overestimated, and underestimated for negative curvature. These effects can become quite significant in more sparsely sampled atmospheres.
 
 The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust alternative is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three point stencils, but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
 
-Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER second order approach of \citet{Stepan2013}.
+Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
 All of these methods can be derived analagously to the linear formal solver presented above.
 
 \subsection{Other Formal Solvers}
 
 \citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
-As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed, but such an accurate treatment of steep gradients and discontinuities is important to all RT modelling, as a reduction in the necessary spatial resolution can lead to significant reductions in computational requirements, making more complex simulations possible.
+As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed, but an accurate treatment of steep gradients and discontinuities is important to all RT modelling, as a reduction in the spatial resolution needed to correctly evaluate radiative transfer can lead to significant reductions in computational requirements, making more complex simulations possible.
 
 
 \subsection{LTE vs NLTE}
 
-With the formal solvers discussed in the previous section, and knowledge of the emissivity and opacity throughout an atmospheric model, the outgoing radiation can be computed directly. As the emissivity and opacity of the plasma depend primarily on the atomic level populations, knowledge of these is sufficient for computing the radiation.
-This is the case if the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, for example in the photosphere. The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not know \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.} On a microscopic view, LTE occurs when the atomic processes are in detailed balance (i.e. for every transition there is an equivalent opposing transition).
+\TODO{Rewrite from here}
 
+With the formal solvers discussed in the previous section, and knowledge of the emissivity and opacity throughout an atmospheric model, the outgoing radiation can be computed directly. As the emissivity and opacity of the plasma depend primarily on the atomic level populations, knowledge of these is sufficient for computing the radiation.
+This is the case if the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, for example in the photosphere. The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
+
+\TODO{https://science.sciencemag.org/content/132/3429/707}
 Unfortunately, the LTE description is inadequate, as discussed by Jefferies and Thomas \NeedRef{}, and everything outside of this is termed non-LTE (NLTE). In fact, due to the detailed balance of an LTE treatment, if detailed balance applied throughout the stellar atmosphere, no radiation would be able to escape. As photons are able to escape from the upper layers of the atmosphere, there is insufficient absorption processes to balance the emission processes and these layers must be NLTE. This is particularly clear for the chromosphere and transition region where a non-monotonic temperature gradient could not arise if the atmosphere were in LTE.
 Departures from an LTE description of the plasma are therefore expected when the radiative rates become comparable or larger than the collisional rates, and where the radiation field is not black-body like.
 We distinguish here, and in the following, between radiative transitions (due to spontaneous emission and absorption, and stimulated emission), and collisional transitions (due to collisions between particles).
@@ -391,7 +395,7 @@ for $l\neq l^\prime$. The problem is now represented by a system of linear equat
 
 Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework. More detail on the implementation are provided in the associated technical report \citep{Osborne2021} and in the documentation \NeedRef{}.
 
-\subsection{Time-Dependent Population Updates}
+\subsection{Time-Dependent Population Updates}\label{Sec:TimeDepPopUpdates}
 
 As discussed previously an update to the populations solving for statistical equilibrium can be phrased as $\Gamma \vec{n} = \vec{0}$. A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations. We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere).
 We can, however, discretise $\partial n / \partial t = \Gamma \vec{n}$ as
@@ -469,12 +473,12 @@ Ignoring bulk plasma flows, the integrals over angle and frequency can then be s
 \emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997}}
 
 In the previous sections we have explained the basis of the radiative transfer methods used throughout this work.
-The difficulty in radiative transfer primarily lies in the nuance of the various integration terms.
+The difficulty in radiative transfer primarily lies in the nuance of implementing the various integration terms.
 To provide a clear understanding of RHD we also need a numerical description of hydrodynamics, and an explanation of solving the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
 
-The scalar radiative transfer equation, solved via the formal solver (presented in the previous chapter) is a good example of an ordinary differential equation.
+The scalar radiative transfer equation, solved via the formal solver is a good example of an ordinary differential equation.
 It is relatively easy to solve via a variety of methods, typically striving for a balance of speed, reliability, and accuracy.
-In general, PDEs are difficult to solve numerically in a general way.
+Unfortunately, PDEs are difficult to solve numerically in a general way.
 
 A generic second-order PDE of a quantity $q$ depending on two independent variables $x$ and $y$ can be written as
 \begin{equation}
@@ -497,9 +501,9 @@ There is an inherent assumption that the flux function is local, and acts only o
 
 Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant in time.
 This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
-The simplest equation of this form is advection, which simply arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $u$ as
+The simplest equation of this form is advection, which arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $v$ as
 \begin{equation}\label{Eq:Advection}
-    \rho_t + (\rho u)_x = 0.
+    \rho_t + (\rho v)_x = 0.
 \end{equation}
 
 The advection equation can be augmented with two further equations to form the Euler equation set.
@@ -508,24 +512,25 @@ Together they describe the evolution of ideal fluids.
 The complete set is written
 \begin{equation}\label{Eq:EulerEqns}
 \begin{split}
-    \rho_t + (\rho u)_x &= 0,\\
-    (\rho u)_t + (\rho u^2 + p)_x &= 0,\\
-    E_t + (u(E + p))_x &= 0,
+    \rho_t + (\rho v)_x &= 0,\\
+    (\rho v)_t + (\rho v^2 + p)_x &= 0,\\
+    E_t + (v(E + p))_x &= 0,
 \end{split}
 \end{equation}
 where $E$ is the total energy and $p$ is the gas pressure.
+This system is already recognisable as the simplified roots of the RHD equations.
 As our three conserved quantities are the mass density, momentum density, and energy, the pressure must be expressed as a combination of these so as to be able to write this system in the form of \eqref{Eq:ConsLaw}.
 The simplest way to achieve this is to use the equation of state for an ideal gas
 \begin{equation}
-    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho u^2.
+    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho v^2.
 \end{equation}
-Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, as considered in the case of solar plasma.
+Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, typically assumed in the case of solar plasma.
 
 The Euler equations \eqref{Eq:EulerEqns} describe the evolution of an ideal fluid without any energy losses.
 In practice we often need to model some loss terms.
 Ignoring radiative effects for now, the most important of these is heat conduction\footnote{In the plasmas considered here there is additional nuance to heat conduction, which we will return to in Sec.~\ref{Sec:NumericalConduction}.}, which is typically described by parabolic equations.
 This adds a second spatial derivative term to the right-hand side of the energy conservation equation.
-It is also common to need source and sink terms when modelling real world problems, these can account for fluids entering and leaving a volume, the non-local emission and absorption of energy, or simply the effects of gravity.
+It is also common to need source and sink terms when modelling real world problems; these can account for fluids entering and leaving a volume, the non-local emission and absorption of energy, or simply the effects of gravity.
 These terms are also added to the right-hand side of the equations of \eqref{Eq:EulerEqns}, and together with the effects of viscosity, these describe the Navier-Stokes equations.
 
 \subsection{Numerical Approaches}
@@ -536,7 +541,7 @@ The local gradient of the conserved quantities can then be estimated from pointw
 This method can be applied to discrete problems in both space and time.
 Applying a basic one-sided method to the advection equation \eqref{Eq:Advection} gives
 \begin{equation}\label{Eq:FdmAdvection}
-    \frac{q^{t+1}_i - q^t_i}{\Delta t} + u\left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
+    \frac{q^{t+1}_i - q^t_i}{\Delta t} + v\left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
 \end{equation}
 where the subscript refers to the location of the conserved quantity, the superscript the discrete timestep, with $\Delta x$ and $\Delta t$ being the local grid spacing and timestep duration respectively.
 
@@ -547,7 +552,7 @@ It is better to locally use the formulation such that information from points ``
 In this sense the information used to update points is following the fluid flow.
 Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the approximate value of the quantity at the next timestep,
 \begin{equation}
-    q^{t+1}_i = q^t_i - \frac{u \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
+    q^{t+1}_i = q^t_i - \frac{v \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
 \end{equation}
 
 This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
@@ -652,7 +657,7 @@ Without loss of generality this discontinuity can be placed at $x=0$, and the va
 A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics, is that of the Sod shock tube \citep{Sod1978}.
 The problem is a single Riemann problem, with gas at a different pressure and density on each side of a membrane.
 At $t=0$ the membrane is removed, and multiple waves with different velocities are launched in both directions.
-A solution to the classic Sod shock tube with states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
+A solution to the classic Sod shock tube with initial states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
 At this time, a complex pressure and density structure has formed in the shock tube.
 The Riemann problem is often considered in terms of the propagating waves.
 In Fig.~\ref{Fig:RiemannFan} we show the same density profile, but divided into regions by black lines, with grey lines showing a time-distance plot of the different waves in the system.
@@ -669,11 +674,11 @@ From analysis of the Jacobian of the flux function of the Euler equations, the s
 There are three waves, associated with the eigenvalues of this Jacobian.
 The contact discontinuity propagates at the fluid velocity $u$ (as the fluid expands into the low density region), the other two eigenvalues are $u\pm c_s$, where $c_s$ is the sound speed of the fluid.
 Unfortunately these waves are non-linear and do not necessarily propagate at the characteristic velocity given by their associated eigenvalue.
-Instead it is necessary to apply the Rankine-Hugoniot jump conditions, at both the shock front and the contact discontinuity (given that the pressure and velocity do not vary across the latter), and solve the resultant transcendental equation to determine the parameters of regions $\gamma$ and $\delta$.
+Instead it is necessary to apply the Rankine-Hugoniot jump conditions, at both the shock front and the contact discontinuity, and solve the resultant transcendental equation to determine the parameters of regions $\gamma$ and $\delta$.
 These problems can be solved using iterative methods and knowledge of the expected wave form of the solution.
 
 As the complexity of the system and the equation of state increases, it becomes harder (or impossible) to compute this solution in an efficient manner.
-Fortunately, it is rarely necessary to compute the exact solution to the Riemann problem, but it is important to understand the the structure originating from this simple case to interpret and validate the numerical methods described later.
+Fortunately, it is rarely necessary to compute the exact solution to the Riemann problem as many efficient approximate solvers exist, but it is important to understand the the structure originating from this simple case to interpret and validate the numerical methods described later.
 
 % N.B. The characteristic of a system like this is a line for which the the solution q is constant. i.e. for advection this is x(t) = x0 + ut
 % For linear systems we can transform to characteristic variables, for which the coefficient matrix is diagonal and we have a system of independent scalar advection equations.
@@ -709,7 +714,7 @@ WENO methods were first proposed by \citet{Liu1994}, and formalised for arbitrar
 These methods form a convex combination of polynomials over overlapping regions.
 For example, in the case of the commonly used fifth-order WENO method of \citet{Jiang1996}, three parabolae are constructed over five adjacent points, i.e. the first uses the stencil $\{x_1, x_2, x_3\}$ the second $\{x_2, x_3, x_4\}$, and the third $\{x_3, x_4, x_5\}$.
 We can equivalently define a fifth-order polynomial over the stencil $\{x_1, \ldots, x_5\}$, which can also be written as a linear combination of our interpolating parabolae at each point in this region.
-These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities or similar effects.
+These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities.
 
 The process of computing these initial interpolating functions is somewhat complex due to the finite volume framework often applied in hydrodynamics.
 These should be computed such that the integral over the interpolating polynomial in each cell is close to the average value, rather than simply taking it as a pointwise value.
@@ -721,7 +726,7 @@ The WENO method has been extended many times to provide increased accuracy or me
 
 \subsection{Numerical Fluxes}
 
-Whilst there are many approximate Riemann solvers that can accurately and efficiently solve the Riemann problems arising from the Euler equations including the addition of source terms, it does not appear feasible to express the evolution of the RHD system in this way.
+Whilst there are many approximate Riemann solvers that can accurately and efficiently solve the Riemann problems arising from the Euler equations including the addition of source terms, it does not appear feasible to express the evolution of the entire RHD system in this way.
 Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces is used.
 For implicit methods we can instead use a Newton iterative scheme to minimise the residual of the discretised conservation law across the cell interfaces with the fluxes typically computed from the upwind value of the reconstructed parameter.
 
@@ -735,7 +740,7 @@ This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{R
 Here $q_i^L$ and $q_i^R$ represent the left and right hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
 Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.
 General symmetric fluxes like this are simple and efficient, but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
-This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available, a specialised Riemann solver for the current problem is likely a better choice.
+This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available, a specialised Riemann solver for the current problem is often a better choice.
 
 \subsection{Time Integration and Stability}\label{Sec:HydroStability}
 
@@ -797,11 +802,12 @@ As part of further investigation, work is currently under way to integrate these
 
 We have provided an overview of the commonly used techniques for simulating solar flares and the observable radiation produced from these events.
 The core components of radiative transfer, hydrodynamics, and heat conduction have been discussed in depth, along with an overview of the numerical treatments of these terms.
-Whilst there are other important terms in the RHD equations, such as the beam used for heating the model, these represent the core of any flare simulation.
+Whilst there are other important terms in the RHD equations, such as the heating model, these represent the core of any flare simulation.
 
 We have also presented a description and validation of the \Lw{} radiative transfer framework and the intentions behind its design.
 Frameworks can substantially enhance productivity, and enable the construction of specialised tools without the need to focus on the implementation or performance of the common core of dense numerical code shared by programs of this style.
-The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of python can yield a tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
+The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of python can yield tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
 
 Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations.
-It is likely that these limitations will be significantly reduced in the coming 1-2 decades as computing power and numerical techniques improve, however before this can happen there are individual components of this larger treatment that can be evaluated (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{} based experiments.
+It is likely that significant progress will be made on these limitations in the coming 1-2 decades as computing power and numerical techniques improve.
+In the meantime, we can undertake numerical experiments to evaluate individual components of these larger treatments (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{} based experiments.

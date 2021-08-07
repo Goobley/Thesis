@@ -105,7 +105,7 @@ chRT = texfigure.Manager(
 %     \item Another item - PRD is hard?
 % \end{itemize}
 
-Modern Radiation Hydrodynamic (RHD) codes are highly complex, and contain many specialised features as discussed in the previous chapter.
+Modern Radiation Hydrodynamic (RHD) codes as described in Chap.~\ref{Chap:FlareModelling} are highly complex, and contain many specialised features.
 In the following discussion we will focus primarily on \Radyn{}, the most widely used code of its ilk, and how using additional tools can facilitate new avenues of investigation.
 
 \section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
@@ -113,31 +113,30 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 \emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
 \Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code \citep{Carlsson1992} and many commonalities remain.
-NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant level population balance equations.
+NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant kinetic equilibrium equations.
 This method is designed to solve the problem of non-overlapping lines but including an underlying background continuum.
-This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
-This approach also assumed the use of a local diagonal $\Lambda^*$ operator, as discussed in the previous chapter.
-\Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
+This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep[i.e. MALI, ][]{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
+Their analysis assumed the use of a local diagonal $\Lambda^*$ operator; \Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
 It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but the two methods will no longer arrive at exactly equivalent numerical formulations.
 \Radyn{} also uses an efficient Feautrier formalism for its formal solver, which solves for both the up- and down-going rays simultaneously but cannot handle both overlapping lines and Doppler shifts.
 There are no lines with significant overlap considered in the standard model atoms used in \Radyn{}, and continuum emissivities and opacities rarely change sufficiently over the wavelength range of a line to need to be considered in a wavelength varying sense.
 This is likely fair trade-off for \Radyn{} given the computational benefits it can bring.
 
-The advantage of the linearisation approach in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
+The advantage of the linearisation approach applied in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
 Taking for example the kinetic equilibrium equation \eqref{Eq:KinEq}, \Radyn{}'s method formulates this expression such that the corrections from both the advection and population transition terms are considered simultaneously.
 This is achieved through the use of a Newton-Raphson method, where the Jacobian is computed based on an analytic derivation, including the aforementioned linearisation of the kinetic equilibrium equations.
-This same process simultaneously solves for the population updates, heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid of \citet{Dorfi1987}.
+This same process simultaneously solves for the population updates, heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid following the method of \citet{Dorfi1987}.
 
 A significant benefit of this implicit approach is a relaxation of the timestep constraints present in explicit approaches.
 This is particularly important when considering the very fine grid spacing often required by the dynamic grid, which, combined with the large bulk velocities occurring in flares can lead to extremely oppressive timestep constraints.
 
 Despite its elegance, there are several major downsides to this implicit approach.
 Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically derived and correctly computed.
-This presents a very large barrier to entry for future developments on the platform, and this is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
+This presents a very large barrier to entry for future developments on the platform, and is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
 Additionally, implicit codes, whilst having less severe timestep constraints, are typically much more costly per timestep than explicit codes.
 This is somewhat offset by the majority of the cost of each step residing within the formal solver, which remains similar in both cases.
 The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
-On these scales the assumptions that allow us to treat the plasma as an ideal fluid begin to break down.
+On these scales the assumptions that allow us to treat the plasma as an ideal fluid begin to break down, and due to the fixed number of grid points used, spatial accuracy is reduced elsewhere in the simulation.
 
 \Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and these comments merely intend to highlight avenues for future development within the field of RHD.
 As the different applications of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
@@ -150,7 +149,7 @@ In the following we focus on reprocessing aspects of the radiative transfer of p
 \section{Minority Species Modelling}
 
 For flares, \Radyn{}'s primary focus is on the major spectral lines and continua of hydrogen, helium, and calcium.
-These typically represent the bulk of the radiative energy lost in the chromosphere.
+These typically represent the bulk of the radiative energy lost from the chromosphere.
 Singly ionised magnesium has also been shown to be an important contributor to these energy losses, however the h and k lines require a treatment including PRD to avoid significantly overestimating their losses.
 The \Caii{} H and K lines are also somewhat affected by PRD, in addition to the hydrogen Lyman lines.
 For the Lyman lines we will discuss several strategies for approximating this treatment, and for \Caii{} H and K, it has been suggested that considering these in CRD approximately accounts for the lack of Mg\,\textsc{ii} h and k if all of these transitions were treated with PRD \citep{Kerr2019a}.
@@ -160,12 +159,12 @@ For example, Si\,\textsc{iv} optical thickness has been investigated in a minori
 An element treated as a ``minority species'' is assumed to not interact significantly with the energy balance of the simulation (i.e. the thermodynamic response of the model does not change significantly if this species is subject to a complete radiative treatment).
 This should be true for most species with trace populations.
 The radiative transfer calculations associated with this species can then be performed in a ``second-pass'' over a previously computed \Radyn{} simulation.
-The MS\_RADYN code was designed for this task; it takes the thermodynamic parameters from every timestep of a \Radyn{} simulation, along with the non-equilibrium hydrogen populations, and solves the kinetic equilibrium equation at each timestep for a minority species.
+The MS\_RADYN code is a modification of \Radyn{} designed for this task; it takes the thermodynamic parameters from every timestep of a \Radyn{} simulation, along with the non-equilibrium hydrogen populations, and solves the kinetic equilibrium equation at each timestep for a minority species.
 Due to the lack of atmospheric thermodynamic response to changes in the radiative output of this species, far more complex atomic models can be used, such as the 30 level model silicon atom used by \citet{Kerr2019c}.
 
 An approach similar to that of minority species modelling can be applied to testing the methods used in \Radyn{} and the importance of certain omissions.
 Due to the reduced complexity of solving the kinetic equilibrium equations rather than the entire RHD system, these calculations typically run significantly faster than the original simulation.
-In the following we will discuss the creation of a minority species tool for reprocessing \Radyn{} simulations, built on the \Lw{} framework, as well as its application to investigating the importance of overlapping transitions and discussing the difficulties of including PRD in these simulations.
+In the following we will discuss the creation of a minority species tool for reprocessing \Radyn{} simulations, built on the \Lw{} framework, as well as its application to investigating the importance of overlapping transitions, and discussing the difficulties of including PRD in these simulations.
 From the previous discussion, building such a tool on the \Lw{} framework should provide researchers with a modern, simpler codebase that is easier to conceptualise and modify, allowing for investigation of effects to be included in \Radyn{} or future RHD codes.
 Excluding the model atom definitions, the source code of the simulations presented in this chapter totals $\sim$1000 lines of Python, mostly following modern best practices.
 
@@ -175,8 +174,8 @@ This approach could also be applied to a simple investigation of the effects of 
 
 To perform a minority species simulation, a particular file from the original simulation, \texttt{atmost.dat}, must be provided.
 From investigating the contents of this file we can determine the exact configuration of \Lw{} and the equations to be solved.
-This file is written to for every internal timestep of the \Radyn{} simulation, and represents a limited subset of the less frequently written ``complete'' output (typically stored every \SI{0.1}{\second}).
-It contains some metadata describing the size of the simulation, then for each internal timestep, the current timestep, the elapsed time at each timestep, the current locations of the dynamic grid, the mass density profile, the electron density profile, the temperature structure, the vertical velocity, and the current hydrogen level populations.
+When requested, this file is written to for every internal timestep of the \Radyn{} simulation, and represents a limited subset of the less frequently written ``complete'' output (typically stored every \SI{0.1}{\second}).
+It contains some metadata describing the size of the simulation, then for each internal timestep, the current timestep, the elapsed time, the current locations of the dynamic grid, the mass density profile, the electron density profile, the temperature structure, the vertical velocity, and the current hydrogen level populations.
 
 For the validation of \Lw{} and this style of simulation, we also wished to compute and compare the hydrogen populations to those computed in \Radyn{}.
 Several difficulties arose due to the non-thermal collisional rates used in the kinetic equilibrium calculation for hydrogen and helium.
@@ -195,18 +194,18 @@ For this we use of the default abundances in \Lw{}, based on \citet{Asplund2009}
 These differ to those used in \Radyn{}, but not significantly for any of the species discussed here.
 
 Ignoring the advection term it is then simple to produce a minority species tool using this approach.
-In many situations, the advection term has a small effect, and can safely be ignored \NeedRef{} \TODO{Old Flarix paper}.
+In many situations, the advection term has a small effect, and can safely be ignored \citep{Kasparova2003,Nejezchleba1998}. \TODO{I don't love the justifications in Nejezchleba1998, but that's what Jana used.}
 The method for advancing the atomic populations in time employed in \Radyn{} is formulated on the dynamic grid, and this is not the case in \Lw{}, which assumes that the grid is static (although this limitation can be worked around).
 We can simply use a fixed denser spatial sampling of the atmosphere to account for the motion of features such as the transition region over the course of the simulation.
 This model then interpolates the thermodynamic properties and NLTE hydrogen populations for the starting atmosphere onto our stratification and computes the statistical equilibrium solution for the minority species in question.
-For each subsequent timestep these properties are interpolated from the new \Radyn{} grid to the static grid, and the minority species populations can be advanced in time using the process described in Sec.~\NeedRef{}.
+For each subsequent timestep these properties are interpolated from the new \Radyn{} grid to the static grid, and the minority species populations can be advanced in time using the process described in Sec.~\ref{Sec:TimeDepPopUpdates}.
 
 To reduce the number of grid points needed for a static stratification one could instead use a fixed column mass stratification.
 The transition region moves very little in terms of column mass during the simulation, however it then becomes necessary to interpolate the populations from one column mass stratification to the next; a process which can introduce significant error if not undertaken with care.
 This error can be reduced by renormalising each specie's total number density throughout the atmosphere from the mass density and abundances, and this helps to avoid errors growing around regions of high gradient, such as the transition region.
 
-To solve the minority species problem properly in a manner compatible with \Radyn{} it is necessary to include the advection terms.
-In the following we will describe several different approaches to handling these advection terms, drawing on our previous discussions of hydrodynamics, and thus solving the complete kinetic equilibrium equations.
+To solve the minority species problem properly in a manner fully compatible with \Radyn{} it is necessary to include the advection terms.
+In the following we will describe several different approaches to handling these advection terms, drawing on our previous discussions of hydrodynamics, and thus solving the complete system of kinetic equilibrium equations.
 
 \subsection{Advection}
 
@@ -218,7 +217,7 @@ It draws from the simple explicit finite-volume approaches discussed earlier in 
 This numerical scheme performs extremely well in textbook advection and hydrodynamic tests, however it was found to be ill-suited to the long internal timesteps that \Radyn{}'s implicit method chooses.
 These timesteps are longer than those permitted by the CFL condition, requiring the explicit method to perform multiple substeps for each of \Radyn{}'s timestep.
 This alone can introduce cumulative error, which is further compounded by the use of the dense static grid.
-As this grid needs to conform to the requirements of the simulation over its entire evolution, rather than just its instantaneous requirements (as is the case for \Radyn{}'s grid) there are often dense clusters of points in regions where they are not required to resolve the atmospheric structure.
+As this grid needs to conform to the requirements of the simulation over its entire evolution, rather than just its instantaneous requirements (as is the case for \Radyn{}'s grid) there are often dense clusters of points in regions where they are not currently required to resolve the atmospheric structure.
 These regions may have high plasma flow velocities, further increasing the timestep restrictions on the explicit method.
 In some cases several thousand applications of the explicit scheme were required to match one of \Radyn{}'s internal timesteps.
 With such different timestep restrictions imposed on the two components of this simulation, it is difficult to correctly treat both processes in a coupled fashion.
@@ -228,14 +227,14 @@ Due to \Radyn{}'s longer timesteps, during more explosive evaporative phases, th
 Whilst the populations quickly evolved in their new environment this process is sufficiently slow to introduce unexpected variability in the line profiles.
 A higher order splitting scheme may have helped to mitigate this but would add more computational cost to an already expensive process (due to the shear number of advection steps needed).
 This effect can also be mitigated by limiting the maximum timestep that can be taken by \Radyn{} during the creation of the baseline simulation.
-However, limiting \Radyn{}'s performance is a poor solution to this problem; the explicit advection method described here could serve well at the core of a code designed around it, in the way that FLARIX and HYDRAD both use similar explicit advection schemes, but many difficulties are created by the difference in ideologies between this and \Radyn{}'s implicit dynamic grid scheme.
+However, limiting \Radyn{}'s performance is a poor solution to this problem; the explicit advection method described here could serve well at the core of a code designed around it, in the way that FLARIX and HYDRAD both use similar explicit advection schemes, but many difficulties are created by the difference in ideologies between this and \Radyn{}'s implicit dynamic grid.
 
-To improve the agreement with \Radyn{}, reduce the number of interpolations, and leverage rather than fight its adaptive grid we instead decided to apply its technique for advection, but keep it separate from the radiative transfer.
+To improve the agreement with \Radyn{}, reduce the number of interpolations, and leverage rather than fight its adaptive grid we instead decided to apply its technique for advection, but keep it distinct from the radiative transfer.
 Thus, at the start of each timestep we advect the populations from the previous grid to the new grid locations, and then advance the populations in time based on the NLTE rates.
 This method employs a variant of the second order spatially accurate method of \citet{VanLeer1979} to reconstruct the values on either side of the interface, of which the upwind value is chosen.
-This is set within a time-centering scheme similar to that described in \citet{A.Dorfi1997}.
+This is set within a time-centering scheme similar to that described in \citet{Dorfi1997}.
 Under this scheme the advection stencil depends on the values of five cells, two on either side of the current one.
-Thus the Jacobian matrix for this equation is pentadiagonal (and block pentadiagonal for the system of ODEs).
+Thus the Jacobian matrix for this equation is pentadiagonal (and block pentadiagonal for the complete system of ODEs).
 For simplicity and ease of implementation we chose to not directly code the expressions for these derivatives that occur in the Jacobian matrix, but instead compute them by finite differences.
 There is an elegant technique that can be used to optimise this process when an equation's region of dependence is known.
 This approach is known as Coloured Finite Difference \citep{Curtis1974}; so long as only one point in the domain affecting each output point is perturbed the gradient can be trivially attributed to the correct point.
@@ -325,27 +324,27 @@ lFig.placement = 'hbtp'
 
 The hydrogen (five bound levels with H\,\textsc{ii} continuum and ten lines), helium, and calcium (five bound \Caii{} levels with \Caiii{} continuum and five lines) model atoms used in the simulations presented here are the same as those used in \Radyn{}.
 All other model atoms used in the LTE background opacities are taken from the \Lw{} standard library (and have in turn been converted from  RH distribution \citep{Uitenbroek2001}).
-Currently only the hydrogen and calcium populations are considered in the NLTE treatment.
+Currently only the hydrogen and calcium populations are fully treated in NLTE.
 
 To determine the importance of the photoionisation by the Lyman lines, each \Radyn{} simulation is reprocessed twice, once including the effects of the Lyman lines on \Caii{} (henceforth Lyman inclusive (LI)), and once without these effects (Lyman exclusive (LE)).
-This is achieved through the use of two different hydrogen model atoms.
+This is achieved through the use of two different hydrogen model atoms, where the one for the LE treatment excludes the Lyman lines and uses fixed hydrogen populations from \Radyn{}.
 In both cases the effects of the Lyman continuum are included, as this is commonly considered in RHD codes, and allows for direct comparison of the LE simulation against \Radyn{}.
 The simulations are performed using the CRD formalism for consistency with \Radyn{}, although the models used for the Lyman lines contain an approximation to PRD by removing radiative broadening and reducing van der Waals broadening.
-This makes line profile closer to a Doppler profile, by reducing the importance of the Lorentzian wings.
+This makes the line profile closer to a Doppler profile, by reducing the importance of the Lorentzian wings.
 This is one of the two more common approaches to approximating PRD effects in these transitions, the other being to truncate the line quadrature around ten Doppler widths from the line core.
 Both of these are empirical but we favour the former in flare simulations as the narrow grid used in the latter can easily ``lose'' opacity in the moderate to high Doppler shifts that occur in flare models (Carlsson 2021, \emph{private communication}).
 PRD effects are also present in the \Caii{} lines (primarily the resonance lines, although cross-redistribution effects also affect the infra-red triplet).
 The effects on these are typically less significant than those on the hydrogen Lyman lines, especially due to the high chromospheric densities that occur during flares.
 We therefore do not add any approximate PRD treatments to the \Caii{} lines.
-These model atoms are therefore identical between \Radyn{} and \Lw{}, and the two models differ only in their description of LTE background opacities, which in the case of the \Lw{} simulations includes helium.
+These model atoms are therefore identical between \Radyn{} and \Lw{}, and the two tools differ only in their description of LTE background opacities, which in the case of the \Lw{} simulations includes helium.
 Comparison of these simulations should therefore enable the study of these photoionisation effects.
 
-Our \Lw{}-based tool uses the first-order splitting technique discussed in Sec.~\ref{Sec:HydroStability}.
+Our \Lw{}-based tool uses the first-order splitting technique discussed in Sec.~\ref{Sec:HydroStability} to temporally couple the two subproblems of the kinetic equilibrium equations.
 The complete kinetic equilibrium equations are split into radiative and advective operators that are applied sequentially.
 A Strang-splitting approach was trialled but provided no noticeable difference in the solution over this first-order technique and whilst being more computationally costly than the simpler approach.
-After solving the statistical equilibrium problem to determine an initial solution for the atomic populations in the given starting atomsphere, the populations are then advected, and the thermodynamic atmospheric parameters are updated using the \Radyn{} data from the next timestep.
+After solving the statistical equilibrium problem to determine an initial solution for the atomic populations in the given starting atmosphere, the populations are then advected, and the thermodynamic atmospheric parameters are updated using the \Radyn{} data from the next timestep.
 This update process includes the calculation of the LTE populations of all species considered and computing the resultant background opacities.
-The atomic level populations are then advanced in time using the approach described in \NeedRef{}.
+The atomic level populations are then advanced in time using the approach described in Sec.~\ref{Sec:TimeDepPopUpdates}.
 
 \subsection{The \Radyn{} simulations}
 
@@ -358,7 +357,8 @@ The two simulations differed only in energy deposition, which was a constant flu
 These simulations will be referred to as F9 and F10 respectively.
 
 All of these parameters fall within the range of those used in the F-CHROMA grid, other than the beam energy flux which is lower than the peak fluxes used in the grid.
-This is primarily due to the triangular \SI{20}{\second} duration heating profile used which is less demanding on the simulation than the constant deposition used in our simulations.
+This is primarily due to the triangular \SI{20}{\second} duration heating profile used in the grid, which is less demanding on the simulation than the constant deposition used in our simulations.
+
 Our choice of parameters are also supported by observational data.
 The low-energy cut-off is in accord with the findings of \citet{Sui2007} whose analysis of 33 early impulsive flares using the Ramaty High Energy Solar Spectroscopy Imager (RHESSI) found a range of 10-\SI{50}{\kilo\electronvolt} whilst accounting for X-ray albedo and under the assumption of a cold collisional thick target model.
 Another study of 53 flares using RHESSI by \citet{Saint-Hilaire2008} found that the photon spectral index $\gamma$ was distributed between 2 and 5, peaking between 3 and 3.5.
@@ -719,7 +719,7 @@ The LI and LE treatments produce significantly different populations for the upp
 The left-hand and centre panels present the contribution functions for the two different treatments with the $\tau_\nu=1$ line overlaid in red.
 The $\tau_\nu=1$ line is reliably extended to higher altitudes in the line core of the LE treatment, suggesting that this core is formed in a different location between the two treatments.
 There is a significant feature contributing to the violet wing of the LE models around the \SI{1.5}{\mega\metre} region.
-In this same region both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
+In this same region both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values, creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
 Under the LI treatment we instead see that there is substantially more \Caiii{} in this region, likely due to \Caii{} to \Caiii{} photoionisation from Lyman lines formed in the upper chromosphere and transition region.
 In the F10 simulation there is also a significant difference between the \Caiii{} populations computed in the two treatments around the temperature minimum region; this is much deeper than any of the \Caii{} spectral line cores typically form, but is likely due to the same photoionisation process and the effects of the much larger Lyman line intensity that occurs in the F10 model.
 
@@ -870,7 +870,7 @@ For this we adopt an absolute relative difference metric computed following
 \end{equation}
 where $\mathcal{C}$ is the set of calcium lines used on our model atom, and $\mathrm{loss}_i$ is the volumetric radiative loss of transition $i$.
 This metric therefore quantifies the effect on the total energy being redistributed throughout the simulation (or leaving the simulation) from the different treatments of the \Caii{} lines.
-To assess the importance of this it is also essential to know the importance of the \Caii{} lines on the total energy balance of the simulation.
+To assess the importance of this it is also essential to know the impact of the \Caii{} lines on the total energy balance of the simulation.
 Thus we also compute
 \begin{equation}
     \frac{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{\Radyn{}}}|}{\sum_j|\mathrm{loss}_{j,\,\mathrm{\Radyn{}}}|},
@@ -942,7 +942,7 @@ def plot_cf_rf_comparison(cfnData, rfTempLI, rfVlosLI,
     ax[0, 1].set_xlim(-0.1, 0.1)
     ax[0, 1].set_ylim(None, 2.4)
     ax[0, 1].set_title('Temperature Response')
-    vmaxAbs = rf_sym_range(rfVlosLI['rf'])
+    # vmaxAbs = rf_sym_range(rfVlosLI['rf'])
     ax[0, 2].pcolormesh(wavelengthEdgesLI - lambda0, cfnData['heightEdges'], rfVlosLI['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
@@ -957,14 +957,14 @@ def plot_cf_rf_comparison(cfnData, rfTempLI, rfVlosLI,
     ax[1, 0].plot(cfnData['wavelengthTau1'], cfnData['tau1LE'], c='r', alpha=0.5)
     ax[1, 0].set_xlim(-0.1, 0.1)
     ax[1, 0].set_ylim(None, 2.4)
-    vmaxAbs = rf_sym_range(rfTempLE['rf'])
+    # vmaxAbs = rf_sym_range(rfTempLE['rf'])
     ax[1, 1].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfTempLE['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
     ax[1, 1].plot(cfnData['wavelengthTau1'], cfnData['tau1LE'], c='r', alpha=0.5)
     ax[1, 1].set_xlim(-0.1, 0.1)
     ax[1, 1].set_ylim(None, 2.4)
-    vmaxAbs = rf_sym_range(rfVlosLI['rf'])
+    # vmaxAbs = rf_sym_range(rfVlosLI['rf'])
     ax[1, 2].pcolormesh(wavelengthEdgesLE - lambda0, cfnData['heightEdges'], rfVlosLE['rf'],
                         rasterized=True, cmap='RdBu_r',
                         norm=SymLogNorm(linthresh=1e-14, vmin=-vmaxAbs, vmax=vmaxAbs))
@@ -1042,21 +1042,21 @@ In the time-dependent case, we can further divide by the timestep used to obtain
 As previously stated, care must be taken with extrapolating quantitative variations of outgoing intensity from the time-dependent response function, but in both cases the simple units present allow for easy comparison of the magnitude of the line's response to different effects.
 
 This method for computing time-dependent response functions to perturbations in temperature and velocity has been applied to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
-These properties were chosen due as they important relatively free parameters in the system.
+These properties were chosen due as they important ``relatively'' free parameters in the system.
 It is also common to compute the response functions to electron density, microturbulent velocity and magnetic field, however these parameters are either not considered or truly free.
 Following \Radyn{}, the microturbulence is assumed to be constant both in time and throughout the atmosphere, and this model does not consider any effects of the magnetic field.
 The electron density is dependent on the rest of the atmosphere through charge conservation, and is therefore not a free parameter.
-We note that the radiative response to the electron density could likely be computed using the method \citet{Metcalf1990a} who present the following method for computing the response to electron density $n_e$
+We note that the radiative response to the electron density could likely be computed using the method of \citet{Metcalf1990a} who present the following method for computing the response to electron density $n_e$
 \begin{equation}
     \frac{\partial I}{\partial n_e} = \left( \frac{dI}{dT} - \frac{\partial I}{\partial T} \right)\left( \frac{d n_e}{dT} \right)^{-1},
 \end{equation}
-where these terms are defined as follows, the total derivative of $I$ with respect to $T$ can be computed from computing the response with charge conservation enabled, the partial derivative of $I$ with respect to $T$ from computing the response with $n_e$ fixed, and the derivative of $n_e$ with respect to $T$ can simply be computed from the change in $n_e$ during computation of the response function with charge conservation.
-This method was originally presented for computing the response of an intermediate parameters such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.
-In the context of inversions, this is very useful, however our RHD models should remain self-consistent.
-Nevertheless, this could be useful for interpretation, but is $\sim2$x more computationally costly than other parameters due to the requirement of additional derivatives.
+where these terms are defined as follows: the total derivative of $I$ with respect to $T$ can be evaluated from computing the response with charge conservation enabled, the partial derivative of $I$ with respect to $T$ from computing the response with $n_e$ fixed, and the derivative of $n_e$ with respect to $T$ can simply be computed from the change in $n_e$ during evaluation of the response function with charge conservation.
+This method was originally presented for computing the response of an intermediate parameter such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.
+In the context of inversions, this additional response is very useful, however our RHD models should remain self-consistent.
+Nevertheless, this could also be useful for interpretation, but is $\sim2$x more computationally costly than other parameters due to the requirement of additional derivatives.
 
 Our contribution and response functions are shown in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
-All of the response functions shown in these plots were computed with a timestep of \SI{1}{\milli\second}, but were validated for consistency against other timesteps.
+All of the response functions shown in these plots were computed with a timestep of \SI{1}{\milli\second}, but were visually identical to those computed for a timestep of \SI{5}{\milli\second} and extremely similar to those computed for a timestep of \SI{0.01}{\milli\second}.
 In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
 The shape of the temperature response function is immediately recognisable as similar to the contribution function shown in the first column.
 This is not surprising, as temperature is the most important atmospheric parameter in spectral line formation, and will always affect the region where the observed photons form.
@@ -1074,11 +1074,11 @@ The structure of this plot below $\sim$\SI{1}{\mega\metre} is easy to interpret;
 The effects on the far wings, visible below $\sim$\SI{0.4}{\mega\metre} are less immediately intuitive, but correspond to increased absorption of photospheric emission in the blue wing, and reduced in the red wing.
 The structure in the line core is far more complex, and has a non-trivial response to variations in velocity, affecting the LE and LI cases differently.
 This is most pronounced in the F10 response function at \SI{11}{\second} (Fig.~\ref{Fig:F10RfComp11s}).
-There are also responses due to changes in velocity from well below the $\tau_\nu=1$ line in the line core due to changes in opacity in these regions affecting the radiation field in the line forming region.
+There are also responses due to changes in velocity from well below the $\tau_\nu=1$ line in the line core which produce changes in opacity in these regions affecting the radiation field in the line forming region.
 
 We have presented a brief introduction to the concept and application of response functions to the simulations investigating the effects of the LI and LE treatments.
 Response functions can provide additional information on line formation and how it is affected by the model atmosphere.
-In this way they represent a powerful, but moderately computationally expensive, supplement to the traditional contribution function, allowing for additional insight into the formation of NLTE spectral lines and their domains of sensitivity.
+In this way they represent a powerful, but moderately computationally expensive, supplement to the traditional contribution function, allowing for additional insight into the formation of NLTE spectral lines and their regions of sensitivity.
 
 \section{Is Full Time-Dependence Necessary?}\label{Sec:TimeDepSE}
 
@@ -1088,8 +1088,8 @@ It has been repeatedly shown that a time-dependent treatment of the hydrogen pop
 This was first investigated in wave heated chromospheric simulations by \citet{Carlsson2002}, who found a settling time for hydrogen to return to equilibrium ionisation of the order of thousands of seconds.
 \citet{Brown2018} also compared the hydrogen line profiles, computed with \Radyn{}'s approximate PRD and time-dependence, and also with statistical equilibrium using a the full PRD treatment of RH (i.e. treating each atmospheric subsequent snapshot in statistical equilibrium).
 They found that the time-dependence had a more significant effect than PRD on the Lyman lines, and could not be ignored.
-More recently \citet{Kerr2019a} have investigated the effects of a time-dependent treatment of the level populations of Mg\,\textsc{ii}, and found that whilst there were differences between the statistical equilibrium and time-dependent treatments, the statistical equilibrium treatment was sufficient for most stages of the flare models investigated and for this line priority should be given to the PRD treatment.
-Similarly \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$ from three-dimensional RMHD models, only an equation of state taking into account the non-equilibrium ionisation and its effects on the electron density is necessary, and under this condition a full 3D treatment is more important than complete time-dependence.
+More recently \citet{Kerr2019a} have investigated the effects of a time-dependent treatment of the level populations of Mg\,\textsc{ii}, and found that whilst there were differences between the statistical equilibrium and time-dependent treatments, the statistical equilibrium treatment was sufficient for most stages of the flare models investigated, they conclude that for this line priority should be given to the PRD treatment.
+Similarly, \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$ from three-dimensional RMHD models, only an equation of state taking into account the non-equilibrium ionisation and its effects on the electron density is necessary, and under this condition a full 3D treatment is more important than complete time-dependence.
 
 It is therefore important to assess the importance of a time-dependent treatment of \Caii{} in solar flare models.
 In the following, we shall briefly summarise our investigation of the importance of treating \Caii{} with time-dependence in the RHD model used for the comparison of the \Radyn{} and FLARIX codes presented in \citet{Kasparova2019}.
@@ -1210,7 +1210,7 @@ For the latter of these, the line shape is correct, but the intensity of the sta
 At $t=\SI{2}{\second}$ the difference between the two different LI treatments is greater than the difference between the LE treatments, but for both the LI and LE cases the statistical equilibrium lines are narrower and less pronounced than their time-dependent counterparts.
 
 For this particular simulation, after the first few seconds of heating, the statistical equilibrium treatment is perfectly valid with no obvious defects.
-Clearly, this one simulation does not represent all RHD flare simulations, but we have qualitatively found this to be true when testing multiple timesteps from the simulations used in the previous sections.
+Clearly, this one simulation does not represent all RHD flare simulations, but we have empirically found this to be true when testing multiple timesteps from the simulations used in the previous sections.
 
 
 \section{PRD}\label{Sec:TimeDepPrd}
@@ -1219,7 +1219,7 @@ As highlighted by \citet{Brown2018}, when considering the hydrogen Lyman lines i
 It is possible that this could prove important for the energy balance of the line-forming regions, in a similar manner to the photoionisation effects discussed previously.
 Indeed, any significant variation in the hydrogen Lyman series may affect the populations \Caii{} and similar species through photoionisation, and also in \Ha{} through modifications of the level populations.
 \citet{Leenaarts2012a} investigated the Doppler-like PRD approximation used in our \Radyn{} simulations and found it sufficient for the correct formation of H$\alpha$ in the quiet Sun case.
-The version of \Radyn{} used by \citet{Brown2018} truncated the Lyman lines at several Doppler widths from the line-core, and thus conclusions drawn about the importance of PRD may not be directly applicable to our models.
+The version of \Radyn{} used by \citet{Brown2018} truncated the Lyman lines at several Doppler widths from the line-core, and thus conclusions drawn about the importance of PRD may not be directly comparable between these models.
 
 The \Lw{} framework supports both time-dependence and PRD lines, thus we can attempt to modify the tool built in the previous section to also include PRD effects.
 This is achieved by restoring the damping terms on the Ly$\alpha$ and Ly$\beta$ spectral line definitions (as these were adjusted to approximate PRD), solving the statistical equilibrium problem for the initial atmosphere in PRD, and then updating the PRD line emission ratio $\rho$ during each timestep based on the current atmospheric parameters and radiation field.
@@ -1228,11 +1228,11 @@ Many timesteps fail to converge or the iteration scheme can enter a loop of repe
 Of the timesteps that do converge, many take an exceedingly large number of iterations.
 
 These convergence problems are somewhat unexpected due to the reliability of the methods used here when applied here to statistical equilibrium problems.
-We are faced with an additional problem when performing time-dependent simulations, especially in the reprocessing context used here; when a timestep fails to converge we lose the ability to investigate later in the simulation, as the populations at every timestep are dependent on the preceding.
+We are faced with an additional problem when performing time-dependent simulations, especially in the reprocessing context used here; when a timestep fails to converge we lose the ability to investigate later in the simulation, as the populations at every timestep are dependent on those preceding.
 When reprocessing snapshots of an RHD simulation using a statistical equilibrium treatment, a failure for one of these to converge does not limit the analysis of any other snapshot.
 These problems may in part be related to the convergence of the PRD scattering integral on the fine spatial grid that \Radyn{} produces, but as previously noted, this is rarely a problem in statistical equilibrium situations.
 
-The following procedure was found to be relatively robust, sufficient for reprocessing the complete F9 simulation of the previous section.
+The following procedure was found to be relatively robust, sufficient for reprocessing the complete F9 simulation presented earlier.
 At the start of each timestep, when the populations are advected from the previous grid to the next, the line emission ratio $\rho$ is interpolated onto the new grid.
 Inherent to this assumption is the idea that $\rho$ will not change too drastically between subsequent timesteps.
 The time-dependent problem is then solved to our normal tolerance whilst keep $\rho$ fixed at its interpolated values.
@@ -1241,8 +1241,8 @@ Once converged, we continue to compute the time-dependent population update, whi
 In the F9 simulation this approach proves to be rapidly convergent at early times, but far less so at later times during the cooling phase.
 Initially this appears unintuitive, but the non-thermal collisional rates from the electron beam depositing energy in the simulation are substantial during the heating phase and likely reduce the effects of PRD on these lines.
 At later times the Lyman line forming regions are likely to be relatively non-collisional (hence the expectation of PRD effects), and the population transition rate is likely dominated by the radiative effects, increasing the relative importance of these PRD effects.
-However, the bulk of the Ly$\alpha$ line core forms in the transition region, which is not as dramatically affected by direct energy deposition from the beam as the chromosphere, due to its decreased density, so the reason for this variation in convergence behaviour is not clear.
-Similar behaviour occurred when reprocessing the F10 simulation, but the convergence deteriorates sooner and despite adjustments to the number of PRD iterations taken, usually fails to converge around $t=\SI{3.75}{\second}$.
+However, the bulk of the Ly$\alpha$ line core forms in the transition region, which is not as dramatically affected by direct energy deposition from the beam as the chromosphere, due to its decreased density, so the reason for this variation in convergence behaviour is not entirely clear.
+Similar behaviour occurred when reprocessing the F10 simulation, but the convergence deteriorates sooner and despite adjustments to the number of PRD iterations taken, the model usually fails to converge around $t=\SI{3.75}{\second}$.
 
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
@@ -1416,7 +1416,7 @@ The iterative method, implemented as first presented in \citet{Uitenbroek2001}, 
 It is plausible here that the effective damping of the population update equations of the time-dependent kinetic equilibrium equations relative to statistical equilibrium is reducing the convergence rate, due to the slower rate (per iteration) at which the populations evolve.
 It may therefore be worth investigating the direct solution in the hope that by more rapidly converging to the correct solution for the emission profile the populations do not pass through intermediate states that are not ``valid'' i.e. states that are intermediate to the iteration scheme, but do not occur at any point in the real world system we are computing.
 It is plausible that many of the intermediate states that occur in both time-dependent and statistical equilibrium are not states that occur naturally, instead resulting from our numerical treatment of the system.
-When additional iteration processes such as PRD and charge conservation are applied, whilst being combined with the damped nature of the time-dependent population update, it appears that cycles in the global iteration procedure can occur quite frequently, and no method that we have found reliably prevents these (including interleaving basic $\Lambda$-iterations and applying Ng acceleration).
+When additional iteration processes such as PRD and charge conservation are applied (leading to the application of three simultaneous iterative processes to the problem), whilst being combined with the damped nature of the time-dependent population update, it appears that cycles in the global iteration procedure can occur quite frequently, and no method that we have found reliably prevents these (including interleaving basic $\Lambda$-iterations and applying Ng acceleration).
 
 \section{Discussions}
 
@@ -1430,18 +1430,18 @@ The radiative losses in this region were found to be affected by up to 15\%, whi
 We did not find a clear correlation between the magnitude of this effect and the increased heating in the F9 and F10 models; in both cases the effect was important, and therefore is likely to remain so at higher energy depositions.
 It is therefore essential that RHD simulations start to consider this in a self-consistent way to gauge its full effect.
 These photoionisation effects could also affect other species with continua overlapping the hydrogen Lyman lines.
-For instance, Mg\,\textsc{ii} line profiles are often used for chromospheric diagnostics, but these are unlikely to be as significantly affected by the hydrogen Lyman lines as \Caii{} due to the resonance continuum edge being located at \SI{82.46}{\nano\metre}.
+For instance, Mg\,\textsc{ii} line profiles are often used for chromospheric diagnostics, but these are unlikely to be as significantly affected by the hydrogen Lyman lines as \Caii{} due to the resonance continuum edge being located at \SI{82.46}{\nano\metre}, and can therefore only be affected by the far Lyman continuum.
 The Mg\,\textsc{ii} populations will be influenced to a lesser extent by photoionisation from the subordinate continua, some of which overlap the Lyman series.
 
 On the other hand, we found that the deviations of the calcium populations due to full time-dependent kinetic equilibrium over statistical equilibrium were typically small in the simulations investigated.
 This is interesting, as it theoretically allows for \Caii{} to be processed separately, but as the radiative losses from this species need to be known for the hydrodynamics of an RHD simulation, this species likely still needs to be treated in lockstep with the rest of the simulation.
 Additionally, there is typically a loss in speed by computing the statistical equilibrium solution at each timestep in the simulation (even starting close to the solution from the previous timestep's solution) over the time-dependent solution when using traditional RT methods.
-This could change with the application of machine learning, as it will be far easier to construct detailed models that provide the unique statistical equilibrium solution for a given atmosphere than determining the correct time-dependent solution.
+This could change with the application of machine learning, as it will be far easier to construct detailed models that provide the unique \TODO{Is the provably unique? Or do some of our iterative woes stem from here?} statistical equilibrium solution for a given atmosphere than determining the correct time-dependent solution.
 As the hydrogen populations would continue to require a full time-dependent treatment there is not likely to be an immediate gain from such a model in the context of RHD simulations.
 However, the nuanced analysis of the formation of H$\alpha$ in the quiet Sun by \citet{Leenaarts2012a} suggests that it may be sufficient to purely capture the effects of hydrogen non-equilibrium ionisation (i.e. the fraction of hydrogen that is fully ionised and its effects on the electron density) through the equation of state and then perform NLTE synthesis in statistical equilibrium with this given electron density.
-This would also need to be validated for flares models, and could be done following the approach laid out in this chapter.
+This would also need to be validated for flare models, which could be done following the approach laid out in this chapter.
 It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE RT approaches.
-Parallels can be drawn between the application of machine learning to this problem and the use of interpolated rates following the method of Sollum \NeedRef{} as can be done with HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
+Parallels can be drawn between the application of machine learning to this problem and the use of simplified local rates following the method of Sollum \NeedRef{} as can be seen in HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011, Leenaarts2007}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
 Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
@@ -1452,6 +1452,6 @@ The effects of treating the \Caii{} resonance lines in PRD were significantly la
 This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD).
 It is therefore important to investigate whether applying PRD to the H and K lines can be done efficiently.
 Empirically, we have found that the majority of convergence problems originate from the hydrogen Lyman lines, thus it may be relatively efficient to treat the \Caii{} resonance lines in PRD.
-If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that applied to the Ly$\alpha$ and Ly$\beta$.
+If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that used for Ly$\alpha$ and Ly$\beta$.
 It has been suggested that \Radyn{}'s treatment of the \Caii{} resonance lines in CRD overestimates the radiative losses but this overestimation is compensated by not considering the Mg\,\textsc{ii} h and k lines \citep[e.g.][]{Kerr2019a}.
-The techniques presented in this chapter should allow for a thorough investigation of this and the development of suitable PRD approximations if necessary.
+The techniques presented in this chapter should allow for a thorough investigation of this assumption and the development of suitable PRD approximations if necessary.

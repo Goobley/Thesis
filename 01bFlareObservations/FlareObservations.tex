@@ -205,7 +205,7 @@ If the source function is taken to be constant in each slab this becomes
 \begin{equation}\label{Eq:LinearResponse}
     I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
 \end{equation}
-and for each slab, the associated integral represents its contribution to the outgoing intensity.
+and for each slab the associated integral represents its contribution to the outgoing intensity.
 In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
 We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
 This response function does not change with the source function due to the linearity of the problem.
@@ -292,7 +292,7 @@ These effects can instead be captured by the use of response functions.
 Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
 A response function tells us how the outgoing intensity changes \emph{in response} to a change in an atmospheric parameter.
 These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
-A similar approach (built on framing the intensity perturbations as a Fredholm integral equation and using the finite difference method to evaluate necessary terms) for the scalar RTE was employed in the inversions of \citet{Metcalf1990a}, but their focus was on the direct application to inversions and not interpretation of the response functions produced.
+A similar approach (built on framing the intensity perturbations as a Fredholm integral equation and using the finite difference method to evaluate necessary terms) for the scalar RTE was employed in the inversions of \citet{Metcalf1990a}, but their focus was on the direct application to inversions rather than the interpretation of the response functions produced.
 In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
 
 To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
@@ -302,7 +302,7 @@ In LTE, where the source function is set by the local atmospheric parameters, th
 The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by \citet{SanchezAlmeida1992}) to perturbations in different atmospheric parameters at the same time as the formal solution.
 These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ and assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
 
-For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations is significantly more arduous.
+For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations can be significantly more arduous.
 The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilibrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
 Whilst computationally expensive, this ``brute force'' approach to response functions makes them simple to calculate.
 Following this approach, the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the populations are updated using the new radiation field and atmosphere.
@@ -329,17 +329,17 @@ An alternative approach to reducing the computational overhead of NLTE inversion
 
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
-It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seed as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
+It is common to allow line-of-sight velocity as a parameter, which technically violates the constraint of hydrostatic equilibrium, however this is a minor effect and is seen as a worthwhile trade-off for the increase in tractability of quiet sun inversions.
 Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
-The integral approach of \citep{Metcalf1990a} was also applied to flares and differs from the others discussed here, and constructs a matrix of kernels which is solved for temperature and electron density perturbations using a regularised method.
-The kernels presented cannot capture the complete response to perturbations in parameters affecting NLTE spectral lines without an approach that can find the new source function (which can be affected non-locally).
-A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, but would likely be found lacking due to the small perturbation range of validity of the kernel functions, requiring a starting atmosphere that matches the observed spectrum quite well, due to the first order nature of this method.
+The integral approach of \citep{Metcalf1990a} was also applied to flares and differs from the others discussed here, by constructing a matrix of kernels which is solved for temperature and electron density perturbations using a regularised method.
+The kernels presented cannot capture the complete response to perturbations in parameters affecting NLTE spectral lines without an approach that can find the new source function (which can be modified non-locally).
+A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, but would likely be found lacking due to the narrow range of validity of the kernel functions, requiring a starting atmosphere that matches the observed spectrum quite well, due to the first order nature of this method.
 
 
 \subsection{Forward Modelling}
 
 A technique related to inversions that has commonly been applied to flares in the last decade is that of forward modelling through the use of RHD codes.
-Where possible the energy input parameters are constrained from observations, via techniques such as X-ray spectroscopy to deduce the non-thermal electron flux and spectral index.
+Where possible, the energy input parameters are constrained from observations, via techniques such as X-ray spectroscopy to deduce the non-thermal electron flux and spectral index.
 A challenging manual iteration then follows to attempt to obtain an agreement between the time-dependent simulation and the observations.
 This is extremely time-consuming both due to the manual aspect of the inversions and the computational requirements of the RHD simulations.
 Clearly, the human intervention necessary to optimise and analyse these simulations cannot scale to the large volumes of data coming already present and coming from future telescopes.
