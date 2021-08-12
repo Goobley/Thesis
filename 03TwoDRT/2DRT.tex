@@ -379,7 +379,7 @@ ax.set_ylabel(r'Absolute Maximum Difference', c='C0')
 ax1.set_ylabel(r'L2 Norm', c='C1')
 
 lFig = ch2DRT.save_figure('2DErrChange', fig, fext='.pgf')
-lFig.caption = r'Differences between the 1 and 2D Formal Solvers (including ALI iteration procedure).'
+lFig.caption = r'Standard convergence metric (absolute maximum difference) and L2 difference of the \CaLine{} line profiles between between the 1 and 2D Formal Solvers (including ALI iteration procedure).'
 \end{pycode}
 
 \begin{pycode}[2DValidation]
@@ -656,7 +656,7 @@ The boundary condition radiation for the almost vertical rays used in the right-
 
 Flares produce huge changes in the radiation field, in both lines and continua.
 They are typically modelled in a plane-parallel context and we analyse the radiation leaving the top of this plane-parallel atmosphere.
-In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} and represent an estimate of the conditions in the core of a heated flux-tube.
+In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} horizontally and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges on and interacts with neighbouring plasma.
 These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band observations \citep{Isobe2007}.
@@ -708,15 +708,17 @@ We will focus primarily on these inclined observations as flares are extremely u
 Even a slight inclination can have a large effect, and in the following we will focus primarily on the most vertical ray present in our quadrature, with an angle of approximately \SI{18}{\degree} ($\mu_z\approx0.95$) to the surface normal.
 Only $\sim$1/25 of the visible solar disc has a viewing angle smaller than this, so inclination effects will be at least this significant for the majority of observed flares.
 
+\TODO{FIX Viewing ray definition. mu\_y exists too... Ray is much more vertical in the x-z plane than we say here.}
+
 In this simulation we use the same model atoms as the previous chapter, with both hydrogen and calcium being set as active species.
 This simulation is carried out for two different flare models illuminating the 2D slab; F9 and F10 models with identical heating parameters to those of Chapter~\ref{Chap:TimeDepRt} including the Lyman line photoionisation effects, but with RADYN's in-built coronal irradiation enabled.
-We will now showcase the results of these simulations, looking at both the observable effects and the population changes internal to the slab, focusing on the \Ha{} and \CaLine{} spectral lines, before comparing these to observations taken with the CRISP instrument on the SST.
+We will now show the results of these simulations, looking at both the observable effects and the population changes internal to the slab, focusing on the \Ha{} and \CaLine{} spectral lines, before comparing these to observations taken with the CRISP instrument on the SST.
 To justify the importance of the time-dependent treatment, we will also compare these results against statistical equilibrium solutions computed at several timesteps.
 
 
 \section{Simulation Results}\label{Sec:2dSimResults}
 
-Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive than the plane-parallel models of the previous chapter, both due to larger number of points to be solved as well as the increased angular samples and interpolations needed at each point.
+Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive than the plane-parallel models of the previous chapter, both due to the larger number of points at which the RTE is to be solved as well as the increased angular samples and interpolations needed at each point.
 The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$8,000 CPU hours on the hercules machine \TODO{machines.}
 {\color{Red} The code for these simulations is present in the MsLightweaver repository on the RefinedGrid2d branch.}
 
@@ -837,7 +839,7 @@ lFig.caption = r'\Ha{} for 2D F9 Case.'
 \end{pycode}
 % spell-checker: enable
 
-% \py[2DRT]|ch2DRT.get_figure('2DHaF9')|
+\py[2DRT]|ch2DRT.get_figure('2DHaF9')|
 
 % spell-checker: disable
 \begin{pycode}[2DRT]
@@ -849,7 +851,7 @@ lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 Case.'
 \end{pycode}
 
-% \py[2DRT]|ch2DRT.get_figure('2DCaF9')|
+\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
 
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
@@ -1350,13 +1352,14 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ax = fig.add_subplot(spec[1, 8])
     cax = fig.colorbar(mesh, cax=ax)
     cax.ax.tick_params(axis='y', direction='out')
+    return ctx
 
 
 atmost = read_atmost(ch2DRT.data_file('atmost_F9.dat'))
 atmost.to_SI()
 dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+ctxF9 = plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation. The $\tau=1$ line, initial line profile and line profiles \SI{100}{\kilo\metre} on both sides of the flare is shown in the first panel."
@@ -1366,7 +1369,7 @@ atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
 atmost.to_SI()
 dataPops = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-plot_rel_change_pops(fig, dataPops, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+ctxF10 = plot_rel_change_pops(fig, dataPops, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F10 simulation. The $\tau=1$ line, initial line profile and line profiles \SI{100}{\kilo\metre} on both sides of the flare is shown in the first panel."
@@ -1408,6 +1411,62 @@ There is a secondary feature on these \Caii{} population relative change plots, 
 This feature overlaps the core of the line contribution shown in the left-most panel, and appears to be a relatively similar reduction in both the upper and lower level populations (the reduction in the upper level population becomes larger than that of the lower level population approaching $x=\SI{1}{\mega\metre}$).
 
 \TODO{Use an anisotropy plot of the radiation from the 1D atmosphere to investigate the "lane" present in F10 populations of Ca ii.}
+%spell-checker: disable
+\begin{pycode}[2DRT]
+from copy import copy, deepcopy
+def plot_radiation_anisotropy(ctx, wlIdx):
+    # ctx.depthData.fill = True
+    # with open(os.devnull, 'w') as devnull:
+    #     with redirect_stdout(devnull):
+    #         ctx.formal_sol_gamma_matrices()
+
+    atmos = ctx.atmos.pyAtmos
+    sd = deepcopy(ctx.state_dict())
+    atmosManyAngle = sd['kwargs']['atmos']
+    atmosManyAngle.quadrature(10)
+    atmos = atmosManyAngle
+    ctxManyAngle = ctx.construct_from_state_dict_with(sd)
+    ctxManyAngle.depthData.fill = True
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            for i in range(100):
+                dJ = ctxManyAngle.formal_sol_gamma_matrices()
+                if dJ < 1e-3:
+                    break
+    Idir = ctxManyAngle.depthData.I
+
+    zIdxs = [0]
+    for z in range(atmos.height.shape[0]):
+        if abs(atmos.height[z] - atmos.height[zIdxs[-1]]) > 1e5:
+            zIdxs.append(z)
+
+    Nrays = atmos.Nrays
+    us = []
+    vs = []
+    for upDown in [0, 1]:
+        sign = [-1.0, 1.0][upDown]
+        for i in range(Nrays):
+            us.append(np.sqrt(1.0 - atmos.muz[i]**2) * Idir[wlIdx, i, upDown, zIdxs])
+            vs.append(sign * atmos.muz[i] * Idir[wlIdx, i, upDown, zIdxs])
+    # NOTE(cmo): Why doesn't this produce any down directed rays?
+    us = np.concatenate(us)
+    vs = np.concatenate(vs)
+
+    zs = (atmos.height[zIdxs] / 1e6).tolist() * Nrays * 2
+    xs = np.zeros(len(zs))
+
+    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+    ax = fig.gca()
+    ax.quiver(xs, zs, us, vs, scale=1e-6)
+    ax.set_ylim(1.2, 1.8)
+    return fig
+
+fig = plot_radiation_anisotropy(ctxF10, 927)
+lFig = ch2DRT.save_figure('CaF10Anisotropy', fext='.pgf')
+\end{pycode}
+\py[2DRT]|ch2DRT.get_figure('CaF10Anisotropy')|
+%spell-checker: enable
+
 
 This will mostly lead to a reduction in local opacity, with a slight reduction in source function.
 Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick upper-chromospheric layers above the core forming region.

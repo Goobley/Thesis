@@ -33,18 +33,18 @@ Our theory of radiative transfer does not give any immediate insight into the fo
 
 \section{The RADYNVERSION Model}\label{Sec:RadynversionModel}
 
-Our approach towards inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.
-We wish to learn the form of the latent space, and by sampling this space sufficiently for a given observation we can infer the likelihoods of parameters of the flaring atmosphere.
+Our approach to inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.
+We wish to learn the form of the latent space, and by sampling this space sufficiently for a given observation we can infer the likelihoods of parameters at each location in the flaring atmosphere.
 Nevertheless, we have no data on which to train which directly characterises the latent space, and thus we turn to the technique of invertible neural networks (INNs) which naturally learn bijective functions to learn the bijective mapping \emph{and} the form of the latent space simultaneously.
 
 The INN is a form of DNN in which invertible blocks are used.
-A traditional fully connected or convolutional layer is not generally invertible.
+A traditional fully connected or convolutional layer used in an ANN is not generally invertible.
 Indeed, whilst a fully connected layer with equal number of inputs and outputs and an invertible activation function \emph{can} be inverted, it is extremely computationally expensive to do so due to the cost of inverting the potentially large square matrix of weights.
 The INN is instead built on trivially invertible blocks which can be trained to naturally learn our bijective function.
-These blocks are built using DNNs, and are thus universal function approximators themselves, and can learn to map different density (in the sense of probability \emph{density}) distributions to each other.
+These blocks are built using DNNs, and are thus universal function approximators themselves, meaning they can learn to map different density (in the sense of probability \emph{density}) distributions to each other.
 This is the cornerstone of how the form of the latent space is learned; the INN is trained to map the samples of the latent distribution to a known distribution.
 Provided there is sufficient dimensionality to represent the original distribution, it can be remapped to another without any loss of information.
-We can therefore choose to characterise the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the training data.
+We can therefore choose to represent the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the training data.
 For simplicity we choose to represent the latent space as the unit multivariate Gaussian distribution with mean 0 and variance 1, which we denote $\mathcal{N}(0, \mathcal{I}_n)$ for an $n$ dimensional case.
 Due to the speed of our neural network based solution relative to the cost of the formal solution and iteration that is required in conventional NLTE inversions, we can simply take a large number of samplings of our chosen latent space, and thus generate a probability density function for the atmospheric parameters at each location in the atmosphere, conditioned by our training set.
 The approach to inferring atmospheric parameters using the INN therefore differs to the approach of traditional methods that take guided explorations of the latent space by taking much broader samplings of this space and constructing a posterior distribution from these, but similarities can also be drawn between this rapid direct sampling and the ``exploration'' approach of traditional inversion codes.
@@ -143,7 +143,7 @@ Models with both three and five affine coupling layers were trialled, with the l
 Whilst it is possible to continue to increase the depth of this network, this is not without significant computational cost, and did not seem necessary given the quality of the results.
 
 RADYNVERSION is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
-The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time, in our case the temperature $T$, electron density $n_e$, and velocity $v$.
+The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time; in our case the temperature $T$, electron density $n_e$, and velocity $v$.
 These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
 The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $v\mapsto\mathrm{sign}(v)\log_{10} \left( |v_{\mathrm{km\, s^{-1}}}| + 1\right)$.
 The mapping for $v$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
@@ -159,16 +159,16 @@ Thus the input and total output (i.e. output and latent space) must be of length
 To improve the generalisation performance of the network and allow it a greater dimensionality for its representation of the data we choose to set the input and output size to 384.
 The input to the network is zero-padded to this length, and the output and latent space are concatenated with zero-padding in between.
 This width was also determined empirically, as it was found that the model had difficulties converging for the minimum width of 210.
-This problem seemed to vanish upon increasing the width, a technique that was found in the examples associated with \citep{2018Ardizzone}, so no other values were trialled.
+This problem was greatly mitigated by increasing the width, a technique that was found in the examples associated with \citep{2018Ardizzone}, so no other values were trialled.
 The deep neural networks used inside the affine coupling layers have an input and output of length 192, but this is increased to 384 for the inner layers, to further increase their representational ability.
 
 The RADYNVERSION model presented here considers each set of atmospheric parameters and observables as instantaneous quantities.
-As we have discussed, it is usually necessary to consider time-dependent populations in flares, and clearly we do not do that here.
-The atomic populations are not considered directly with this model, and we are interested in whether there is sufficient information present in this reduced description of the atmosphere to reproduce the emergent line profiles and whether an ANN can then learn to decode this information.
+As we have discussed, it is usually necessary to consider time-dependent populations in flares, and clearly we do not do so here.
+The atomic populations are not considered directly with this model, thus we are interested in determining whether there is sufficient information present in this reduced description of the atmosphere (under the inherent assumption in the training set that all snapshots originate from the same starting atmosphere) to reproduce the emergent line profiles and whether an ANN can then learn to decode this information.
 
 \subsection{Training Data}
 
-To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{} {\color{Red} Let's see what happens to the online database}.
+To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{} \TODO{online database link}.
 These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
 All models are heated by a symmetric triangular electron beam pulse, modelled using the Fokker-Planck module (with an initial power law distribution of electron energies), of \SI{20}{\s} duration, with a peak at \SI{10}{\s}.
 The total beam deposition varies between \SI{3e10}{\erg\per\square\cm} and \SI{1e12}{\erg\per\square\cm}, the low-energy cut-off is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
@@ -176,8 +176,8 @@ All of these simulations last for \SI{50}{\s}, with data saved every \SI{0.1}{\s
 
 Not all of these simulations converged due to certain parameter combinations.
 In particular some simulations with lower values for the low-energy cut-off, higher spectral indices, and high total energy deposition were not present in the grid of models.
-From the 81 simulations we then have 40,500 individual timesteps of which we separate 20\% for validation purposes.
-The atmospheric parameters and line profiles are mapped onto their fixed grids and prepared as discussed in Section~\ref{Sec:RadynversionModel}.
+From the 81 simulations we then have 40,500 individual timesteps, of which we separate 20\% for validation purposes.
+The atmospheric parameters and line profiles are mapped onto their fixed grids and the parameters are prepared as discussed previously.
 Our height stratification is chosen to primarily sample the chromosphere, and places 45 linearly spaced points below \SI{3.5}{\mega\metre}, with a constant spacing of \SI{79.2}{\kilo\metre}.
 The remaining 5 points are then exponentially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
 
@@ -192,10 +192,10 @@ This latent space is constrained by a Maximum Mean Discrepancy (MMD) loss.
 The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\mathrm{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
 This is discussed in depth, along with implementation details in Section~\ref{Sec:Mmd}.
 During the forward process the MMD loss is used to ensure that the network learns to map the true latent space to our chosen form for it (the multivariate unit Gaussian distribution).
-A traditional regression loss cannot be applied here, as we would have to assign fixed ``samples'' from the latent space for each timestep in the training set, which cannot be done without understanding the true latent space.
-Its aim is instead to condition the distribution produced in the latent space.
+A traditional regression loss cannot be applied here, as we would have to assign fixed samples from the latent space for each timestep in the training set, which cannot be done without understanding the true latent space.
+Its aim is instead to condition the form of the distribution produced in the latent space.
 To this end, whilst $y$ is included in the MMD loss terms (as this is an important component of the output), the gradients on $y$ due to the MMD loss are ignored, so as not to affect the training of the forward model i.e. whilst the elements of $y$ are considered when computing the value of the MMD loss, the MMD can only affect the weights determining $z$.
-Both the L2 and MMD losses converging ensures that samples of $z$ are correctly independent of $y$ as they must not contain copies of the same information for the reverse process to work correctly.
+The convergence of both the L2 and MMD losses ensures that samples of $z$ are correctly independent of $y$ as they must not contain copies of the same information (i.e. they must be independent) for the reverse process to work correctly.
 
 The inverse process is trained similarly, with an additional two losses.
 An L2 loss is used for $x$ and the zero-padding to ensure the expected atmosphere parameters are produced (and that the padding remain 0), and an MMD loss ensuring the correct distribution of $x$ for random latent samples.
@@ -207,24 +207,24 @@ These are combined to produce the losses
     loss_f &= w_\mathrm{pred} L2_f + w_\mathrm{latent} MMD_f,\\
     loss_b &= 0.5w_\mathrm{pred} L2_b + \xi(n)w_\mathrm{rev} MMD_b,
 \end{align}
-where $f$ and $b$ represent the forward and backwards terms respectively, and $\xi$ is a term that gradually increases towards unity.
+where $f$ and $b$ represent the forward and backward terms respectively, and $\xi$ is a term that gradually increases towards unity over the course of a fade-in period.
 It is parametrised as
 \begin{equation}
     \xi(n) = \left( \min\left( \frac{n}{0.4 N_\mathrm{fade}}, 1 \right) \right)^3,
 \end{equation}
-where $n$ is the current epoch, and $N_\mathrm{fade}$ is the fade-in period i.e. the number of epochs needed for this term to become unity.
-This terms serves to slowly increase the effect of the MMD loss, that was otherwise found to hinder the training of both the forward and inverse problems by dominating $loss_b$ and guiding the system away from a solution that minimised both terms.
+where $n$ is the current epoch, and $N_\mathrm{fade}$ is the fade-in period.
+This terms serves to slowly increase the effect of the MMD loss, as this was otherwise found to hinder the training of both the forward and inverse problems by dominating $loss_b$ and guiding the system away from a solution that minimised both terms.
 To ensure that the output in the zero-padded sections remains close to zero we also use $1-\xi$ to initialise these with a small amount of random noise, decaying over this same period.
 This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
-Empirically we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
-After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each block of these to fine-tune the line profiles and atmospheric parameters which were otherwise a little noisy.
+Through a manual hyperparameter search we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
+After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each of these blocks to fine-tune the line profiles and atmospheric parameters which were otherwise a little noisy.
 From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ again being increased by 1000.
 These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forward process would not reliably converge.
 
-The weights update is computed from the gradients of the linearly combined losses using the Adam optimisation algorithm \citep{2014Kingma} with hyperparameters $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
+The update of the weights inside the neural networks is computed from the gradients of the linearly combined losses using the Adam optimisation algorithm \citep{2014Kingma} with hyperparameters $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
 The $\beta_i$ terms control the decay rate for momentum of the first- and second-moment estimates of the gradients and $\epsilon$ simply prevents division by zero.
-These gradients are clipped to a range of $\pm15$ to help further mitigate problems with exploding gradients.
-This does not affect the final solution as the gradients will decrease as we approach a minimum.
+These gradients are limited to a range of $\pm15$ to help further mitigate problems with exploding gradients.
+This does not affect the final solution as the gradients will become small as we approach a minimum.
 The learning rate was initialised to $1.5\times10^{-3}$ and decays by a factor of $0.004^{1/1333}$ every 12 epochs.
 Each minibatch contained 500 different samples and 20 minibatches were used per learning epoch.
 The final model was selected based on its L2 performance for the forward and backwards results on the validation set.
@@ -239,19 +239,19 @@ In this case the best performing model was the one saved after 11,400 epochs of 
 The maximum mean discrepancy (MMD) is a statistic for comparing two distributions, based on samples drawn from these, and computes the difference in expectations over functions in the unit ball of a reproducing kernel Hilbert space (RKHS).
 It represents an estimate of the distance between the mean features of the sampled distributions in the space defined by a chosen kernel i.e. the greater similarity between the two sampled distributions the smaller the value of the MMD.
 
-A Hilbert space is a space in which an inner product is defined that is linear, symmetric, and the inner product of an element with itself is positive definite.
-From this inner product a norm can be defined $||f|| = \sqrt{\langle f, f \rangle}$.
+A Hilbert space is a space in which an inner product is defined that is linear, symmetric, and where the inner product of an element with itself is positive definite.
+A norm can be defined from this inner product $||f|| = \sqrt{\langle f, f \rangle}$.
 These spaces must also be Cauchy complete, implying that every Cauchy sequence (convergent sequence), must converge to a point in the space.
 
 An RKHS $\mathcal{H}$ is then a Hilbert space of functions $f : \mathcal{X} \rightarrow \mathbb{R}$ for which the evaluation functional $\delta_x : f \mapsto f(x)$ is bounded and continuous\footnote{This can be generalised to functions $f : \mathcal{X} \rightarrow \mathbb{C}$.}.
 The RKHS has the property that two functions that are close in norm in $\mathcal{H}$ are then pointwise close when evaluated anywhere over $\mathcal{X}$.
-The kernel associated with this RKHS is a positive definite kernel $k : \mathcal{X} \times \mathcal{X} \rightarrow \mathbb{R}$ if there exists a map $\phi : \mathcal{X} \rightarrow \mathcal{H}$ such that $\forall\, x,y \in \mathcal{H}$
+The kernel associated with this RKHS is a positive definite kernel $k : \mathcal{X} \times \mathcal{X} \rightarrow \mathbb{R}$ if there exists a map $\phi : \mathcal{X} \rightarrow \mathcal{H}$ such that $\forall\, x,y \in \mathcal{X}$
 \begin{equation}
     k(x,y) = \langle \phi(x), \phi(y) \rangle_\mathcal{H}.
 \end{equation}
 The map $\phi$ is termed the feature map, and $\mathcal{H}$ is known as the feature space.
 
-Let us define two probability distributions $P$ and $Q$ and draw an observation $X$ and $Y$ in an independent and identically distributed fashion from $P$ and $Q$ respectively.
+Let us define two probability distributions $P$ and $Q$ and draw observations $X$ and $Y$ in an independent and identically distributed fashion from $P$ and $Q$ respectively.
 The MMD is then defined by
 \begin{equation}\label{Eq:MmdDef}
 \begin{aligned}
@@ -269,14 +269,14 @@ $\mu_P$ can now be written in terms of the features of $\mathcal{H}$
 \begin{equation}
     \mu_P = [\ldots \mathbb{E}_P[\phi_i(X)] \ldots],
 \end{equation}
-where $\mathbb{E}_P$ denotes the expected value of its argument with respect to $P$ and $\phi_i$ is the $i$th feature of the feature map (which may contain infinitely many features).
+where $\mathbb{E}_P$ denotes the expected value of its argument with respect to $P$, and $\phi_i$ is the $i$th feature of the feature map (which may contain infinitely many features).
 We can then write
 % Muandet2017, p51, crossed with Gretton Madrid notes
 \begin{equation}
     \langle \mu_P, \mu_P \rangle_\mathcal{H} = \langle \mathbb{E}_P [k(\cdot\, ,\, X)], \mathbb{E}_{P} [k(\cdot\, ,\, X^\prime)] \rangle_\mathcal{H} = \mathbb{E}_{P} [k(X, X^\prime)],
 \end{equation}
 where $X^\prime$ is an independently drawn copy of $X$ from $P$, and $k(\cdot\, ,\, X)$ refers to the function, and not its evaluation at a particular point.
-In this case $k(\cdot,\, ,\, X)$ is the feature map $\phi(X)$.
+Thus $k(\cdot,\, X)$ is the feature map $\phi(X)$.
 We define $Y^\prime$ analogously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
 \begin{equation}
     \mathrm{MMD}^2 = ||\mu_P - \mu_Q|| ^2
@@ -291,7 +291,7 @@ For length $n$ finite observations $X$ and $Y$ we can expand this to provide an 
 As this statistic is unbiased and computed from a finite sample size, it can be negative when $P$ and $Q$ are similar distributions, despite being the definition of $\mathrm{MMD}^2$.
 We therefore employ a biased estimate of the MMD which remains positive in all scenarios
 \begin{equation}
-    \widehat{\mathrm{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, x_j) \right).
+    \widehat{\mathrm{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, y_j) \right).
 \end{equation}
 This biased form of the MMD is also more efficient to compute using the vectorised tensor operations present in machine learning frameworks like pytorch.
 
@@ -301,11 +301,11 @@ We choose to employ the inverse multi-quadric (IMQ) kernel as used by \citet{201
     k_\alpha(x, y) = \frac{\alpha^2}{\alpha^2 + ||x-y||_2^2}.
 \end{equation}
 This kernel meets the strictly positive definite criterion that is necessary for a characteristic kernel of an RKHS, but contains a free parameter $\alpha$.
-This equation therefore described a family of kernels, which will have different performance depending on the data and the choice of $\alpha$.
-We were unable to empirically determine a single value for $\alpha$ for which the MMD could reliably distinguish between the two distributions well enough to optimise over, however it was found that the value of the MMD for different values of $\alpha$ whilst retaining fixed $X$ and $Y$ peaked for a particular value of $\alpha$.
+This equation therefore describes a family of kernels, which will have different performance depending on the data and the choice of $\alpha$.
+We were unable to empirically determine a single value for $\alpha$ for which the MMD could reliably distinguish between the two distributions well enough to optimise over, however it was found that the value of the MMD for different values of $\alpha$, whilst retaining fixed $X$ and $Y$, peaked for a particular value of $\alpha$.
 The kernel of the family with this value of $\alpha$ is able to better resolve the differences between our fixed samples and is therefore best suited (of the tested values) to guiding the optimisation of the weights associated with these terms.
 This approach was used to refine the MMD losses by updating the $\alpha$ parameter of the kernel to the value for which the MMD was maximal (given the fixed input samples from this epoch) every five epochs of training.
-Modifying the MMD loss in this way ensures that it is most sensitive to the scale of differing features between our current distribution samples.
+Modifying the MMD loss in this way ensures that it is most sensitive to the scale of the currently differing features between our distribution samples.
 
 Minimising the forward MMD loss then ensures the independence of data stored in the latent space and that the latent space takes a normal unit distribution form, whilst minimising the backwards MMD ensures that the distribution of atmospheres generated with different draws of the latent space is a plausible distribution when compared against the training set.
 
@@ -446,20 +446,20 @@ latexFig.caption = r'Validation of the RADYNVERSION reverse process from the gro
 
 During and after training, the RADYNVERSION model is validated against the unseen validation data separated from the training set.
 An example taken from the validation set showing the forward process is presented in Fig.~\ref{Fig:RadynversionValidationForwards}.
-The upper row shows that atmosphere inserted into the model whilst the lower row shows the expected output (solid lines) and the output of the forward process (dashed lines).
+The upper row shows the atmosphere input into the model whilst the lower row shows the expected output (solid lines) and the output of the forward process (dashed lines).
 The mean squared error in the scaled intensity at each wavelength point for the validation set is $5.74\times10^{-5}$ showing that the model can very accurately predict the scaled line profiles based on the atmospheric parameters for unseen atmospheres.
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationReverse')|
 
-Due to the model's inherent non-uniqueness and possible degeneracies it is harder to numerically evaluate the performance of the model's reverse process.
+Due to the inherent non-uniqueness and presence of possible degeneracies it is harder to numerically evaluate the performance of the model's reverse process.
 For each pair of line profiles we draw a large number of samples from the latent space and infer the predicted atmosphere from each latent space draw combined with the pair of line profiles.
 This gives a large number of possible sets of atmospheric parameters which we plot on a two dimensional histogram to show the probability density of the solution in each altitude node.
 This method then allows us to gauge possible degeneracies and establish the relative probabilities of different solutions.
-An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process.
-These histograms were generated from 10,000 draws latent space draws, and their values were gamma corrected (with $\gamma=\,$\py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
+An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process as input.
+These histograms were generated from 10,000 draws latent space draws, and their values were gamma corrected (with $\gamma=$ \py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
 The overplotted black dashed lines show the ground truth solution for each of the atmospheric parameters, and overlap the peak density of the histogram extremely well.
 The histogram remains very narrow in the lower atmosphere, but starts to expand above \SI{3}{\mega\metre}, where the solution is poorly constrained by the chromospheric lines in use here.
-This effect is most visible on the velocity plot, but despite the increase in uncertaintly, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.
+This effect is most visible on the velocity plot, but despite the increase in uncertainty, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.
 
 \subsection{Proof of Concept Results}
 
@@ -608,12 +608,12 @@ Fig.~\ref{Fig:CrispPlot} shows CRISP images in the blue wing, line core, and red
 These images were taken just after flare onset.
 Two pixels are marked, a circle on the flare ribbon, and a square far from the flare, in a much quieter region.
 The spectral line profiles from these two pixels are shown in Fig.~\ref{Fig:LineProfilesToInvert}.
-For the circular point both lines are strongly in emission whereas they are broad absorption lines for the square point.
+For the circular point both lines are strongly in emission whereas for the square point they are broad absorption lines.
 These lines from these pixels have then been inverted using RADYNVERSION, with 20,000 latent space draws each.
 The results of these inversions are shown in Figs~\ref{Fig:InversionResultsFlare}~and~
 \ref{Fig:InversionResultsQuiet} for the circular and square points respectively.
+These figures present equivalent information to the lower panels of Fig.~\ref{Fig:RadynversionValidationReverse}, although the dashed black lines now show the median of the histogram at each atmospheric point as there is no ground truth solution available.
 Performing these inversions with 20,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU.
-As there is no ground truth solution for this data we instead overplot the median solution at each altitude node.
 
 \py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
 \py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
@@ -622,12 +622,14 @@ As there is no ground truth solution for this data we instead overplot the media
 The following is a brief summary of the analysis undertaken by my co-authors.
 The inverted pixels were found to be consistent with previous analyses.
 For example, forward modelling by \citet{Kuridze2015} suggests that the \Ha{} line profile forms below \SI{1.2}{\mega\metre}, with the core forming towards the top of this region, and the line wings forming below \SI{0.95}{\mega\metre}.
-In this observation the \Ha{} line profile is asymmetric in favour of the red wing, and from the inversions we see that there is a slight upflow in the region where the wings are formed.
-This is likely chromospheric evaporation in this region causing an increase in the opacity of the blue wing, leading in turn to more intensity in the red wing.
+In this observation the \Ha{} line profile is found to be asymmetric in favour of the red wing, and from the inversions we see that there is a slight upflow in the region where the wings are formed.
+This is likely due to chromospheric evaporation in this region causing an increase in the opacity of the blue wing, leading in turn to more intensity in the red wing.
+
 For the off-ribbon pixel we note that both line profiles are very broad.
 The inverted velocity field contains a significant number of small magnitude oscillations which we believe are due to RADYN's conservative assumption of a \SI{2}{\kilo\metre\per\second} microturbulent velocity throughout the atmosphere, as this is insufficient to produce line profiles as broad as those observed here.
 If the network has learned that bulk plasma flows can shift the position of the line core (i.e. the majority of the opacity in a line), then it is reasonable to suggest that these represent our model's attempt to broaden the line profiles.
 Recent studies have shown that significantly higher microturbulent velocities are needed to explain the non-thermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
+The other atmospheric parameters vary more smoothly and do not reach values as large as those found for the on-ribbon pixel, which is consistent with the much quieter atmosphere expected at this location.
 
 \subsection{Discussion}
 
@@ -636,8 +638,10 @@ This is achieved by the union of machine learning and a large body of RHD simula
 The implementation is currently a proof of concept but shows much promise, agreeing with previous investigations, and can easily be extended to other spectral lines and atmospheric parameters.
 With the addition of more advanced forward models this technique could be applied to inference of the chromospheric magnetic field from full Stokes observations.
 Inversions using this method are fast and robust; the effort of ``exploring'' the latent space that is common in regression based codes has effectively been replaced with an up-front cost in the training process.
-Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due the previous training effort, which is then shared between every application of the model (in the traditional 1.5D inversion technique, where every column is treated independently, a lot of this work is replicated).
+Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due the previous training effort, and this is then shared between every application of the model (contrary to the traditional 1.5D inversion technique, where every column is treated independently, a lot of this work is replicated).
 These latent draws additionally serve to provide an estimate of the uncertainty on the inferred parameters.
 Potential future extensions to this model include incorporating the concept of time-dependence in a robust fashion so as to condition the solution from previous observations, and increasing the number of atmospheric parameters inferred.
 
 The RADYNVERSION approach has the potential to provide new insight into the structure of the flaring chromosphere and allow investigation of complete observation fields of view in a timely fashion, allowing researchers to leverage the full capabilities of next-generation solar telescopes such as DKIST.
+
+\TODO{Add discussion of other ML inversion techniques to intro.}
