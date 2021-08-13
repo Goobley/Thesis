@@ -736,12 +736,11 @@ import zarr
 import matplotlib.gridspec as gridspec
 
 
-def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLine=0.4):
-    fig.clf()
-
-    xEdges = (np.arange(d['xAxis'].shape[0]+1) - 0.5) * d['xAxis'][1]
-    xEdges /= 1e6
-    spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75,1], figure=fig)
+def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
+                    angularIdxDown, enhancementLine=0.4, enhancementLineDown=0.1):
+    xAxis = d['xAxis']
+    xEdges = np.concatenate(([xAxis[0]], 0.5 * (xAxis[1:] + xAxis[:-1]), [xAxis[-1]])) / 1e6
+    spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75, 1], figure=fig)
     xAxis = d['xAxis'][...] / 1e6
     wavelength = d['wavelength']
 
@@ -750,62 +749,100 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
                                 [d.time[-1]]))
 
     Idata = d['I'][:, :, angularIdx, :][...]
+    IdataDown = d['I'][:, :, angularIdxDown, :][...]
     IChangeArr = (Idata - Idata[:, :, -1][:, :, None]) / Idata[:, :, -1][:, :, None]
+    IChangeArrDown = (IdataDown - IdataDown[:, :, -1][:, :, None]) / IdataDown[:, :, -1][:, :, None]
 
     offset = wlOffset
 
     change1 = IChangeArr[:, wl-offset, :]
+    change1Down = IChangeArrDown[:, wl-offset, :]
     line1 = np.zeros(IChangeArr.shape[0])
     for t in range(change1.shape[0]):
         for k in range(change1.shape[1]-1, -1, -1):
             if change1[t, k] > enhancementLine:
                 line1[t] = xAxis[k]
                 break
+    line1Down = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change1Down[t, k] > enhancementLineDown:
+                line1Down[t] = -xAxis[k]
+                break
     change2 = IChangeArr[:, wl, :]
+    change2Down = IChangeArrDown[:, wl, :]
     line2 = np.zeros(IChangeArr.shape[0])
     for t in range(change1.shape[0]):
         for k in range(change1.shape[1]-1, -1, -1):
             if change2[t, k] > enhancementLine:
                 line2[t] = xAxis[k]
                 break
+    line2Down = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change2Down[t, k] > enhancementLineDown:
+                line2Down[t] = -xAxis[k]
+                break
     change3 = IChangeArr[:, wl+offset, :]
+    change3Down = IChangeArrDown[:, wl+offset, :]
     line3 = np.zeros(IChangeArr.shape[0])
     for t in range(change1.shape[0]):
         for k in range(change1.shape[1]-1, -1, -1):
             if change3[t, k] > enhancementLine:
                 line3[t] = xAxis[k]
                 break
+    line3Down = np.zeros(IChangeArr.shape[0])
+    for t in range(change1.shape[0]):
+        for k in range(change1.shape[1]-1, -1, -1):
+            if change3Down[t, k] > enhancementLineDown:
+                line3Down[t] = -xAxis[k]
+                break
 
     ax = fig.add_subplot(spec[0, 0])
-    change = IChangeArr[:, wl-offset, :]
-    mesh = ax.pcolormesh(timeEdges, xEdges, change1.T, cmap='Greys_r', rasterized=True)
+    vmin = min(change1.min(), change1Down.min())
+    vmax = max(change1.max(), change1Down.max())
+    vmaxAmp = max(abs(vmin), abs(vmax))
+    mesh = ax.pcolormesh(timeEdges, xEdges, change1.T, rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp, cmap='RdBu_r')
+    mesh = ax.pcolormesh(timeEdges, -xEdges, change1Down.T, rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp, cmap='RdBu_r')
     ax.plot(d['time'], line1)
-    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl-offset]), fontdict={'fontsize': 11})
+    ax.plot(d['time'], line1Down, c='C1')
+    ax.axhline(0, c='r')
+    ax.set_title(r'$\Delta\lambda={:.4f}$ nm'.format(wavelength[wl-offset] - wavelength[wl]), fontdict={'fontsize': 11})
     ax.tick_params(axis='x', labelbottom=False)
-    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
-    ax.set_ylim(None, 1.5)
+    ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
+#     ax.set_ylim(None, 1.5)
     cax = fig.colorbar(mesh, ax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[1, 0])
-    change = IChangeArr[:, wl, :]
-    mesh = ax.pcolormesh(timeEdges, xEdges, change2.T, cmap='Greys_r', rasterized=True)
+    vmin = min(change2.min(), change2Down.min())
+    vmax = max(change2.max(), change2Down.max())
+    vmaxAmp = max(abs(vmin), abs(vmax))
+    mesh = ax.pcolormesh(timeEdges, xEdges, change2.T, cmap='RdBu_r', rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp)
+    mesh = ax.pcolormesh(timeEdges, -xEdges, change2Down.T, cmap='RdBu_r', rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp)
     ax.plot(d['time'], line2)
-    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl]), fontdict={'fontsize': 11})
+    ax.plot(d['time'], line2Down, c='C1')
+    ax.axhline(0, c='r')
+    ax.set_title(r'$\lambda_0={:.4f}$ nm'.format(wavelength[wl]), fontdict={'fontsize': 11})
     ax.tick_params(axis='x', labelbottom=False)
-    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
-    ax.set_ylim(None, 1.5)
+    ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
+#     ax.set_ylim(None, 1.5)
     cax = fig.colorbar(mesh, ax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[2, 0])
-    change = IChangeArr[:, wl+offset, :]
-    mesh = ax.pcolormesh(timeEdges, xEdges, change3.T, cmap='Greys_r', rasterized=True)
+    vmin = min(change3.min(), change3Down.min())
+    vmax = max(change3.max(), change3Down.max())
+    vmaxAmp = max(abs(vmin), abs(vmax))
+    mesh = ax.pcolormesh(timeEdges, xEdges, change3.T, rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp, cmap='RdBu_r')
+    mesh = ax.pcolormesh(timeEdges, -xEdges, change3Down.T, rasterized=True, vmin=-vmaxAmp, vmax=vmaxAmp, cmap='RdBu_r')
     ax.plot(d['time'], line3)
-    ax.set_title(r'$\lambda={:.4f}$ nm'.format(wavelength[wl+offset]), fontdict={'fontsize': 11})
+    ax.plot(d['time'], line3Down, c='C1')
+    ax.axhline(0, c='r')
+    ax.set_title(r'$\Delta\lambda={:.4f}$ nm'.format(wavelength[wl+offset] - wavelength[wl]), fontdict={'fontsize': 11})
     ax.set_xlabel('Time [s]')
-    ax.set_ylabel('Extent [Mm]', fontdict={'fontsize': 11})
-    ax.set_ylim(None, 1.5)
+    ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
+#     ax.set_ylim(None, 1.5)
     cax = fig.colorbar(mesh, ax=ax)
     cax.ax.tick_params(axis='y', direction='out')
 
@@ -826,12 +863,13 @@ def plot_rel_change_2d(fig, d, wl, wlOffset, position, angularIdx, enhancementLi
 #         fig.suptitle('F9 into RADYN')
 #         fig.suptitle(r'Ca ɪɪ 8542 $\AA$ F9 Heating')
     # fig.suptitle(r'H$-\alpha$ F9 Heating Flare atmosphere')
-    fig.tight_layout()
+    # fig.tight_layout()
 
 dataRad = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
 angularIdx = 1
-plot_rel_change_2d(fig, dataRad, 743, 15, 2, angularIdx)
+angularIdxDown = 3
+plot_2d_imaging(fig, dataRad, 743, 15, 4, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F9 Case.'
@@ -844,8 +882,7 @@ lFig.caption = r'\Ha{} for 2D F9 Case.'
 % spell-checker: disable
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-angularIdx = 1
-plot_rel_change_2d(fig, dataRad, 927, 7, 2, angularIdx)
+plot_2d_imaging(fig, dataRad, 927, 7, 4, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 Case.'
@@ -854,27 +891,25 @@ lFig.caption = r'\CaLine{} for 2D F9 Case.'
 \py[2DRT]|ch2DRT.get_figure('2DCaF9')|
 
 \begin{pycode}[2DRT]
+dataRadF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-
-angularIdx = 3
-plot_rel_change_2d(fig, dataRad, 743, 15, 2, angularIdx)
+plot_2d_imaging(fig, dataRadF10, 743, 15, 4, angularIdx, angularIdxDown)
 fig.tight_layout()
-lFig = ch2DRT.save_figure('2DHaF9Away', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\Ha{} for 2D F9 Case. Away from ribbon.'
+lFig = ch2DRT.save_figure('2DHaF10', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\Ha{} for 2D F10 Case.'
 \end{pycode}
 
-% \py[2DRT]|ch2DRT.get_figure('2DHaF9Away')|
+\py[2DRT]|ch2DRT.get_figure('2DHaF10')|
 
 \begin{pycode}[2DRT]
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-angularIdx = 3
-plot_rel_change_2d(fig, dataRad, 927, 7, 2, angularIdx)
+plot_2d_imaging(fig, dataRadF10, 927, 7, 4, angularIdx, angularIdxDown)
 fig.tight_layout()
-lFig = ch2DRT.save_figure('2DCaF9Away', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\CaLine{} for 2D F9 Case. Away from ribbon'
+lFig = ch2DRT.save_figure('2DCaF10', fig, fext='.pgf', dpi=500)
+lFig.caption = r'\CaLine{} for 2D F10 Case.'
 \end{pycode}
 
-% \py[2DRT]|ch2DRT.get_figure('2DCaF9Away')|
+\py[2DRT]|ch2DRT.get_figure('2DCaF10')|
 
 \begin{pycode}[2DRT]
 def plot_2d_rad(ax, dataRad, time, waveRange):
@@ -939,7 +974,6 @@ ax[1,1].set_yticklabels([])
 lFig = ch2DRT.save_figure('CaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
 
-dataRadF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
 fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
 waveRangeHa = (656.326, 656.626)
 plot_2d_rad(ax[0,0], dataRadF10, 5, waveRangeHa)
@@ -1033,6 +1067,25 @@ Outside of the \regiona{} range \CaLine{} appears to behave very similarly to th
 We see that these optical line profiles can present significant core enhancements up to \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
 There are only modest variations in the outgoing radiation for viewing angles where this is not the case (the negative $x$ region).
 % In both cases the line wings and continuum levels do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
+
+%spell-checker: disable
+\begin{pycode}[2DRT]
+fig, ax = plt.subplots(1, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+dataRad10s = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_10s_radiation_ZeroBc.zip'), 'r')
+plot_2d_rad(ax[0], dataRad10s, 10.0, (656.376, 656.576))
+ax[0].set_title(r'H$\alpha$')
+ax[0].set_xlabel(r'$\Delta\lambda$ [nm]')
+ax[0].set_ylabel(r'$x$ [Mm]')
+plot_2d_rad(ax[1], dataRad10s, 10.0, (854.3444, 854.5444))
+ax[1].set_title(r'Ca\,\textsc{ii} \SI{854.2}{\nano\metre}')
+ax[1].set_xlabel(r'$\Delta\lambda$ [nm]')
+ax[1].set_yticklabels([])
+lFig = ch2DRT.save_figure('ZeroBcSpectro', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Intensity at $t=\SI{10}{\second}$ in the F10 model for both \Ha{} and \CaLine{} with the boundary conditions in $x$ set to emit no radiation.'
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('ZeroBcSpectro')|
+%spell-checker: enable
 
 \subsection{Population Changes}
 
@@ -1367,9 +1420,9 @@ lFig.placement = 'htbp'
 
 atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
 atmost.to_SI()
-dataPops = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
+dataPopsF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-ctxF10 = plot_rel_change_pops(fig, dataPops, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+ctxF10 = plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F10 simulation. The $\tau=1$ line, initial line profile and line profiles \SI{100}{\kilo\metre} on both sides of the flare is shown in the first panel."
@@ -1414,57 +1467,103 @@ This feature overlaps the core of the line contribution shown in the left-most p
 %spell-checker: disable
 \begin{pycode}[2DRT]
 from copy import copy, deepcopy
-def plot_radiation_anisotropy(ctx, wlIdx):
-    # ctx.depthData.fill = True
-    # with open(os.devnull, 'w') as devnull:
-    #     with redirect_stdout(devnull):
-    #         ctx.formal_sol_gamma_matrices()
+def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, matchAspectRatios=True):
 
-    atmos = ctx.atmos.pyAtmos
+    ctx = ctxBoundary
+    atmos2d = lw.Atmosphere.make_2d(height=np.arange(2), x=np.arange(2), temperature=np.ones((2,2)),
+                                vx=np.zeros((2,2)), vz=np.zeros((2,2)), vturb=np.ones((2,2)),
+                                ne=np.ones((2,2)), nHTot=np.zeros((2,2)))
+    atmos2d.quadrature(6)
+    Nrays2d = atmos2d.mux.shape[0] // 2
+
     sd = deepcopy(ctx.state_dict())
-    atmosManyAngle = sd['kwargs']['atmos']
-    atmosManyAngle.quadrature(10)
-    atmos = atmosManyAngle
-    ctxManyAngle = ctx.construct_from_state_dict_with(sd)
-    ctxManyAngle.depthData.fill = True
+    atmos2dRays = sd['kwargs']['atmos']
+    atmos2dRays.rays(**{'muz':atmos2d.muz[:Nrays2d], 'mux': atmos2d.mux[:Nrays2d], 'wmu':2*atmos2d.wmu[:Nrays2d]})
+    ctx2dRays = ctx.construct_from_state_dict_with(sd)
+    atmos = atmos2dRays
+
+    ctx2dRays.depthData.fill = True
     with open(os.devnull, 'w') as devnull:
         with redirect_stdout(devnull):
             for i in range(100):
-                dJ = ctxManyAngle.formal_sol_gamma_matrices()
+                dJ = ctx2dRays.formal_sol_gamma_matrices()
                 if dJ < 1e-3:
                     break
-    Idir = ctxManyAngle.depthData.I
+    Idir = ctx2dRays.depthData.I
 
     zIdxs = [0]
     for z in range(atmos.height.shape[0]):
-        if abs(atmos.height[z] - atmos.height[zIdxs[-1]]) > 1e5:
+        if abs(atmos.height[z] - atmos.height[zIdxs[-1]]) > 7e4:
             zIdxs.append(z)
 
     Nrays = atmos.Nrays
     us = []
     vs = []
-    for upDown in [0, 1]:
-        sign = [-1.0, 1.0][upDown]
-        for i in range(Nrays):
-            us.append(np.sqrt(1.0 - atmos.muz[i]**2) * Idir[wlIdx, i, upDown, zIdxs])
-            vs.append(sign * atmos.muz[i] * Idir[wlIdx, i, upDown, zIdxs])
-    # NOTE(cmo): Why doesn't this produce any down directed rays?
+    cs = []
+    zs = []
+    xs = []
+
+    xScaling = 2 / (len(lineNames)) / 0.9
+    for lineIdx, wlIdx in enumerate(wlIdxs):
+        for upDown in [0, 1]:
+            sign = [-1.0, 1.0][upDown]
+            for i in range(Nrays):
+                us.append(atmos.mux[i] * Idir[wlIdx, i, upDown, zIdxs])
+                vs.append(sign * atmos.muz[i] * Idir[wlIdx, i, upDown, zIdxs])
+                cs.append(Idir[wlIdx, i, upDown, zIdxs])
+
+
+        zs.append((atmos.height[zIdxs] / 1e6).tolist() * Nrays * 2)
+        xs.append(np.ones(len(zs[-1])) * lineIdx * xScaling)
     us = np.concatenate(us)
     vs = np.concatenate(vs)
+    cs = np.concatenate(cs)
+    zs = np.concatenate(zs)
+    xs = np.concatenate(xs)
 
-    zs = (atmos.height[zIdxs] / 1e6).tolist() * Nrays * 2
-    xs = np.zeros(len(zs))
+    fig, axs = plt.subplots(1, 2,
+                            figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+    ax = axs[1]
+    tIdx = np.searchsorted(dataPops['time'][...], 10.0)
+    zN = np.copy(dataPops['zAxis'][tIdx])
+    zEdges = np.concatenate(([zN[0]], 0.5 * (zN[1:] + zN[:-1]), [zN[-1]])) / 1e6
+    xAxis = dataPops['xAxis'][...]
+    xEdges = np.concatenate(([xAxis[0]], 0.5 * (xAxis[1:] + xAxis[:-1]), [xAxis[-1]])) / 1e6
 
-    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-    ax = fig.gca()
-    ax.quiver(xs, zs, us, vs, scale=1e-6)
-    ax.set_ylim(1.2, 1.8)
+    mappable = ax.pcolormesh(xEdges, zEdges,
+                             dataPops['ne'][tIdx].reshape(450, 41), norm=LogNorm(),
+                             rasterized=True)
+    ax.set_xlabel('$x$ [Mm]')
+    ax.set_ylim(0.9, 1.7)
+    ax.set_title('$n_e$ [m$^{-3}$]')
+    ax.set_yticklabels([])
+    fig.colorbar(mappable, ax=ax)
+
+
+    ax = axs[0]
+    angles = 'xy' if matchAspectRatios else None
+    mappable = ax.quiver(xs, zs, us, vs, cs, scale=1e-6, cmap='Reds', angles=angles)
+    ax.set_ylim(0.9, 1.7)
+    ax.set_xlim(None, 2.0)
+    ax.set_xticks(np.arange(len(lineNames)) * xScaling)
+    ax.set_xticklabels(lineNames)
+    ax.set_ylabel('$z$ [Mm]')
+    ax.set_title('Radiation Anisotropy')
+    fig.colorbar(mappable, ax=ax)
     return fig
 
-fig = plot_radiation_anisotropy(ctxF10, 927)
-lFig = ch2DRT.save_figure('CaF10Anisotropy', fext='.pgf')
+ca = CaII()
+h = H_6()
+linesToPlot = [h.lines[0], ca.lines[1], h.lines[4], ca.lines[4]]
+lineNames = [r'Ly$\alpha$', r'Ca\,\textsc{ii} K', r'H$\alpha$', r'854.2 nm']
+fig = plot_ne_radiation_anisotropy_10s(dataPopsF10, ctxF10,
+                                       [np.searchsorted(ctxF10.spect.wavelength, l.lambda0)
+                                        for l in linesToPlot],
+                                       lineNames)
+fig.tight_layout()
+lFig = ch2DRT.save_figure('F10AnisotropyNe', fig, fext='.pgf', dpi=500)
 \end{pycode}
-\py[2DRT]|ch2DRT.get_figure('CaF10Anisotropy')|
+\py[2DRT]|ch2DRT.get_figure('F10AnisotropyNe')|
 %spell-checker: enable
 
 
