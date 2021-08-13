@@ -1491,9 +1491,10 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
                     break
     Idir = ctx2dRays.depthData.I
 
-    zIdxs = [0]
+    zIdxs = []
     for z in range(atmos.height.shape[0]):
-        if abs(atmos.height[z] - atmos.height[zIdxs[-1]]) > 7e4:
+        if atmos.height[z] > 0.8e6 and atmos.height[z] < 1.8e6 \
+           and (len(zIdxs) == 0 or (abs(atmos.height[z] - atmos.height[zIdxs[-1]]) > 7e4)):
             zIdxs.append(z)
 
     Nrays = atmos.Nrays
@@ -1503,7 +1504,7 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
     zs = []
     xs = []
 
-    xScaling = 2 / (len(lineNames)) / 0.9
+    xScaling = 2 / (len(lineNames)) / 0.85
     for lineIdx, wlIdx in enumerate(wlIdxs):
         for upDown in [0, 1]:
             sign = [-1.0, 1.0][upDown]
