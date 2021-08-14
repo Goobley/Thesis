@@ -866,50 +866,46 @@ def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
     # fig.tight_layout()
 
 dataRad = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 angularIdx = 1
 angularIdxDown = 3
-plot_2d_imaging(fig, dataRad, 743, 15, 4, angularIdx, angularIdxDown)
+plot_2d_imaging(fig, dataRad, 743, 15, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\Ha{} for 2D F9 Case.'
-
+lFig.caption = r'\Ha{} for 2D F9 case. The left-hand column shows the intensity enhancement over quiet values on each side of the flare (red line) for the three different wavelengths indicated on the right-hand panel with vertical lines. The blue lines show the extent of a 40\% enhancement over the quiet boundary condition, and the orange a 10\% enhancement. The right-hand panel shows the spectral output at position $x=\SI{500}{\kilo\metre}$ at different times in the simulation.'
+lFig.placement = 'htb'
 \end{pycode}
 % spell-checker: enable
 
-\py[2DRT]|ch2DRT.get_figure('2DHaF9')|
-
 % spell-checker: disable
 \begin{pycode}[2DRT]
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-plot_2d_imaging(fig, dataRad, 927, 7, 4, angularIdx, angularIdxDown)
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
+plot_2d_imaging(fig, dataRad, 927, 7, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\CaLine{} for 2D F9 Case.'
+lFig.caption = r'\CaLine{} for 2D F9 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.placement = 'htb'
 \end{pycode}
-
-\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
 
 \begin{pycode}[2DRT]
 dataRadF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_radiation_thesis.zip'))
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-plot_2d_imaging(fig, dataRadF10, 743, 15, 4, angularIdx, angularIdxDown)
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
+plot_2d_imaging(fig, dataRadF10, 743, 15, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF10', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\Ha{} for 2D F10 Case.'
+lFig.caption = r'\Ha{} for 2D F10 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.placement = 'htb'
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2DHaF10')|
 
 \begin{pycode}[2DRT]
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-plot_2d_imaging(fig, dataRadF10, 927, 7, 4, angularIdx, angularIdxDown)
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
+plot_2d_imaging(fig, dataRadF10, 927, 7, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF10', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\CaLine{} for 2D F10 Case.'
+lFig.caption = r'\CaLine{} for 2D F10 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.placement = 'htb'
 \end{pycode}
-
-\py[2DRT]|ch2DRT.get_figure('2DCaF10')|
 
 \begin{pycode}[2DRT]
 def plot_2d_rad(ax, dataRad, time, waveRange):
@@ -930,7 +926,7 @@ def plot_2d_rad(ax, dataRad, time, waveRange):
     ax.axhline(0, c='r', alpha=0.6)
     ax.set_xlim(waveRange[0] - waveCentre, waveRange[1] - waveCentre)
 
-fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeHa = (656.376, 656.576)
 plot_2d_rad(ax[0,0], dataRad, 5, waveRangeHa)
 ax[0,0].set_ylabel('$x$ [Mm]')
@@ -951,8 +947,9 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('HaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\Ha{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
+lFig.placement = 'htbp'
 
-fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeCa = (854.3444, 854.5444)
 plot_2d_rad(ax[0,0], dataRad, 5, waveRangeCa)
 ax[0,0].set_ylabel('$x$ [Mm]')
@@ -973,8 +970,9 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('CaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F9 simulation."
+lFig.placement = 'htbp'
 
-fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeHa = (656.326, 656.626)
 plot_2d_rad(ax[0,0], dataRadF10, 5, waveRangeHa)
 ax[0,0].set_ylabel('$x$ [Mm]')
@@ -995,8 +993,9 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('HaFull2dPlotF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\Ha{} intensity on both sides of the ``flare'' at different points during the F10 simulation."
+lFig.placement = 'htbp'
 
-fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeCa = (854.3444, 854.5444)
 plot_2d_rad(ax[0,0], dataRadF10, 5, waveRangeCa)
 ax[0,0].set_ylabel('$x$ [Mm]')
@@ -1017,56 +1016,9 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('CaFull2dPlotF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity on both sides of the ``flare'' at different points during the F10 simulation."
+lFig.placement = 'htbp'
 \end{pycode}
 % spell-checker: enable
-
-\py[2DRT]|ch2DRT.get_figure('HaFull2dPlot')|
-
-The emergent radiation from the F9 simulation is shown for \Ha{} and \CaLine{} in Figs.~\ref{Fig:HaFull2dPlot} and \ref{Fig:CaFull2dPlot} respectively.
-These are presented as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$.
-The viewing angle to the local surface normal is~$\approx18.1\degree$ ($\mu_z\approx0.951$).
-Here we assume that the flaring atmosphere has infinitesimal width (in $x$) and is shown by the horizontal red line.
-The intensity scale is constant for all timesteps for each line.
-Immediately in both of these figures we see a large difference between the observation of each side of the flare.
-This is likely due to the rays observed from positive $x$ encountering both scattered light from the flare and directly intersecting the flaring atmosphere.
-There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
-Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
-
-We note that for both spectral lines the far wings and continuum remain constant throughout the simulation.
-This will be discussed more later, when the effects on the populations are investigated.
-
-\def\regiona{$0-\SI{0.5}{\mega\metre}$}
-
-\py[2DRT]|ch2DRT.get_figure('CaFull2dPlot')|
-\py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
-
-Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remainder of the simulation.
-In the negative $x$ region we see that the line core is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
-The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is driven into emission in the $0-\SI{0.5}{\mega\metre}$ region and remains in absorption (although enhanced) through the rest of this region as it smoothly transitions back to its quiet sun shape.
-A slight asymmetry of the red wing starts to appear here in the $0-\SI{0.5}{\mega\metre}$ region.
-The negative $x$ region remains similar to $t=\SI{5}{\second}$ although the line core is less enhanced immediately adjacent to the flare.
-Some time after the heating has ended ($t=\SI{15}{\second}$ and $t=\SI{25}{\second}$), the brightening in the blue wing over the \regiona{} region is now a dimming, but there remains an enhancement in the red wing.
-The remainder of these timesteps remain similar to the $t=\SI{10}{\second}$ line profile, presenting an enhanced core (remaining in absorption) that slowly returns to its quiet sun form as distance from the flare illumination increases.
-
-The \CaLine{} line profiles in the F9 simulation shown in Fig.~\ref{Fig:CaFull2dPlot} tell a similar story to the \Ha{} line profiles, although the line width does not vary noticeably throughout the simulation.
-The line is strongly enhanced in emission over the \regiona{} region for $t=\SI{5}{\second}$ and $t=\SI{10}{\second}$, with a slight red asymmetry.
-At later times this line remains in emission with a more significant red asymmetry.
-Throughout the simulation the line smoothly transitions back from its enhanced shape to its quiet sun profile at the $x=\SI{2}{\mega\metre}$ boundary.
-The negative $x$ region presents slight core enhancement, stronger during heating, before decaying slowly after heating.
-
-\py[2DRT]|ch2DRT.get_figure('CaFull2dPlotF10')|
-
-The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.~\ref{Fig:HaFull2dPlotF10} and \ref{Fig:CaFull2dPlotF10} respectively.
-The results are similar to those from the F9 simulations, but mostly exaggerated.
-The line profiles in the \regiona{} region are substantially broader than those in the F9 simulation, which is not surprising, as much of this radiation comes from the flaring boundary condition, which is heated by a significantly more energetic beam.
-During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model, likely due to the higher velocities present in the flaring boundary.
-In addition to the enhancement seen in the F9 model, more significant broadening is present in the \Ha{} line profile over the $0.5-\SI{1}{\mega\metre}$ range.
-This is mirrored to some extent in the $-0.5 - \SI{0}{\mega\metre}$ region.
-Outside of the \regiona{} range \CaLine{} appears to behave very similarly to the F9 case.
-
-We see that these optical line profiles can present significant core enhancements up to \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
-There are only modest variations in the outgoing radiation for viewing angles where this is not the case (the negative $x$ region).
-% In both cases the line wings and continuum levels do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
 
 %spell-checker: disable
 \begin{pycode}[2DRT]
@@ -1083,9 +1035,92 @@ ax[1].set_yticklabels([])
 lFig = ch2DRT.save_figure('ZeroBcSpectro', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Intensity at $t=\SI{10}{\second}$ in the F10 model for both \Ha{} and \CaLine{} with the boundary conditions in $x$ set to emit no radiation.'
 \end{pycode}
-
-\py[2DRT]|ch2DRT.get_figure('ZeroBcSpectro')|
 %spell-checker: enable
+
+\py[2DRT]|ch2DRT.get_figure('2DHaF9')|
+\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
+\py[2DRT]|ch2DRT.get_figure('2DHaF10')|
+\py[2DRT]|ch2DRT.get_figure('2DCaF10')|
+
+
+Figs.~\ref{Fig:2DHaF9} -- \ref{Fig:2DCaF10} show the \Ha{} and \CaLine{} spectral lines in the F9 and F10 simulations respectively.
+The left-hand column shows the enhancement in three different wavelengths as a function of space and time, as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$ where the flare model is presumed to have infinitesimal width (in $x$) indicated by the horizontal red line.
+These three wavelengths sample the line core and secondary features on either side of the the line and are indicated in the by the vertical lines in the left-hand panel, with the line core indicated in blue and the two secondary wavelengths in dashed orange.
+This left-hand panel also shows the emergent intensity in this line at $x=\SI{500}{\kilo\metre}$ from the flare at different times throughout the simulation for viewing angle to the local surface normal is~$\approx18.1\degree$ ($\mu_z\approx0.951$) \TODO{Fix}.
+Blue and orange lines are also plotted on the left-hand panel and indicate the distance at which an enhancement of 40\% and 10\% (respectively) over the quiet boundary are observed for this wavelength and point in the simulation.
+The different thresholds are used for the positive and negative $x$ regions respectively as the scale of the enhancements vary significantly between these, with the effect in the negative $x$ region being notably smaller.
+
+It is clear from these figures that in all cases the enhancement in the line core is significantly larger in all of value, extent (dimension in $x$), and duration, than the wing feature enhancements with both the positive and negative $x$ enhancements remaining over \SI{0.5}{\mega\metre} from the flare for the entire duration.
+The enhancements in the wing features are much smaller in extent and more transient, especially for \Ha{}, where the blue wing feature enters a reduction from the quiet boundary value soon after heating ends in the flare model ($t=\SI{10}{\second}$).
+In \CaLine{} both the blue and red wing features in positive $x$ present a similar extent, but the red wing feature persists for the entire simulation whereas the blue feature vanishes around $t=\SI{30}{\second}$.
+There are interesting differences in the negative $x$ enhancements for \CaLine{} between the F9 and F10 models.
+In the former there is an enhancement only during the flare heating period, whereas in the latter there is no significant enhancement until after the heating has ended, and this persists for the remainder of the simulation.
+
+The \Ha{} line profile in the F9 simulation (Fig.~\ref{Fig:2DHaF9}) synthesised at $x=\SI{500}{\kilo\metre}$ shows that over the course of the simulation the line core intensity increases, but not enough to enter emission, and two secondary features form in the red and blue wings during the flare heating.
+These decay rapidly after heating ends, dropping to below the initial value on our blue wing sampling.
+The \CaLine{} computed in this same simulation (Fig.~\ref{Fig:2DCaF9}) strongly enters emission as a doubly-peaked line with a slight asymmetry in favour the red wing and remains so for the majority of the simulation, decaying slowly over time, with the line core decaying more rapidly than the secondary peaks, leading to an increasingly deep central reversal.
+
+The effects are similar, but much larger in the F10 simulation.
+The \Ha{} line (Fig.~\ref{Fig:2DHaF10}) is greatly enhanced presenting a doubly-peaked shape with a deep central reversal during heating.
+This line is notably asymmetric in favour of the red wing throughout the simulation.
+After the flare heating ends, the red secondary peak remains enhanced and decays slowly whereas the blue wing rapidly drops below the initial quiet value.
+The \CaLine{} line (Fig.~\ref{Fig:2DCaF10}) is a more dramatically enhanced version of the one considered previously for the F9 simulation although its asymmetry flips in favour of the blue wing for the $t=\SI{12}{\second}$ line profile.
+
+We note that for both spectral lines the far wings and continuum ($|\Delta\lambda| \geq \SI{0.1}{\nano\metre}$ for \Ha{} and $|\Delta\lambda| \geq \SI{0.04}{\nano\metre}$ for \CaLine{}) have very small or no variations throughout both simulations.
+This will be discussed more later, when the effects on the populations are investigated.
+
+To better interpret these simulations we can also look at the what our theoretical slit spectrograph shown in in Fig.~\ref{Fig:2DSimFlipped} would observe at different times in the simulation.
+
+\subsection{Spectroscopic Results}
+
+%spell-checker: disable
+\py[2DRT]|ch2DRT.get_figure('HaFull2dPlot')|
+\py[2DRT]|ch2DRT.get_figure('CaFull2dPlot')|
+\py[2DRT]|ch2DRT.get_figure('ZeroBcSpectro')|
+\py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
+\py[2DRT]|ch2DRT.get_figure('CaFull2dPlotF10')|
+%spell-checker: enable
+
+\TODO{Discuss ZeroBc plot.}
+
+The emergent radiation from the F9 simulation is shown for \Ha{} and \CaLine{} in Figs.~\ref{Fig:HaFull2dPlot} and \ref{Fig:CaFull2dPlot} respectively.
+The intensity scale is constant for all timesteps for each line.
+Immediately in both of these figures we see a large difference between the observation of each side of the flare.
+This is likely due to the rays observed from positive $x$ encountering both scattered light from the flare and directly intersecting the flaring atmosphere.
+There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
+Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
+
+
+\def\regiona{$0-\SI{0.5}{\mega\metre}$}
+
+
+Taking a more detailed look at the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a widened line profile with enhanced ``horns'' in both the red and blue wings over $0-\SI{0.5}{\mega\metre}$, a filling-in of the line core over $0.5-\SI{1}{\mega\metre}$, and a smooth return to the quiet sun line profile over the remainder of the simulation.
+In the negative $x$ region we see that the line core is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
+The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is driven into emission in the $0-\SI{0.5}{\mega\metre}$ region and remains in absorption (although enhanced) through the rest of this region as it smoothly transitions back to its quiet sun shape.
+A slight asymmetry of the red wing starts to appear here in the $0-\SI{0.5}{\mega\metre}$ region.
+The negative $x$ region remains similar to $t=\SI{5}{\second}$ although the line core is less enhanced immediately adjacent to the flare.
+Some time after the heating has ended ($t=\SI{15}{\second}$ and $t=\SI{25}{\second}$), the brightening in the blue wing over the \regiona{} region is now a dimming, but there remains an enhancement in the red wing.
+The remainder of these timesteps remain similar to the $t=\SI{10}{\second}$ line profile, presenting an enhanced core (remaining in absorption) that slowly returns to its quiet sun form as distance from the flare illumination increases.
+
+The \CaLine{} line profiles in the F9 simulation shown in Fig.~\ref{Fig:CaFull2dPlot} tell a similar story to the \Ha{} line profiles, although the line width does not vary noticeably throughout the simulation.
+The line is strongly enhanced in emission over the \regiona{} region for $t=\SI{5}{\second}$ and $t=\SI{10}{\second}$, with a slight red asymmetry.
+At later times this line remains in emission with a more significant red asymmetry.
+Throughout the simulation the line smoothly transitions back from its enhanced shape to its quiet sun profile at the $x=\SI{2}{\mega\metre}$ boundary.
+The negative $x$ region presents slight core enhancement, stronger during heating, before decaying slowly after heating.
+
+
+The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.~\ref{Fig:HaFull2dPlotF10} and \ref{Fig:CaFull2dPlotF10} respectively.
+The results are similar to those from the F9 simulations, but mostly exaggerated.
+The line profiles in the \regiona{} region are substantially broader than those in the F9 simulation, which is not surprising, as much of this radiation comes from the flaring boundary condition, which is heated by a significantly more energetic beam.
+During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model, likely due to the higher velocities present in the flaring boundary.
+In addition to the enhancement seen in the F9 model, more significant broadening is present in the \Ha{} line profile over the $0.5-\SI{1}{\mega\metre}$ range.
+This is mirrored to some extent in the $-0.5 - \SI{0}{\mega\metre}$ region.
+Outside of the \regiona{} range \CaLine{} appears to behave very similarly to the F9 case.
+
+We see that these optical line profiles can present significant core enhancements up to \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
+There are only modest variations in the outgoing radiation for viewing angles where this is not the case (the negative $x$ region).
+% In both cases the line wings and continuum levels do not change significantly and we shall investigate this further by looking at how the level populations are affected by this incident radiation.
+
 
 \subsection{Population Changes}
 
