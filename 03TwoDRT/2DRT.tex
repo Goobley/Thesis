@@ -1120,7 +1120,7 @@ This reduction continues into $C$ with the line appearing at its narrowest aroun
 
 This broadening is somewhat mirrored in the negative $x$ region.
 At early times the line appears significantly broadened over $a$, before decaying back towards the quiet sun profile over $b$ and $c$.
-The variation over $b$ and $c$ is most significant for $t=10$ and $\SI{15}{\second}$ but remains important for $t=\SI{25}{\second}$.
+The variation over $b$ and $c$ is most significant for $t=10$ and $\SI{15}{\second}$ but remains important at $t=\SI{25}{\second}$.
 
 Similarly to the F9 case, the \CaLine{} profile is most affected over $A$, presenting with substantial broadening, initially symmetric but with a red brightening ($\Delta\lambda\approx\SI{0.13}{\nano\metre}$) appearing during the cooling phase.
 During this phase the line remains broadened in the blue wing whilst the red wing half-width returns to a value similar to that found in quiet sun profile, despite the intensity enhancement.
@@ -1234,7 +1234,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     Nz = data['zAxis'].shape[1]
     Ntime = data['zAxis'].shape[0]
 
-    positionIdx = 2
+    positionIdx = 4
     xAxis = data['xAxis'][...]
     z0 = data['zAxis'][0]
     zN = np.copy(data['zAxis'][tIdx])
@@ -1276,6 +1276,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
 
     nHTot = atmost.d1 / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)
     aIdx = np.searchsorted(atmost.time, time)
+    aIdx = 0 # Load slab thermodynamic properties
     atmos = lw.Atmosphere.make_1d(scale=lw.ScaleType.Geometric, depthScale=zN,
                                   temperature=weno4(zN, atmost.z1[aIdx], atmost.tg1[aIdx]),
                                   vlos=weno4(zN, atmost.z1[aIdx], atmost.vz1[aIdx]),
@@ -1299,7 +1300,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
 
             for name in ['H', 'Ca']:
                 pops = data[name]
-                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 0]
+                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 1]
             eqPops.update_lte_atoms_Hmin_pops(atmos)
 
             # Add the extra information expected by our Atoms with Fang non-thermal beam collisional rates
@@ -1342,11 +1343,17 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
                                    haRange, ax.get_ylim())
     fact = min_combine_scale_factors(min_combine_scale_factors(factQs, fact1), fact2)
     ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, 0], fact),  c='C6', alpha=0.8)
+    ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][0, :, 1, positionIdx], fact), '--', c='k', alpha=0.6)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx], fact), c='C1', alpha=0.6)
     ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx*2], fact), '--', c='C1', alpha=0.6)
+    ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx*2], fact), '--', c='C2', alpha=0.6)
     ax.set_xlim(xlim)
     ax.set_ylabel('$z$ [Mm]')
     ax.text(-0.19, 1.96, r'H$\alpha$', va='top', ha='left', fontsize=10)
@@ -1412,11 +1419,15 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     fact1 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 1, positionIdx], caRange, ax.get_ylim())
     fact2 = compute_scale_factors(wavelength, dataRad['I'][tIdx, :, 3, positionIdx], caRange, ax.get_ylim())
     fact = min_combine_scale_factors(min_combine_scale_factors(factQs, fact1), fact2)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, 0], fact),  c='C6', alpha=0.8)
     ax.plot(wavelength - lambda0, tau1_line(fullTau, zN / 1e6), 'r', alpha=0.5)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][0, :, 1, positionIdx], fact), '--', c='k', alpha=0.6)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx], fact), c='C1', alpha=0.6)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx*2], fact), '--', c='C1', alpha=0.6)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
     ax.set_xlim(xlim)
@@ -1475,7 +1486,7 @@ fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale
 ctxF9 = plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
-lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation. The $\tau=1$ line, initial line profile and line profiles \SI{100}{\kilo\metre} on both sides of the flare is shown in the first panel."
+lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation at $t=\SI{10}{\second}$. The $\tau=1$ line and initial line profile are plotted in red and dashed black respectively in the first column. The pink line profile shows the flaring boundary condition. The other solid and dashed line profiles in the first panel are synthesised at 200, and \SI{400}{\kilo\metre} from the flaring boundary respectively, with orange being positive $x$ and green being negative $x$."
 lFig.placement = 'htbp'
 
 atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
@@ -1485,8 +1496,8 @@ fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale
 ctxF10 = plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
-lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F10 simulation. The $\tau=1$ line, initial line profile and line profiles \SI{100}{\kilo\metre} on both sides of the flare is shown in the first panel."
-lFig.placement = 'htbp'
+lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to atomic populations equivalent to Fig.~\ref{Fig:2dLevelsT10} for the F10 simulation at $t=\SI{10}{\second}$."
+lFig.placement =  'htbp'
 
 \end{pycode}
 
@@ -1495,35 +1506,51 @@ lFig.placement = 'htbp'
 
 To investigate how and where the flare's radiation field affects the plasma in our two-dimensional slab we can compare the atomic populations responsible for these spectral lines against their initial statistical equilibrium values.
 For the F9 simulation Fig.~\ref{Fig:2dLevelsT10} shows the contribution function $\mathrm{C}_\mathrm{I}$ in the first column, the effect of local opacity on the outgoing radiation ($\chi_\nu/\tau_\nu$) in the second column, and the relative change of the upper and lower levels of the transitions considered from their initial statistical equilibrium values in the last two columns respectively.
+The relative change in the population is computed as
+\begin{equation}
+    \frac{n_{i, t} - n_{i, 0}}{n_{i, t}},
+\end{equation}
+where $n_{i,t}$ is the number density of atomic level $i$ at time $t$.
+The indexing of the levels shown in the plots is the indexing used by \Lw{}'s model atoms, which is zero indexed.
 These properties are all shown at $t=\SI{10}{\second}$.
-The contribution function and local opacity effect are computed using the atmosphere in the plane-parallel flaring boundary condition, due to the difficulty formulating the contribution function in the two-dimensional slab, and representing the three-dimensional output of $\chi_\nu/\tau_\nu$.
-Nevertheless, these inform us of the primary line forming and absorbing regions.
-The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), and those observed from \SI{100}{\kilo\metre} on either side of the flaring kernel.
+The contribution function and local opacity effect are computed by treating the atmosphere at $x=\SI{50}{\kilo\metre}$ as plane-parallel and computing the contribution function in the traditional way.
+This approach was taken due to the difficulty difficulty formulating the contribution function in the two-dimensional slab; the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plots, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
+We therefore use this simplified model as it should still inform us of the primary line forming and absorbing regions, especially as the thermodynamic structure of the two-dimensional slab is constant (other than the first column, copied from the flaring boundary).
+The $\chi_\nu / \tau_\nu$ plot is computed equivalently to the contribution function.
+The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), current emission from the flaring boundary (pink), and those observed from 200 and \SI{400}{\kilo\metre} on either side of the flaring kernel (orange for the positive $x$ region and green for the negative $x$ region).
+Whilst it is possible to compute the response function to perturbations in atmospheric parameters, this is not particularly insightful due to the assumption that the temperature and velocity fields remain fixed, and the coupling of the electron density to charge conservation again.
 
 There is an enhancement in the upper and lower levels of the \Ha{} transition in the upper chromosphere appearing deeper in the atmosphere (down to an altitude of \SI{1}{\mega\metre}) closer to the flaring boundary condition.
-The contribution function shows that ``horns'' of the \Ha{} line profile form deeper in the atmosphere than the line core.
-The depth of the enhancement in level populations decreases with distance from the flaring boundary, and corresponds with the disappearance of the ``horns'', especially beyond $x\approx\SI{0.5}{\mega\metre}$ where the line core is enhanced.
-Where the relative change is roughly similar in both the upper and lower levels of the \Ha{} line there will be both an increase in opacity, and an equivalent increase in emissivity, leading to no net change in the source function, thus this higher altitude region will proportionately contribute more significantly to the outgoing radiation as the increase in opacity blocks light from deeper in the ray's path.
-This enhancement does not appear to be sufficient to directly create the ``horns'' in the \Ha{} profiles, as evidenced by the green line profile, but the increased source function in the higher temperature region of the upper chromosphere appears sufficient to significantly enhance the core of the line profile.
+The contribution function shows that the secondary peaks of the \Ha{} line profile form deeper in the atmosphere than the line core and approximately overlap the bottom of this enhanced region.
+The depth of this enhancement decreases with distance from the flaring boundary, and corresponds with the disappearance of the secondary peaks observed over region $B$.
+Where the relative change is roughly similar in both the upper and lower levels of the \Ha{} line there will be both an increase in opacity, and an equivalent increase in emissivity.
+This leads to no net change in the source function, thus this higher altitude region will proportionately contribute more significantly to the outgoing radiation as the increase in opacity blocks light from deeper in the ray's path.
+This enhancement does not appear to be sufficient to directly create the secondary peaks in the \Ha{} profiles other than in the columns closest to the flaring boundary, as evidenced by the green line profiles, but the increased source function in the higher temperature region of the upper chromosphere is sufficient to significantly enhance the core of the line profile at significant distances from the flare ($\sim\SI{1}{\mega\metre}$).
 
 The \Caii{} populations, shown in the lower row of Fig.~\ref{Fig:2dLevelsT10}, are much more dramatically affected than the hydrogen populations previously discussed.
-Both the upper and lower levels of the \CaLine{} spectral line are affected in the same $1.25-\SI{1.75}{\mega\metre}$ region at the flaring boundary condition, tapering off with increasing distance from this boundary.
-The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of $-20$.
+Both the upper and lower levels of the \CaLine{} spectral line are affected in the same $z=1.25-\SI{1.75}{\mega\metre}$ region at the $x=\SI{0}{\mega\metre}$ boundary, tapering off as $x$ increases.
+The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of $\sim-20$.
 The lower level of this transition appears to be significantly more reduced than the upper level, which will lead to a dramatic reduction in the local opacity whilst the emissivity remains less affected.
 This will lead to an increase in the local source function as well as a reduction in the opacity affecting the line core radiation formed just below this level.
+This reduction is likely due to photoionisation effects similar to those considered in Sec.~\ref{Sec:CaiiPhotoionisation}, and will be discussed more in the context of the F10 model.
 
 \py[2DRT]|ch2DRT.get_figure('2dLevelsF10T10')|
 
 An equivalent figure for the F10 simulation at $t=\SI{10}{\second}$ is shown in Fig.~\ref{Fig:2dLevelsF10T10}.
 Due to the increased magnitude of the the population changes in the transition region, it is harder to interpret the population change plots for the F10 model.
-The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this will not change the interpretation of the population effects on the line profile, which are corroborated by the line profiles shown in the left-most panel.
+The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this does not significantly change the interpretation of the population effects on the line profile, which are corroborated by the line profiles shown in the left-most panel.
+We also note, as evidenced by Fig.~\ref{Fig:ZeroBcSpectro}, that the enhancements in the \Ha{} populations are sufficient to produce small secondary peaks in the line profile, and the formation of these is clearer in the contribution function than it was in the F9 case.
 
 Despite the upper level of the \CaLine{} line appearing darker than the lower level, given the differences in scaling, the lower level populations have again been reduced by a greater amount than the upper level.
-Thus, the same interpretation as that given to the F9 simulation applies to the \CaLine{} line over the $1.25-\SI{1.75}{\mega\metre}$ region.
-There is a secondary feature on these \Caii{} population relative change plots, an additional reduction in the $1-\SI{1.25}{\mega\metre}$ altitude region.
+Thus, the same interpretation as that given to the F9 simulation applies to the \CaLine{} line over the $z=1.25-\SI{1.75}{\mega\metre}$ region.
+There is a secondary feature on these \Caii{} population relative change plots, an additional reduction in the $z=1-\SI{1.25}{\mega\metre}$ region.
 This feature overlaps the core of the line contribution shown in the left-most panel, and appears to be a relatively similar reduction in both the upper and lower level populations (the reduction in the upper level population becomes larger than that of the lower level population approaching $x=\SI{1}{\mega\metre}$).
 
-\TODO{Use an anisotropy plot of the radiation from the 1D atmosphere to investigate the "lane" present in F10 populations of Ca ii.}
+This will mostly lead to a reduction in local opacity, with a slight reduction in source function.
+Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick upper-chromospheric layers above the core forming region.
+This reduction in local opacity appears to be well-validated by the extremely shallow core of the green line-profile in the first panel relative to the statistical equilibrium solution.
+
+
 %spell-checker: disable
 \begin{pycode}[2DRT]
 from copy import copy, deepcopy
@@ -1569,8 +1596,10 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
         for upDown in [0, 1]:
             sign = [-1.0, 1.0][upDown]
             for i in range(Nrays):
-                us.append(atmos.mux[i] * Idir[wlIdx, i, upDown, zIdxs])
-                vs.append(sign * atmos.muz[i] * Idir[wlIdx, i, upDown, zIdxs])
+                mu = np.array([atmos.mux[i], atmos.muz[i]])
+                mu /= np.linalg.norm(mu)
+                us.append(mu[0] * Idir[wlIdx, i, upDown, zIdxs])
+                vs.append(sign * mu[1] * Idir[wlIdx, i, upDown, zIdxs])
                 cs.append(Idir[wlIdx, i, upDown, zIdxs])
 
 
@@ -1603,7 +1632,7 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
 
     ax = axs[0]
     angles = 'xy' if matchAspectRatios else None
-    mappable = ax.quiver(xs, zs, us, vs, cs, scale=1e-6, cmap='Reds', angles=angles)
+    mappable = ax.quiver(xs, zs, us, vs, cs, scale=6e-7, cmap='Reds', angles=angles)
     ax.set_ylim(0.9, 1.7)
     ax.set_xlim(None, 2.0)
     ax.set_xticks(np.arange(len(lineNames)) * xScaling)
@@ -1623,129 +1652,44 @@ fig = plot_ne_radiation_anisotropy_10s(dataPopsF10, ctxF10,
                                        lineNames)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('F10AnisotropyNe', fig, fext='.pgf', dpi=500)
+lFig.caption = r"The anisotropy of the radiation field at the flaring boundary at the line cores of four different lines (Ly$\alpha$, \Caii{} K, \Ha{}, \CaLine{}) is shown in the left-hand panel for the F10 simulation at $t=\SI{10}{\second}$. Note that the angles of the rays have been mapped to match the aspect ratio of the right-hand panel. The right-panel shows the electron density in the slab at the same point in time."
 \end{pycode}
 \py[2DRT]|ch2DRT.get_figure('F10AnisotropyNe')|
 %spell-checker: enable
 
+An interesting feature present in the \Caii{} plots is the angled white band starting from $z=\SI{1.2}{\mega\metre}$ at the flaring boundary and increasing in altitude with distance from the flare.
+This indicates that there is little change in the calcium populations in this region, despite the much more monotonic variation in $x$ seen in the F9 case.
+In Fig.~\ref{Fig:F10AnisotropyNe} the anisotropy of the radiation field leaving the flaring boundary and entering the slab over the range $z=0.9-\SI{1.7}{\mega\metre}$ for the timestep currently considered, along with the electron density in the slab is shown.
+The anisotropy is shown for the line cores of four different spectral lines (Ly$\alpha$, \Caii{} K, \Ha{}, \CaLine{}) along the vectors of angular quadrature used in the two-dimensional simulation.
+These have been plotted so that their $x$ and $z$ components match the aspect ratio of the electron density plot in the right-hand panel.
+Their sampling of the unit sphere is far more uniform than it appears here due to this significant stretching effect along $z$ and each vector's projected norm in the $x-z$ plane has been normalised.
+This mapping allows their directions to be directly considered in terms of the adjacent panel.
+The length and colour of each vector is then scaled by the associated intensity.
+In the formation region of each line the line core radiation field is relatively isotropic, but the downgoing rays are greatly reduced above this region (as there is little emission or scattering).
 
-This will mostly lead to a reduction in local opacity, with a slight reduction in source function.
-Thus the radiation from deeper in atmosphere, and that formed locally, is less attenuated in both the line-core forming region, and the optically-thick upper-chromospheric layers above the core forming region.
-This reduction in local opacity appears to be well-validated by the extremely shallow core of the green line-profile in the first panel relative to the statistical equilibrium solution.
+In the right-hand panel there an approximately triangular region of enhancement in the electron density (which is initially approximately uniform in $x$ from the values at the $x=\SI{2}{\mega\metre}$ boundary), starting at the flaring boundary around $z=\SI{1.1}{\mega\metre}$, and increasing in distance from the flare with altitude up to $x=\SI{0.75}{\mega\metre}$ at $z=\SI{1.7}{\mega\metre}$.
+The leading edge of this enhancement in electron density agrees well with the white band present in the \Caii{} population plots and the increase in electron density will locally increase the collisionality of the plasma.
+This region also appears to overlap well with the incoming Ly$\alpha$ radiation, which will penetrate further at higher altitudes due to the higher temperature and the combination of radiation arriving close to horizontally and from below; this (and other EUV radiation forming at similar temperatures) will likely be the cause of significant photoionisation.
+The downward sloped population reduction seen in the \Caii{} population plots corresponds to the line core formation region ($\sim\SI{1.1}{\mega\metre}$) which also aligns with the highest altitude at which \CaLine{} is relatively isotropic.
+Above this, the \CaLine{} radiation field is primarily upgoing and injects energy into the slab in a non-uniform fashion.
 
-% \TODO{Do we need to plot the source function ratios etc? This is only qualitative}
+\Ha{} appears relatively isotropic up to $z=\SI{1.5}{\mega\metre}$, becoming primarily upgoing above this.
+From the contribution function in Fig.~\ref{Fig:2dLevelsF10T10} the \Ha{} line core in the slab continues to form up to $z\approx\SI{1.75}{\mega\metre}$, and the anisotropic injection of energy is likely partially responsible for the diagonal structure seen in the population change plot of \Ha{}'s upper level.
+It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$ but remains relatively isotropic until $z\approx\SI{1.3}{\mega\metre}$ and does not appear directly connected to the ionisation region depicted in the right-hand panel.
 
+There is a significant enhancement of electron density within the triangular region shown in the right-hand panel of Fig.~\ref{Fig:F10AnisotropyNe}, which appears to due primarily to photoionisation (as the temperature within the slab cannot change).
+This increase in electron density affects line formation within the slab, both in terms of the line profiles, but also collisional rates and LTE populations.
+It overlaps well with the more complex features shown in the population change plots for the F10 model and shows that the atomic populations responsible for these chromospheric lines can be significantly affected by the incoming radiation.
+
+From the population change figures shown in this section it becomes clear that the the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
+It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation, thus without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
 It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.
 Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
-From the figures shown in this section it becomes clear that the the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
-It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation, thus without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
 
-\subsection{Horizontal Resolution}\label{Sec:HorizontalResolution}
-
-% spell-checker: disable
-\begin{pycode}[2DRT]
-statEq2d = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t10_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-statEq2d_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t10_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-
-def abs_max_in_wavelength_range(wavelength, data, waveRange):
-    waveStartIdx = np.searchsorted(wavelength, waveRange[0])
-    waveEndIdx = np.searchsorted(wavelength, waveRange[1])+1
-
-    return np.max(np.abs(1 - data[waveStartIdx:waveEndIdx]))
-
-
-def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
-    wavelength = dataRad['SimParams/wavelength']
-    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
-    x = dataRad['SimParams/xAxis'][...] / 1e6
-    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
-
-    timeIdx = 1
-
-    Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
-    Itowards81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 5, ::2]
-    Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
-    Iaway81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 11, ::2]
-
-    Imax = 1.2
-    Imin = 0.8
-    spec = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1, 1, 0.1])
-    waveCentreA = 0.5 * (waveRangeA[0] + waveRangeA[1])
-    waveCentreB = 0.5 * (waveRangeB[0] + waveRangeB[1])
-
-    ax = fig.add_subplot(spec[0])
-    mesh = ax.pcolormesh(wavelengthEdges - waveCentreA, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
-    ax.pcolormesh(wavelengthEdges - waveCentreA, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
-    ax.set_xlim(*[w-waveCentreA for w in waveRangeA])
-    ax.axhline(0, c='r', alpha=0.6)
-    ax.set_xlabel('$\Delta\lambda$ [nm]')
-    ax.set_ylabel('$x$ [Mm]')
-    ax.set_title(r'H$\alpha$')
-    ax.text(-0.09, 1.8, r'{:.3f}'.format(abs_max_in_wavelength_range(wavelength,
-                                          Itowards/Itowards81, waveRangeA)),
-            va='top', ha='left', fontsize=10)
-
-    ax = fig.add_subplot(spec[1])
-    mesh = ax.pcolormesh(wavelengthEdges - waveCentreB, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
-    ax.pcolormesh(wavelengthEdges - waveCentreB, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
-    ax.set_xlim(*[w-waveCentreB for w in waveRangeB])
-    ax.set_yticklabels([])
-    ax.axhline(0, c='r', alpha=0.6)
-    ax.set_xlabel('$\Delta\lambda$ [nm]')
-    ax.set_title(r'Ca\,\textsc{ii} 854.2\,nm')
-    ax.text(-0.09, 1.8, r'{:.3f}'.format(abs_max_in_wavelength_range(wavelength,
-                                          Itowards/Itowards81, waveRangeB)),
-            va='top', ha='left', fontsize=10)
-
-    ax = fig.add_subplot(spec[2])
-    fig.colorbar(mesh, cax=ax)
-
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
-lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$.'
-
-statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854.3444, 854.5444))
-lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{5}{\second}$.'
-
-statEq2d15 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-statEq2d15_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t15_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
-
-fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
-plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854.3444, 854.5444))
-lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{15}{\second}$.'
-
-\end{pycode}
-
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison05s')|
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison10s')|
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison15s')|
-% spell-checker: enable
-
-Whilst it would be nice to evaluate the radiation to arbitrary horizontal precision, the limitations of computer performance do not allow this.
-Clearly, we want to investigate the problem at a resolution similar or better than that provided by our observations.
-If the problem produces smoothly varying solutions then it is not necessarily necessary to run the simulation at the same resolution as the observations; however from observations we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
-This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observation against which our results will be compared.
-
-To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire observation) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the simulation and compare the outgoing radiation.
-The incident radiation at the $x=\SI{0}{\kilo\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
-In Figs.~\ref{Fig:HorizontalResolutionComparison05s}-\ref{Fig:HorizontalResolutionComparison15s} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\{5, 10, \SI{15}{\second}\}$ respectively.
-The maximum difference is found to be an enhancement of around 14\% in both line cores at $\sim$\SI{0.7}{\mega\metre} from the flare for the ratio of lower resolution simulation to the higher resolution.
-This is not an insignificant variation, but it does not appear to vary too dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
-
-The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
-Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate lambda operator takes longer to cross the grid.
-For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation, and for primarily computational reasons, but being confident that the solution is reasonable, we opt to use the 41 point spatial grid in all models presented in this chapter.
-
-\subsection{Importance of Time-Dependence}
+\subsection{Importance of Time-Dependence}\label{Sec:2dTimeDepSE}
 
 Due to the need to solve the radiative transfer problem at every timestep in the \Radyn{} simulation, the full time-dependent treatment is extremely computationally demanding.
-If these effects are not important then the style of simulation presented here can be accelerated dramatically by performing a statistical equilibrium solution for the slab illuminated by the flaring boundary at each timestep of interest (which is likely to be many fewer than the total number of timesteps needed for the time-dependent solution).
+If these effects are not important then the style of simulation presented here can likely be accelerated dramatically by performing a statistical equilibrium solution for the slab illuminated by the flaring boundary at each timestep of interest (which is likely to be many fewer than the total number of timesteps needed for the time-dependent solution).
 
 % spell-checker: disable
 \begin{pycode}[2DRT]
@@ -1800,7 +1744,7 @@ fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_stat_eq_comparison(fig, dataRad, statEq2d, (656.376, 656.576))
 
 lFig = ch2DRT.save_figure('2dCompareStatEqTimeDep', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for the H$\alpha$ line in the two-dimensional slab case.'
+lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for the H$\alpha$ line in the F9 model.'
 
 from scipy.integrate import trapezoid
 import astropy.units as u
@@ -1903,16 +1847,18 @@ lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre
 Statistical equilibrium and time-dependent solutions for the \Ha{} line at $t=\SI{10}{\second}$ in the F9 simulation are shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep}.
 Region $A$ appears similar in both cases, but there are significant differences in the line width and core depth outside of these regions.
 It is difficult to directly compare these plots, however the effect is clear when the intensity in this line is integrated and plotted as a function of $x$ position.
-This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa} for both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$.
+This is shown in Fig.~\ref{Fig:2dCompareIntegratedHa} for both $t=\SI{10}{\second}$ (solid) and $t=\SI{15}{\second}$ (dashed) with the statistical equilibrium treatments shown in blue and the time-dependent treatments shown in orange.
 The enhancement of \Ha{} and the region over which it is enhanced varies substantially between the two treatments, showing that for this line there is a clear need to perform this time-dependent treatment.
-There is significantly more intensity present in the line in the $0.5-\SI{2}{\mega\metre}$ region, as well as in the $-1.5-\SI{0}{\mega\metre}$ region when using the time-dependent treatment.
+There is significantly more intensity present in the line in regions $B$ and $C$, as well as in all of the negative $x$ region when using the time-dependent treatment.
 An equivalent comparison is shown for the \CaLine{} line in Fig.~\ref{Fig:2dCompareIntegratedCa}.
 The effect is less significant here, but nevertheless easily visually resolvable, and interestingly is the inverse of what is seen for the \Ha{} line, as there is less intensity in the time-dependent case than in the statistical equilibrium.
 
+The maximum difference between the treatments appears where the primary contribution to the rays is the two-dimensional slab between a few hundred \si{\kilo\metre} and \SI{1}{\mega\metre} from the flaring boundary.
+For the positive $x$ region, the radiation from the boundary mostly dominates region $A$, but the local conditions within the slab, in particular the electron density, are critical for the line formation along the rays observed from region $B$.
+As the flaring boundary is not dominating the outgoing rays from region $a$, and these rays look deeper into the slab rather than towards the flaring boundary we immediately see the differences between the treatments close to $x=\SI{0}{\mega\metre}$ in the negative $x$ region.
+
 In the wave-heated \Radyn{} simulation of \citet{Carlsson2002} the settling time for hydrogen to return to equilibrium populations was found to be on the order of $10^3-10^5\,\si{\second}$, much longer than the entire \SI{50}{\second} simulation duration shown here.
 The effect is likely to be less pronounced here with no thermodynamic heating possible in the slab, and only excitation by incident radiation from the flaring boundary condition, but given the large difference between these treatments at both $t=\SI{10}{\second}$ and $t=\SI{15}{\second}$ it seems prudent to adopt the time-dependent treatment by default when exploring the present phenomenon in flares.
-
-From the discussions in Sec.~\ref{Sec:TimeDepSE} it is reasonable to investigate whether these discrepancies between the time-dependent and statistical equilibrium treatments can be overcome by applying statistical equilibrium by fixing the electron density computed from the time-dependent situation (under the effects of charge conservation).
 
 %spell-checker: disable
 \begin{pycode}[2DRT]
@@ -1938,15 +1884,125 @@ lFig.placement = 'htbp'
 \py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDepLoadNeCa')|
 %spell-checker: enable
 
-Figs.~\ref{Fig:2dCompareStatEqTimeDepLoadNe} and \ref{Fig:2dCompareStatEqTimeDepLoadNeCa} show the \Ha{} and \CaLine{} line profiles respectively at $t=\SI{15}{\second}$ using the electron density loaded from the time-dependent model.
-There remains a significant difference in the \Ha{} line profiles between the two treatments, this is particularly visible in the gradual widening of the line core from 0.5 - \SI{2}{\mega\metre} present in the time-dependent treatment that is barely visible in the statistical equilibrium treatment.
-We note that the line-core narrowing around \SI{0.5}{\mega\metre} in the statistical equilibrium case here is not present in Fig.~\ref{Fig:2dCompareStatEqTimeDep} and must be due to the use of the electron density from the time-dependent model.
-The \Ha{} line profile is therefore closer to that expected from the time-dependent case, but significant differences remain, and a it appears that a full time-dependent treatment is necessary to capture the evolution of the hydrogen populations.
-\CaLine{} on the other hand, agrees well with the expected solution when computed in statistical equilibrium with the provided electron density.
-This is not surprising following the analysis undertaken in Sec.~\ref{Sec:TimeDepSE}, but the conclusions.
+From the discussions in Sec.~\ref{Sec:TimeDepSE} it is reasonable to investigate whether these discrepancies between the time-dependent and statistical equilibrium treatments can be overcome by applying statistical equilibrium with the electron density fixed to the value computed from the time-dependent situation (under the effects of charge conservation).
 
-These treatments were only compared at one timestep; the process of converging a statistical equilibrium solution with the fixed electron density provided from the time-dependent model proved to be unreliable, and the models at $t=5,\,10,$ and \SI{11}{\second} failed to converge.
-This approach therefore appears unsuited to the models presented here, but from the comparison of the \CaLine{} line profiles and the analysis undertaken in the previous chapter it is plausible that a situation with a detailed static treatment of hydrogen, where the populations and electron density can be known approximately, through a method similar to \citet{Leenaarts2007} (although this cannot directly handle the indirect illumination we investigate here), could produce relatively accurate \CaLine{} line profiles, at relatively low computational cost compared to the full time-dependent method employed in this chapter.
+Figs.~\ref{Fig:2dCompareStatEqTimeDepLoadNe} and \ref{Fig:2dCompareStatEqTimeDepLoadNeCa} show the \Ha{} and \CaLine{} line profiles respectively at $t=\SI{15}{\second}$ using the electron density loaded from the time-dependent model.
+There remains a significant difference in the \Ha{} line profiles between the two treatments; this is particularly visible in the gradual widening of the line core over regions $B$ and $C$ present in the time-dependent treatment that is barely visible in the statistical equilibrium treatment.
+We note that the line-core narrowing around $x=\SI{0.5}{\mega\metre}$ in the statistical equilibrium case here is not present in Fig.~\ref{Fig:2dCompareStatEqTimeDep} and must be due to the use of the electron density from the time-dependent model.
+The \Ha{} line profile is therefore closer to that expected from the time-dependent case, but significant differences remain, and it appears that a full time-dependent treatment is necessary to capture the evolution of the hydrogen populations.
+
+\CaLine{}, on the other hand, agrees well with the expected solution when computed in statistical equilibrium with the provided electron density.
+This is not surprising following the analysis undertaken in Sec.~\ref{Sec:TimeDepSE}, but we note that this is only one timestep of the model.
+
+Attempts were made to compare these treatments at other timesteps but the process of converging a statistical equilibrium solution with the fixed electron density provided from the time-dependent model proved to be unreliable, and the models at $t=5,\,10,$ and \SI{11}{\second} failed to converge.
+This approach therefore appears unsuited to the models presented here, but from the comparison of the \CaLine{} line profiles and the analysis undertaken in the previous chapter it is plausible that a situation with a detailed static treatment of hydrogen, where the populations and electron density can be known approximately, through a method similar to \citet{Leenaarts2007} (built on Sollum\NeedRef{}, although this cannot directly handle the indirect illumination we investigate here), could produce relatively accurate \CaLine{} line profiles, at lower computational cost than the full time-dependent method employed in this chapter.
+
+\subsection{Horizontal Resolution}\label{Sec:HorizontalResolution}
+
+% spell-checker: disable
+\begin{pycode}[2DRT]
+statEq2d = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t10_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+statEq2d_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t10_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+
+def abs_max_in_wavelength_range(wavelength, data, waveRange):
+    waveStartIdx = np.searchsorted(wavelength, waveRange[0])
+    waveEndIdx = np.searchsorted(wavelength, waveRange[1])+1
+
+    return np.max(np.abs(1 - data[waveStartIdx:waveEndIdx]))
+
+
+def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
+    wavelength = dataRad['SimParams/wavelength']
+    wavelengthEdges = np.concatenate(([wavelength[0]], 0.5 * (wavelength[1:] + wavelength[:-1]), [wavelength[-1]]))
+    x = dataRad['SimParams/xAxis'][...] / 1e6
+    xEdges = np.concatenate(([x[0]], 0.5 * (x[1:] + x[:-1]), [x[-1]]))
+
+    timeIdx = 1
+
+    Itowards = dataRad['SimOutput/Radiation/I'][timeIdx, :, 5, :]
+    Itowards81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 5, ::2]
+    Iaway = dataRad['SimOutput/Radiation/I'][timeIdx, :, 11, :]
+    Iaway81 = dataRad81['SimOutput/Radiation/I'][timeIdx, :, 11, ::2]
+
+    Imax = 1.2
+    Imin = 0.8
+    spec = gridspec.GridSpec(nrows=1, ncols=3, width_ratios=[1, 1, 0.1])
+    waveCentreA = 0.5 * (waveRangeA[0] + waveRangeA[1])
+    waveCentreB = 0.5 * (waveRangeB[0] + waveRangeB[1])
+
+    ax = fig.add_subplot(spec[0])
+    mesh = ax.pcolormesh(wavelengthEdges - waveCentreA, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentreA, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.set_xlim(*[w-waveCentreA for w in waveRangeA])
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
+    ax.set_ylabel('$x$ [Mm]')
+    ax.set_title(r'H$\alpha$')
+    ax.text(-0.09, 1.8, r'{:.3f}'.format(abs_max_in_wavelength_range(wavelength,
+                                          Itowards/Itowards81, waveRangeA)),
+            va='top', ha='left', fontsize=10)
+
+    ax = fig.add_subplot(spec[1])
+    mesh = ax.pcolormesh(wavelengthEdges - waveCentreB, xEdges, (Itowards / Itowards81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.pcolormesh(wavelengthEdges - waveCentreB, -xEdges, (Iaway / Iaway81).T, vmin=Imin, vmax=Imax, cmap='RdBu_r', rasterized=True)
+    ax.set_xlim(*[w-waveCentreB for w in waveRangeB])
+    ax.set_yticklabels([])
+    ax.axhline(0, c='r', alpha=0.6)
+    ax.set_xlabel('$\Delta\lambda$ [nm]')
+    ax.set_title(r'Ca\,\textsc{ii} 854.2\,nm')
+    ax.text(-0.09, 1.8, r'{:.3f}'.format(abs_max_in_wavelength_range(wavelength,
+                                          Itowards/Itowards81, waveRangeB)),
+            va='top', ha='left', fontsize=10)
+
+    ax = fig.add_subplot(spec[2])
+    fig.colorbar(mesh, cax=ax)
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+
+statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{5}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+
+
+statEq2d15 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+statEq2d15_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t15_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
+
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854.3444, 854.5444))
+lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{15}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+
+\end{pycode}
+
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison05s')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison10s')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison15s')|
+% spell-checker: enable
+
+Whilst it would be nice to evaluate the radiation with arbitrary horizontal precision, the limitations of computer performance do not allow this.
+Clearly, we want to investigate the problem at a resolution similar or better than that provided by our observations.
+If the problem produces smoothly varying solutions then it is not necessarily necessary to run the simulation at the same resolution as the observations; however from observations we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
+This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observation against which our results will be compared.
+
+To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire model) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the simulation and compare the outgoing radiation.
+The incident radiation at the $x=\SI{0}{\mega\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
+In Figs.~\ref{Fig:HorizontalResolutionComparison05s}-\ref{Fig:HorizontalResolutionComparison15s} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\{5, 10, \SI{15}{\second}\}$ respectively.
+The maximum fractional error in each panel is shown in the upper-left corner of each panel.
+The location of the peak differences between the treatments in the positive and negative $x$ regions appear to follow a pattern similar to those in considered in Sec.~\ref{Sec:2dTimeDepSE}, with the largest differences in positive $x$ appearing in region $B$ while those in negative $x$ appear in $a$.
+The maximum difference is found to be an enhancement of around 14\% in both line cores at $x\sim\SI{0.6}{\mega\metre}$ for the ratio of lower resolution simulation to the higher resolution.
+This is not an insignificant variation, but it does not appear to vary too dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
+
+The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
+Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate $\Lambda$ operator takes longer to cross the grid.
+For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation, and for primarily computational reasons, but being confident that the solution is reasonable, we opt to use the 41 point spatial grid in all models presented in this chapter.
+This scaling is more significant with the addition of points in $z$, which are already very dense in some regions.
 
 
 \section{Observational Comparison}
@@ -2158,17 +2214,22 @@ lFig.caption = r'Offset between the enhancement of the blue and red wings of the
 
 Whilst any real world flare situation is far more complex than the two-dimensional model presented in the previous section, we will compare these results against observations of the two-ribbon M1.1 flare SOL 20140906T17:09 from the CRISP instrument, observed in \Ha{} and \CaLine{}.
 A context image of the region in the core of the \CaLine{} line at the flare peak is shown in Fig.~\ref{Fig:2dCaContext}.
+This data was prepared following the procedure described in Sec.~\ref{Sec:CRISP}.
 We have selected a region on edge of the western ribbon for this comparison, which is highlighted in blue in both the left- and right-hand panels of this figure.
 The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being 0.057" ($\sim\SI{42}{\kilo\metre}$).
+This region was chosen as it represents the intersection between the flare ribbon and some of the quieter material present in the data (the east ribbon overlaps a sunspot), lies approximately perpendicular to structure visible here, and is close to the region analysed by \citet{Kuridze2015}.
 
 To investigate the effects presented in the simulation we shall analyse the variation of the radiation in the selected region as a function of $x$ location and time.
-The 10\,{}px in $y$ are averaged to reduce the noise present in the data.
+The 10\,{}px in $y$ are averaged to increase the signal to noise ratio.
 These timeslices are then plotted for three different wavelengths, corresponding to the two wings and the line core, and shown in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
 We take the right-hand edge of this region as representing an approximation the background intensity and compute the distance from the left-hand boundary at which a 40\% enhancement over this background level is seen.
 This extent is shown as the blue lines in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
+The bright expansion of the flare ribbon can be seen on these plots as the triangular region that collapses rapidly around 17:11.
+This plot is similar in concept to the imaging plots (Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10}) produced from our models, but the ``ribbon'' was held at a fixed location.
 
 We can compare the differences between the extents for these different spectral positions on both lines to investigate the differences in emission throughout the slab.
 This is shown for \CaLine{} and \Ha{} in Figs.~\ref{Fig:2dCrispCaEnhanceDists} and \ref{Fig:2dCrispHaEnhanceDists} respectively.
+The comparison here is against the line core, so an offset of $0$\,{}px implies that the enhancement in the line core and this wavelength is co-spatial.
 For \CaLine{}, prior to 17:05, there is little difference between both line wings and the line core, although the blue wing enhancement on average extends slightly further than the red wings, and just prior to the flare peak, up to $5$\,{}px further than the line core.
 As the flare peaks, the enhancement of the line core extends consistently $5-10$\,{}px further from the ribbon than either of the wings, and this trend continues for the remainder of the dataset.
 For \Ha{}, before $\sim$17:07, the red wing enhancement remains $\sim$15\,{}px behind the line core, whilst the blue wing starts in this region, then extends past the line core at $\sim$17:00 before falling back to a similar offset to the red wing at $\sim$17:07.
