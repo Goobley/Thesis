@@ -21,14 +21,14 @@ ch2DRT = texfigure.Manager(
 %     \item Suggestions on visibility of this chromospheric glow with DKIST.
 % \end{itemize}
 
-It is clear that the world around us is multi-dimensional, but until this point we have only considered radiative transfer in one-dimensional atmospheres.
+It is clear that the world around us is multi-dimensional, but until this point we have only considered radiative transfer in one-dimensional plane-parallel atmospheres.
 
 All of the theory of radiative transfer discussed in previous chapters remains valid when applied to higher dimensional systems, with the exception of the description of the formal solver.
 This is due to the non-local terms that appear within the MALI description (with diagonal $\Lambda$ operator) being handled by the formal solver, which is responsible for computing the radiation field throughout the plasma from the local parameters and boundary conditions and thus coupling the atmospheric nodes to each other.
 Once the radiation field has been computed it is then used as a local parameter in the rest of the iteration.
 In fact, if the storage for the atmosphere is ``flattened'' into a one-dimensional form, the code from the plane-parallel case can (and should) be used to implement the iteration scheme.
 
-In this chapter we shall first describe the extension of the \Lw{} framework to two dimensions (with the possibility of further extension), and then describe its application to the simulation of a flaring atmosphere illuminating an adjacent slab of quiet sun, along with potential implications for future observations at high resolution.
+In this chapter we shall first describe the extension of the \Lw{} framework to two dimensions (with the possibility of further extension), and then describe its application to the simulation a slab of quiet sun being illuminated by an adjacent slab of quiet sun, along with potential implications for future observations at high resolution.
 
 \section{The Formal Solver in Two-Dimensions}
 
@@ -81,20 +81,20 @@ The general case, that of an inclined ray ray travelling through the atmosphere 
 In the case of this ray the formal solver must sweep first along $x$ and then along $z$.
 The difficulties which can arise from this will be discussed in Sec.~\ref{Sec:2dEvalOrder}.
 The points $U$ and $D$ refer to them being ``upwind'' and ``downwind'' of the point $O$ for which we are currently computing the intensity.
-This can be explained by looking at the intersections of ray with the grid.
+This can be visualised by looking at the intersections of ray with the grid.
 To compute the intensity in the direction of this ray at point $O$ using the short characteristics formulation we have, as in one-dimension,
 \begin{equation}\label{Eq:MiniScDefinition}
    I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)}\, dt,
 \end{equation}
-where these terms have their usual meanings, $I_O$ is the intensity in this direction at $O$, $I_U$ is the intensity in this direction at $U$ and we have dropped the angular and frequency dependencies for clarity.
+where these terms have their usual meanings, $I_O$ is the intensity in this direction at $O$, $I_U$ is the intensity in this direction at $U$, and we have dropped the angular and frequency dependencies for clarity.
 Thus, to compute the intensity at $O$, the intensity at $U$ must first be known.
-As $U$ does not typically lie on a point of our discrete two-dimensional grid, the value of $I_U$ (and other quantities) are not computed directly by the formal solver, and must instead be interpolated from the values of grid points along the line $\alpha\beta$.
+As $U$ does not generally lie on a point of our discrete two-dimensional grid, the value of $I_U$ (and other quantities) are not computed directly by the formal solver, and must instead be interpolated from the values of grid points along the line $\alpha\beta$.
 
 Following the short characteristic method, a functional form must be assigned to the variation of $S$ over the the line segment $[UO]$.
 In the simplest case, this can again be a linear functional form, but due to the additional dimension for inhomogeneities in the two-dimensional case, unless the grid is very fine or the atmosphere very slowly varying, this may be a poor choice.
 A higher order parametrisation of $S$ is likely to require the values of the source function at both $U$ and $D$, and possibly other points along the ray.
 Similarly to the cubic Bézier spline method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
-The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the large computational demands of the method.
+The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the computational demands of the method.
 Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2013}, which will be briefly summarised here for the scalar case of the RTE.
 
 \subsection{The BESSER method}
@@ -111,7 +111,7 @@ where $f_U$ and $f_O$ are the values of $f$ at points $U$ and $O$ respectively, 
 The control points are points half way along an interval, defining the tangent to the spline at each end of the range i.e. $c_U O$ defines the tangent to the spline at $O$ and $U c_U$ defines the tangent to the spline at $U$.
 If we denote the coordinates of our points along the ray $s_U$, $s_O$, and $s_D$ then we have $a = (s - s_U) / h_U$, where $h_U = s_U - s_O$.
 An equivalent interpolation can be defined over the $[OD]$ segment.
-The monotonicity (for monotonic $f_U$, $f_O$, $f_D$) and continuous first derivative of the interpolating functions at $O$ is ensured by
+The monotonicity (for monotonic $f_U$, $f_O$, $f_D$) and continuous first derivative of the interpolating functions at $O$ is ensured by following this procedure:
 \begin{enumerate}
     \item Verify the monotonicity of $f_U$, $f_O$, $f_D$, and if $f_O$ is a local extremum then the control points $c_U$ and $c_D$ are set to $f_O$, giving a derivative of zero at $O$. As this is is the only possible solution for this case, the process stops here.
 
@@ -126,7 +126,7 @@ The monotonicity (for monotonic $f_U$, $f_O$, $f_D$) and continuous first deriva
 This process is described in more detail in \citet{Stepan2013}, but this covers the most important elements of the process.
 
 Similarly to the plane-parallel case, we will solve the RTE in optical depth, due to its increased stability.
-This interpolation method can be used to compute $\tau_{UO}$ and $\tau_{OD}$ by
+This interpolation method can be used to compute the optical depths $\tau_{UO}$ and $\tau_{OD}$ along these segments by
 \begin{align}
     \tau_{UO} &= \frac{1}{3}(\chi_U + \chi_O + \chi_{c_U}) (s_O - s_U),\\
     \tau_{OD} &= \frac{1}{2}(\chi_O + \chi_D) (s_D - s_O).
@@ -173,7 +173,7 @@ Most of the nodes on this figure are solved equivalently to this one, with all n
 \begin{figure}
 \centering
 \subimport{03TwoDRT/}{SweepOrder}
-\caption{Diagram of sweep order in 2D}
+\caption{Diagram of sweep order for two-dimensional short-characteristics formal solver.}
 \label{Fig:2DSweep}
 \end{figure}
 
@@ -216,7 +216,7 @@ Whilst it is possible to compute the necessary parameter interpolation weights a
 We instead opt to store fractional indices which can be used in conjunction with the grid information in any interpolation procedure.
 Using 64-bit arithmetic these are a concise and robust method for storing these locations.
 By design, the intersection calculation is only performed for one upwind and downwind point
-(excluding long characteristics that cross grid boundaries), as the second order method is considered to be a sufficient trade-off in terms of computational cost against accuracy.
+(excluding long characteristics that cross grid boundaries), as we consider the second order method to be a practical trade-off in terms of computational cost against accuracy.
 This could easily be updated in the future, and we acknowledge that this is a limitation in terms of the two-dimensional formal solvers that can be loaded via the external interface.
 
 
@@ -374,12 +374,12 @@ ax1.plot(dPopsStop, l2s, '+-', label='L2 Norm', c='C1')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax1.set_yscale('log')
-ax.set_xlabel(r'$\mathrm{max}(\Delta n / n)$')
-ax.set_ylabel(r'Absolute Maximum Difference', c='C0')
-ax1.set_ylabel(r'L2 Norm', c='C1')
+ax.set_xlabel(r'$\|\Delta n / n\|_\infty$')
+ax.set_ylabel(r'$L^\infty$ Norm', c='C0')
+ax1.set_ylabel(r'$L^2$ Norm', c='C1')
 
 lFig = ch2DRT.save_figure('2DErrChange', fig, fext='.pgf')
-lFig.caption = r'Standard convergence metric (absolute maximum difference) and L2 difference of the \CaLine{} line profiles between between the 1 and 2D Formal Solvers (including ALI iteration procedure).'
+lFig.caption = r'$L^\infty$ and $L^2$ norms of the difference of the \CaLine{} line profiles between between the 1 and 2D Formal Solvers (including population iteration procedure).'
 \end{pycode}
 
 \begin{pycode}[2DValidation]
@@ -610,18 +610,18 @@ lFig.caption = r'Validation of 2D formal solver in FALC atmosphere with \SI{20}{
 
 It is necessary to validate both the two-dimensional formal solver and its integration into the \Lw{} framework.
 Here, we present a basic validation case, a horizontally homogenous FALC atmosphere, using five points in $x$, spaced \SI{5}{\kilo\metre} apart.
-The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no incoming radiation at the top of the atmosphere.
+The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no radiation is incoming at the top of the atmosphere.
 The standard configuration of \Lw{} in two-dimensions is used, i.e. BESSER formal solver and linear interpolation.
 The 11th order angular quadrature with 6 rays per octant \citep{Stepan2020} is used when solving for the level populations.
 In Fig.~\ref{Fig:2DValidation} we show the comparison of a \CaLine{} computed using this two-dimensional method against the same model atom and atmosphere in a plane-parallel configuration.
 Both of these are iterated until the maximum relative change in the \Caii{} populations is less than $10^{-4}$.
-The outgoing radiation shown in the upper panel of this figure was synthesised for rays in the $x-z$ plane at $\mu_z = 0.9$.
-Visually, the dashed lines, showing the solution from different $x$ locations using the two-dimensional formal solver overlie each other perfectly, showing that the output is homogenous across the $x$ axis, as is to be expected from this horizontally homogenous atmosphere with periodic boundary conditions.
+The outgoing radiation shown in the upper panel of this figure was synthesised using rays in the $x-z$ plane with $\mu_z = 0.9$.
+Visually, the dashed lines, showing the solution from different $x$ locations using the two-dimensional formal solver overlie each other perfectly, showing that the output is homogenous along the $x$ axis, as is to be expected from this horizontally homogenous atmosphere with periodic boundary conditions.
 There is a slight visible offset between the solutions generated from the plane-parallel and two-dimensional simulations, and the relative difference between these is shown in the lower panel of this figure.
 We see that the relative difference is greatest in the line core, peaking at around 1.5\%.
 Overall, this is very good agreement considering the different underlying methods used in the formal solvers.
 
-In Fig.~\ref{Fig:2DErrChange} we show how the difference between the plane-parallel and two-dimensional models changes as the maximum relative population change decreases (i.e. as we approach convergence).
+In Fig.~\ref{Fig:2DErrChange} we show how the difference between the plane-parallel and two-dimensional models changes as the $L^\infty$ norm of the relative population change decreases (i.e. as we approach convergence).
 Further iterations beyond a maximum relative population change of $10^{-3}$ do not substantially improve the agreement between the two methods.
 Thus, the situation shown in Fig.~\ref{Fig:2DValidation} is sufficiently converged to compare the final solutions of the two methods.
 
@@ -631,18 +631,18 @@ Both of these simulations were run with 16 threads on \TODO{machine name}.
 Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
 These are shown in Fig.~\ref{Fig:2DValidationVlosFixedX} and utilise the same configuration other than the parameters discussed below.
 The left-hand column shows the effects of a vertical velocity field on a simulation with periodic boundary conditions.
-This velocity field was uniform in $x$ and defined by the additive inverse of a single period sine wave spanning the entire FALC atmosphere, with the first and last three points set to \SI{0}{\kilo\metre\per\second}.
-The amplitude of this wave was set to \SI{30}{\kilo\metre\per\second}.
+This velocity field is uniform in $x$ and defined by the additive inverse of a single period sine wave spanning the entire FALC atmosphere, with the first and last three points set to \SI{0}{\kilo\metre\per\second}.
+The amplitude of this wave is set to \SI{30}{\kilo\metre\per\second}.
 The lower row of this column shows that there is once again good agreement between the plane-parallel and two-dimensional models, with differences peaking around 5\% in the line core, but the line shape being accurately reproduced.
 This difference could likely be reduced by the use of the previously discussed subgridding technique, but as the simulations that are presented later in this chapter do not use velocity fields within the 2D slab, this work was not undertaken.
 
 In the right-hand column a model with fixed $x$ boundary conditions is presented.
 This model also applies an equivalent velocity field, albeit with a smaller \SI{5}{\kilo\metre\per\second} amplitude.
-The boundary conditions are computed from the associated one-dimensional simulation; the radiation along each ray of the two-dimensional quadrature needed for the boundary condition at each depth used in the two-dimensional simulation is synthesised from the plane-parallel simulation for both the minimum and maximum boundary conditions along the $x$ axis.
-The radiation presented here is synthesised along a ray at $\mu_z=0.99999$ (\SI{0.25}{\degree}) so that the ray through central $x$ cell at the top of the model does not intersect directly with either of these boundary conditions (as this would simply be sampling the plane-parallel simulation) whilst still testing the two-dimensional nature of the formal solver.
+The boundary conditions are computed from the associated one-dimensional simulation; the radiation along each ray of the two-dimensional quadrature needed for the boundary condition at each depth used in the two-dimensional simulation is synthesised from the plane-parallel simulation for both boundary conditions along the $x$ axis.
+The radiation presented here is synthesised along a ray with $\mu_z=0.99999$ (\SI{0.25}{\degree}) so that the ray through central $x$ cell at the top of the model does not intersect directly with either of these boundary conditions (as this would simply be sampling the plane-parallel simulation) whilst still testing the two-dimensional nature of the formal solver.
 The agreement here is once again very good, with the error peaking once again around 1.5\%.
 
-The coupling between the two-dimensional and plane-parallel models shown here is facilitated by the design of the \Lw{} framework, and will be leveraged extensively in the following sections.
+The coupling between the two-dimensional and plane-parallel models utilised here is facilitated by the design of the \Lw{} framework, and will be leveraged extensively in the following sections.
 A plane-parallel boundary condition can be updated and synthesise its output dynamically in response to the rays requested from the two-dimensional model, without the need to precompute these values and go through a multi-step saving and loading process that is prone to error when simulation parameters change; especially for cases where the incoming radiation field from a fixed boundary condition is allowed to be anisotropic, requiring agreement between the rays in both models.
 The boundary condition radiation for the almost vertical rays used in the right-hand column is computed automatically due to the design of the class that describes it, and the coupling allowed by the framework, which allows easy manipulation and coupling of multiple radiative transfer contexts within the same program.
 
@@ -664,9 +664,9 @@ These effects include the possible `core-halo' pattern reported around flare ker
 The proposed explanation for these was radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
 In the following we shall focus primarily on NLTE radiative effects affecting plasma neighbouring a flare, but leave the inclusion of temperature variations due to absorption of radiation to a future study.
 
-It is reasonable to suggest that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field \citep{Spitzer1953}, however the radiation is not affected by these limitations.
+It is reasonable to suggest that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field \citep{Spitzer1953}, however photons are not affected by these limitations.
 Thus, we will investigate the effects of illumination from a neighbouring plane-parallel flare model on a two-dimensional slab of plasma representing the quiet atmosphere, with a time-dependent radiative treatment of both of these.
-This model can then serve as a ``first-order'' approximate investigation of the outgoing radiation from the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
+This model can then serve as a ``first-order'' approximate investigation of the effects of flare radiation on the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
 
 Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}; the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
 On one side of this slab we place the RADYN simulation, and compute the intensity along each ray of the angular quadrature used for the 2D slab, at each depth in the simulation.
@@ -674,20 +674,21 @@ The other $x$ boundary is treated equivalently, but using the fixed initial quie
 
 Similarly to the process described in the previous chapter a time-dependent simulation is run, again reprocessing the thermodynamic atmospheric properties using RADYN's internal timestep.
 The separate components of this model share a $z$ stratification based on a combination of RADYN's grids used for both the initial quiet sun atmosphere and the current timestep.
-This method ensures that 450 points are spaced across the atmosphere in $z$ and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
+This method ensures that 450 points are spaced across the entire altitude range of the atmosphere and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
 The populations are interpolated between the $z$ grids from one timestep to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
 The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed previously.
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
 In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
 As these points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart.
 The use of this grid is justified in Sec.~\ref{Sec:HorizontalResolution}.
-Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square.
-Unlike the model in the previous chapter, we do not consider advection here; the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small, as well as allowing more flexibility in the $z$ stratification, as a grid that is stable for radiative transfer may not be so for advection.
+Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square, which can pose convergence difficulties if insufficient angular resolution is used .
+Unlike the model in the previous chapter, we do not consider advection here; the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small
+This also has the effect of allowing more flexibility in the $z$ stratification, as a grid that is stable for radiative transfer may not be so for advection.
 
 The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in RT simulations.
 The incoming radiation from the flare model is specified for each ray and depth in the first column of the atmosphere.
 As the intensity is specified for all incoming (rightgoing) rays here, it cannot be calculated taking into account the local parameters, meanwhile the outgoing (leftgoing) rays \emph{do} take into account the local parameters, and then inform the local operator acting on these populations.
-Thus, if this column has its thermodynamic properties fixed to those of the initial quiet sun model, it behaves as if it is only receiving radiation from the right, and only being affected by the flare in a ``second-hand'' sense.
+Thus, if this column has its thermodynamic properties fixed to those of the initial quiet sun model, it behaves as if it is only receiving radiation from the right, whilst only being affected by the flare in a ``second-hand'' sense.
 This leads to a dark first column in the two-dimensional synthesis.
 To minimise these effects we copy the flare atmosphere and populations into this first column, and hold these fixed over each timestep.
 These populations are then consistent with the adjacent plane-parallel atmosphere and the radiation emerging from it which is used as a fixed boundary condition.
@@ -884,7 +885,7 @@ fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 plot_2d_imaging(fig, dataRad, 927, 7, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\CaLine{} for 2D F9 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.caption = r'\CaLine{} for 2D F9 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.placement = 'htb'
 \end{pycode}
 
@@ -894,7 +895,7 @@ fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 plot_2d_imaging(fig, dataRadF10, 743, 15, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF10', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\Ha{} for 2D F10 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.caption = r'\Ha{} for 2D F10 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.placement = 'htb'
 \end{pycode}
 
@@ -904,7 +905,7 @@ fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 plot_2d_imaging(fig, dataRadF10, 927, 7, 10, angularIdx, angularIdxDown)
 fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF10', fig, fext='.pgf', dpi=500)
-lFig.caption = r'\CaLine{} for 2D F10 case. The panels show the same information as Fig.~\ref{Fig:2DHaF9}.'
+lFig.caption = r'\CaLine{} for 2D F10 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.placement = 'htb'
 \end{pycode}
 
@@ -1044,22 +1045,23 @@ lFig.caption = r'Intensity at $t=\SI{10}{\second}$ in the F10 model for both \Ha
 \py[2DRT]|ch2DRT.get_figure('2DCaF10')|
 
 
-Figs.~\ref{Fig:2DHaF9} -- \ref{Fig:2DCaF10} show the \Ha{} and \CaLine{} spectral lines in the F9 and F10 simulations respectively.
-The left-hand column shows the enhancement in three different wavelengths as a function of space and time, as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$ where the flare model is presumed to have infinitesimal width (in $x$) indicated by the horizontal red line.
-These three wavelengths sample the line core and secondary features on either side of the the line and are indicated in the by the vertical lines in the left-hand panel, with the line core indicated in blue and the two secondary wavelengths in dashed orange.
-This left-hand panel also shows the emergent intensity in this line at $x=\SI{500}{\kilo\metre}$ from the flare at different times throughout the simulation for the viewing angle to the local surface normal in the $x-z$ plane of \SI{2.24}{\degree}.
-Blue and orange lines are also plotted on the left-hand panel and indicate the distance at which an enhancement of 40\% and 10\% (respectively) over the quiet boundary are observed for this wavelength and point in the simulation.
+Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10} show the \Ha{} and \CaLine{} spectral lines in the F9 and F10 simulations respectively.
+The left-hand column shows the intensity enhancement in three different wavelengths as a function of space and time, configured as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$.
+The flare model is presumed to have an infinitesimal width (in $x$) indicated by the horizontal red line.
+These three wavelengths sample the line core and secondary features on either side of the the line and are indicated by the vertical lines in the left-hand panel, with the line core indicated in blue and the two secondary wavelengths in dashed orange.
+This left-hand panel also shows the emergent intensity in this line at $x=\SI{500}{\kilo\metre}$ from the flare at different times throughout the simulation for the most vertical emergent ray from the simulation.
+Blue and orange lines are also plotted on the left-hand panel and indicate the distance at which an enhancement of 40\% and 10\% (respectively) over the quiet boundary are observed for this wavelength and time in the simulation.
 The different thresholds are used for the positive and negative $x$ regions respectively as the scale of the enhancements vary significantly between these, with the effect in the negative $x$ region being notably smaller.
 
-It is clear from these figures that in all cases the enhancement in the line core is significantly larger in all of value, extent (dimension in $x$), and duration, than the wing feature enhancements with both the positive and negative $x$ enhancements remaining over \SI{0.5}{\mega\metre} from the flare for the entire duration.
-The enhancements in the wing features are much smaller in extent and more transient, especially for \Ha{}, where the blue wing feature enters a reduction from the quiet boundary value soon after heating ends in the flare model ($t=\SI{10}{\second}$).
+It is clear from these figures that in all cases the enhancement in the line core is significantly larger in all of value, extent (dimension in $x$), and duration than the wing feature enhancements, with both the positive and negative $x$ enhancements remaining over \SI{0.5}{\mega\metre} from the flare for the entire duration.
+The enhancements in the wing features are much smaller in extent and more transient, especially for \Ha{}, where the blue wing feature near the flaring boundary enters a reduction relative to the quiet boundary value soon after heating ends in the flare model ($t=\SI{10}{\second}$).
 In \CaLine{} both the blue and red wing features in positive $x$ present a similar extent, but the red wing feature persists for the entire simulation whereas the blue feature vanishes around $t=\SI{30}{\second}$.
 There are interesting differences in the negative $x$ enhancements for \CaLine{} between the F9 and F10 models.
 In the former there is an enhancement only during the flare heating period, whereas in the latter there is no significant enhancement until after the heating has ended, and this persists for the remainder of the simulation.
 
-The \Ha{} line profile in the F9 simulation (Fig.~\ref{Fig:2DHaF9}) synthesised at $x=\SI{500}{\kilo\metre}$ shows that over the course of the simulation the line core intensity increases, but not enough to enter emission, and two secondary features form in the red and blue wings during the flare heating.
-These decay rapidly after heating ends, dropping to below the initial value on our blue wing sampling.
-The \CaLine{} computed in this same simulation (Fig.~\ref{Fig:2DCaF9}) strongly enters emission as a doubly-peaked line with a slight asymmetry in favour the red wing and remains so for the majority of the simulation, decaying slowly over time, with the line core decaying more rapidly than the secondary peaks, leading to an increasingly deep central reversal.
+The \Ha{} line profile in the F9 simulation (Fig.~\ref{Fig:2DHaF9}) synthesised at $x=\SI{500}{\kilo\metre}$ shows that over the course of the simulation the line core intensity increases, but does not rise above the continuum value, and two secondary features form in the red and blue wings during the flare heating.
+These decay rapidly after heating ends, dropping to below the initial quiet value at our blue wing sampling.
+The \CaLine{} computed in this same simulation (Fig.~\ref{Fig:2DCaF9}) emits strongly as a doubly-peaked line with a slight asymmetry in favour the red wing and remains so for the majority of the simulation, decaying slowly over time, with the line core decaying more rapidly than the secondary peaks, leading to an increasingly deep central reversal.
 
 The effects are similar, but much larger in the F10 simulation.
 The \Ha{} line (Fig.~\ref{Fig:2DHaF10}) is greatly enhanced presenting a doubly-peaked shape with a deep central reversal during heating.
@@ -1068,7 +1070,7 @@ After the flare heating ends, the red secondary peak remains enhanced and decays
 The \CaLine{} line (Fig.~\ref{Fig:2DCaF10}) is a more dramatically enhanced version of the one considered previously for the F9 simulation although its asymmetry flips in favour of the blue wing for the $t=\SI{12}{\second}$ line profile.
 
 We note that for both spectral lines the far wings and continuum ($|\Delta\lambda| \geq \SI{0.1}{\nano\metre}$ for \Ha{} and $|\Delta\lambda| \geq \SI{0.04}{\nano\metre}$ for \CaLine{}) have very small or no variations throughout both simulations.
-This will be discussed more later, when the effects on the populations are investigated.
+This will be discussed later, when the effects on the populations are investigated.
 
 To better interpret these simulations we can also look at the what our theoretical slit spectrograph described in Fig.~\ref{Fig:2DSimFlipped} would observe at different times in the simulation.
 
@@ -1083,17 +1085,17 @@ The emergent spectra from the F9 simulation are shown for \Ha{} and \CaLine{} in
 The intensity scale is constant for all timesteps for each line.
 As expected from the previous imaging results, significant variations in the line profiles are observed 0.5--\SI{1}{\mega\metre} from the flare location.
 Once again, there is a large difference between the positive and negative $x$ regions, with much greater variations observed in the former.
-This is likely due to rays passing through positive $x$ region encountering more scattered light from the flare and directly intersecting the flaring atmosphere.
+This is likely due to rays passing through the positive $x$ region encountering more scattered light from the flare and directly intersecting the flaring atmosphere.
 There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
 Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
-To better discuss these effects in detail we will split the atmosphere into regions based on $x$-coordinate as follows $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
+To better discuss these effects in detail we will split the atmosphere into regions based on $x$-coordinate as follows: $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
 We will use minuscules ($a$, $b$, $c$) of these designations to denote the reflections of their associated regions in the $x$-axis.
 
 Starting with the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a line profile in region $A$ with a broadened core in absorption (dark in the figure) and enhanced secondary peaks in both the red and blue around $|\Delta\lambda|=\SI{0.06}{\nano\metre}$.
 In $B$, the line core is enhanced relative to both $A$ and its quiet value with the secondary peaks in the wings around decaying rapidly, producing a shallower absorption profile, before a smooth return to the quiet sun line profile over $C$.
 In the negative $x$ region the line is less deep near the flare, decaying back to pre-flare levels over the \SI{2}{\mega\metre} extent.
 The situation is similar at the end of the heating ($t=\SI{10}{\second}$), but here the core is more significantly enhanced in region $A$ before deepening but remaining well above the quiet value over $B$ and smoothly transitioning back to its quiet sun form in region $C$.
-A slight asymmetry of the red wing (due to brightening around $\Delta\lambda = \SI{0.05}{\nano\metre}$) starts to appear here in region $A$.
+A slight asymmetry of the red wing (due to the brightening around $\Delta\lambda = \SI{0.05}{\nano\metre}$) starts to appear here in region $A$.
 The negative $x$ region remains similar to $t=\SI{5}{\second}$ although the line core is less enhanced immediately adjacent to the flare.
 Some time after the heating has ended ($t=\SI{15}{\second}$ and $t=\SI{25}{\second}$), the previous brightening (secondary peak) in the blue wing over $A$ is now a dimming, but there remains an enhancement in the red wing, which fades gradually.
 In region $B$ the line appears shallower than for $t=\SI{10}{\second}$, but not as enhanced as for $t=\SI{5}{\second}$.
@@ -1113,9 +1115,10 @@ Regions $b$, $c$, and $C$ do not change substantially over the course of the sim
 The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.~\ref{Fig:HaFull2dPlotF10} and \ref{Fig:CaFull2dPlotF10} respectively.
 The results are similar to those from the F9 simulations, but mostly exaggerated.
 The line profiles over $A$ and $B$ are substantially broadened relative to those shown in the F9 simulation, which is not surprising, as much of this radiation comes from the flaring boundary condition, which is heated by a significantly more energetic beam.
-During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model, likely due to the higher velocities present in the flaring boundary.
+During the cooling phase there is still a strong red asymmetry in this region; much stronger than that in the F9 model.
+This is likely due to the higher velocities present in the flaring boundary.
 This brightening encompasses the red wing, line core and enters the blue wing in region $A$.
-Focussing on \Ha{} (Fig.~\ref{Fig:HaFull2dPlotF10}), the broadening in $B$, which is much more significant than that seen in the F9 case is not constant in $x$.
+Focussing on \Ha{} (Fig.~\ref{Fig:HaFull2dPlotF10}), the broadening in $B$, which is much more significant than that seen in the F9 case, is not constant in $x$.
 For $t=5$ and $\SI{10}{\second}$ the line profile is enhanced over quiet values and substantially broadened, decaying slowly back to quiet values as the distance from the flare increases, whereas for $t=15$ and $\SI{25}{\second}$, this effect increases over the first half of $B$ before reducing over the second half.
 This reduction continues into $C$ with the line appearing at its narrowest around $x=\SI{1.5}{\mega\metre}$, although feature's distance from the flare decreases to $\sim\SI{1.2}{\mega\metre}$ for $t=\SI{25}{\second}$.
 
@@ -1138,15 +1141,14 @@ To assess this we have synthesised the spectra of the \Ha{} and \CaLine{} lines 
 These spectra are shown in Fig.~\ref{Fig:ZeroBcSpectro}.
 For both lines, in region $A$, there is no emission in the far wings and continuum ($|\Delta\lambda|\ge\SI{0.07}{\nano\metre}$ for \Ha{} and $|\Delta\lambda|\ge\SI{0.02}{\nano\metre}$ for \CaLine{}) below \SI{0.25}{\mega\metre}.
 For \Ha{}, the secondary peaks in the wings ($|\Delta\lambda|\approx\SI{0.06}{\nano\metre}$) protrude approximately \SI{100}{\kilo\metre} further toward the flaring boundary with the line core protruding approximately \SI{50}{\kilo\metre} less than these secondary peaks.
-The situation is reversed for \CaLine{}; the line core protrudes similarly to \Ha{}'s secondary peaks
-a slight recess of approximately \SI{50}{\kilo\metre} at wavelengths just beyond the secondary peaks ($|\Delta\lambda| > \SI{0.02}{\nano\metre}$) before returning smoothly and rapidly towards the continuum values.
+The situation is reversed for \CaLine{}; the line core protrudes similarly to the secondary \Ha{} peaks, and there is a slight recess of approximately \SI{50}{\kilo\metre} at wavelengths just beyond the secondary peaks ($|\Delta\lambda| > \SI{0.02}{\nano\metre}$) which returns smoothly and rapidly towards the continuum values.
 
 There is no significant variation in extent in the negative $x$ region, with visible emission starting around $\SI{0.3}{\mega\metre}$ from the quiet boundary.
 
 Despite the lack of visible emission in these regions when the boundary conditions are set to zero, this does not mean that there are no effects due to the two dimensional nature of the simulation present.
 If the source function is low in these regions but there is still significant opacity then the observed radiation will be affected, but this cannot be seen without the incident radiation.
 Nevertheless, there are clear effects due to the two-dimensional simulation beyond \SI{0.25}{\mega\metre} from the flaring boundary, and these lie well within the regions of important variation outlined in the our imaging and spectroscopic analyses of the data.
-The further investigate the flare's effect on the slab and why the continuum emission is not affected we will now see how the atomic populations within the slab vary.
+To further investigate the flare's effect on the slab and why the continuum emission is not affected we will now see how the atomic populations within the slab vary.
 
 \subsection{Population Changes}
 
@@ -1515,22 +1517,22 @@ where $n_{i,t}$ is the number density of atomic level $i$ at time $t$.
 The indexing of the levels shown in the plots is the indexing used by \Lw{}'s model atoms, which is zero indexed.
 These properties are all shown at $t=\SI{10}{\second}$.
 The contribution function and local opacity effect are computed by treating the atmosphere at $x=\SI{50}{\kilo\metre}$ as plane-parallel and computing the contribution function in the traditional way.
-This approach was taken due to the difficulty difficulty formulating the contribution function in the two-dimensional slab; the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plots, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
+This approach was taken due to the difficulty difficulty formulating the contribution function in the two-dimensional slab; the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plot, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
 We therefore use this simplified model as it should still inform us of the primary line forming and absorbing regions, especially as the thermodynamic structure of the two-dimensional slab is constant (other than the first column, copied from the flaring boundary).
 The $\chi_\nu / \tau_\nu$ plot is computed equivalently to the contribution function.
-The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), current emission from the flaring boundary (pink), and those observed from 200 and \SI{400}{\kilo\metre} on either side of the flaring kernel (orange for the positive $x$ region and green for the negative $x$ region).
+The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), current emission from the flaring boundary (pink), and those observed from 200 (solid line) and \SI{400}{\kilo\metre} (dashed line) on either side of the flaring kernel (orange for the positive $x$ region and green for the negative $x$ region).
 Whilst it is possible to compute the response function to perturbations in atmospheric parameters, this is not particularly insightful due to the assumption that the temperature and velocity fields remain fixed, and the coupling of the electron density to charge conservation again.
 
 There is an enhancement in the upper and lower levels of the \Ha{} transition in the upper chromosphere appearing deeper in the atmosphere (down to an altitude of \SI{1}{\mega\metre}) closer to the flaring boundary condition.
 The contribution function shows that the secondary peaks of the \Ha{} line profile form deeper in the atmosphere than the line core and approximately overlap the bottom of this enhanced region.
-The depth of this enhancement decreases with distance from the flaring boundary, and corresponds with the disappearance of the secondary peaks observed over region $B$.
+The depth of this enhancement decreases with distance from the flaring boundary, and corresponds well with the disappearance of the secondary peaks observed over region $B$.
 Where the relative change is roughly similar in both the upper and lower levels of the \Ha{} line there will be both an increase in opacity, and an equivalent increase in emissivity.
 This leads to no net change in the source function, thus this higher altitude region will proportionately contribute more significantly to the outgoing radiation as the increase in opacity blocks light from deeper in the ray's path.
-This enhancement does not appear to be sufficient to directly create the secondary peaks in the \Ha{} profiles other than in the columns closest to the flaring boundary, as evidenced by the green line profiles, but the increased source function in the higher temperature region of the upper chromosphere is sufficient to significantly enhance the core of the line profile at significant distances from the flare ($\sim\SI{1}{\mega\metre}$).
+This enhancement does not appear to be sufficient to directly create the secondary peaks in the \Ha{} profiles other than in the columns closest to the flaring boundary, as evidenced by the green line profiles, but the increased source function in the higher temperature region of the upper chromosphere is sufficient to significantly enhance the core of the line profile at large distances from the flare ($\sim\SI{1}{\mega\metre}$).
 
 The \Caii{} populations, shown in the lower row of Fig.~\ref{Fig:2dLevelsT10}, are much more dramatically affected than the hydrogen populations previously discussed.
 Both the upper and lower levels of the \CaLine{} spectral line are affected in the same $z=1.25-\SI{1.75}{\mega\metre}$ region at the $x=\SI{0}{\mega\metre}$ boundary, tapering off as $x$ increases.
-The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of $\sim-20$.
+The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of approximately $-20$.
 The lower level of this transition appears to be significantly more reduced than the upper level, which will lead to a dramatic reduction in the local opacity whilst the emissivity remains less affected.
 This will lead to an increase in the local source function as well as a reduction in the opacity affecting the line core radiation formed just below this level.
 This reduction is likely due to photoionisation effects similar to those considered in Sec.~\ref{Sec:CaiiPhotoionisation}, and will be discussed more in the context of the F10 model.
@@ -1539,7 +1541,7 @@ This reduction is likely due to photoionisation effects similar to those conside
 
 An equivalent figure for the F10 simulation at $t=\SI{10}{\second}$ is shown in Fig.~\ref{Fig:2dLevelsF10T10}.
 Due to the increased magnitude of the the population changes in the transition region, it is harder to interpret the population change plots for the F10 model.
-The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this does not significantly change the interpretation of the population effects on the line profile, which are corroborated by the line profiles shown in the left-most panel.
+The upper and lower levels of the \Ha{} transition have been affected similarly to the F9 simulation, but the magnitude of the population increase is larger, however this does not significantly change the interpretation of the population effects on the line profile, which is corroborated by the line profiles shown in the left-most panel.
 We also note, as evidenced by Fig.~\ref{Fig:ZeroBcSpectro}, that the enhancements in the \Ha{} populations are sufficient to produce small secondary peaks in the line profile, and the formation of these is clearer in the contribution function than it was in the F9 case.
 
 Despite the upper level of the \CaLine{} line appearing darker than the lower level, given the differences in scaling, the lower level populations have again been reduced by a greater amount than the upper level.
@@ -1660,7 +1662,7 @@ lFig.caption = r"The anisotropy of the radiation field at the flaring boundary a
 
 An interesting feature present in the \Caii{} plots is the angled white band starting from $z=\SI{1.2}{\mega\metre}$ at the flaring boundary and increasing in altitude with distance from the flare.
 This indicates that there is little change in the calcium populations in this region, despite the much more monotonic variation in $x$ seen in the F9 case.
-In Fig.~\ref{Fig:F10AnisotropyNe} the anisotropy of the radiation field leaving the flaring boundary and entering the slab over the range $z=0.9-\SI{1.7}{\mega\metre}$ for the timestep currently considered, along with the electron density in the slab is shown.
+In Fig.~\ref{Fig:F10AnisotropyNe} the anisotropy of the radiation field leaving the flaring boundary and entering the slab over the range $z=0.9-\SI{1.7}{\mega\metre}$ for the timestep currently considered is shown, along with the electron density in this region of the slab.
 The anisotropy is shown for the line cores of four different spectral lines (Ly$\alpha$, \Caii{} K, \Ha{}, \CaLine{}) along the vectors of angular quadrature used in the two-dimensional simulation.
 These have been plotted so that their $x$ and $z$ components match the aspect ratio of the electron density plot in the right-hand panel.
 Their sampling of the unit sphere is far more uniform than it appears here due to this significant stretching effect along $z$ and each vector's projected norm in the $x-z$ plane has been normalised.
@@ -1668,17 +1670,17 @@ This mapping allows their directions to be directly considered in terms of the a
 The length and colour of each vector is then scaled by the associated intensity.
 In the formation region of each line the line core radiation field is relatively isotropic, but the downgoing rays are greatly reduced above this region (as there is little emission or scattering).
 
-In the right-hand panel there an approximately triangular region of enhancement in the electron density (which is initially approximately uniform in $x$ from the values at the $x=\SI{2}{\mega\metre}$ boundary), starting at the flaring boundary around $z=\SI{1.1}{\mega\metre}$, and increasing in distance from the flare with altitude up to $x=\SI{0.75}{\mega\metre}$ at $z=\SI{1.7}{\mega\metre}$.
+In the right-hand panel there an approximately triangular region of enhancement in the electron density (which is initially approximately uniform in $x$ taking the values at the $x=\SI{2}{\mega\metre}$ boundary), starting at the flaring boundary around $z=\SI{1.1}{\mega\metre}$, and increasing in distance from the flare with altitude up to $x=\SI{0.75}{\mega\metre}$ at $z=\SI{1.7}{\mega\metre}$.
 The leading edge of this enhancement in electron density agrees well with the white band present in the \Caii{} population plots and the increase in electron density will locally increase the collisionality of the plasma.
 This region also appears to overlap well with the incoming Ly$\alpha$ radiation, which will penetrate further at higher altitudes due to the higher temperature and the combination of radiation arriving close to horizontally and from below; this (and other EUV radiation forming at similar temperatures) will likely be the cause of significant photoionisation.
-The downward sloped population reduction seen in the \Caii{} population plots corresponds to the line core formation region ($\sim\SI{1.1}{\mega\metre}$) which also aligns with the highest altitude at which \CaLine{} is relatively isotropic.
-Above this, the \CaLine{} radiation field is primarily upgoing and injects energy into the slab in a non-uniform fashion.
+The downward sloped population reduction seen in the \Caii{} population plots corresponds to the line core formation region ($\sim\SI{1.1}{\mega\metre}$) which also aligns with the highest altitude at which \CaLine{} radiation field is relatively isotropic.
+Above this, the radiation field is primarily upgoing and injects energy into the slab in a non-uniform fashion.
 
 \Ha{} appears relatively isotropic up to $z=\SI{1.5}{\mega\metre}$, becoming primarily upgoing above this.
 From the contribution function in Fig.~\ref{Fig:2dLevelsF10T10} the \Ha{} line core in the slab continues to form up to $z\approx\SI{1.75}{\mega\metre}$, and the anisotropic injection of energy is likely partially responsible for the diagonal structure seen in the population change plot of \Ha{}'s upper level.
-It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$ but remains relatively isotropic until $z\approx\SI{1.3}{\mega\metre}$ and does not appear directly connected to the ionisation region depicted in the right-hand panel.
+It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$ but remains relatively isotropic until $z\approx\SI{1.3}{\mega\metre}$, and does not appear directly connected to the ionisation region depicted in the right-hand panel.
 
-There is a significant enhancement of electron density within the triangular region shown in the right-hand panel of Fig.~\ref{Fig:F10AnisotropyNe}, which appears to due primarily to photoionisation (as the temperature within the slab cannot change).
+There is a significant enhancement of electron density within the triangular region shown in the right-hand panel of Fig.~\ref{Fig:F10AnisotropyNe}, which appears to be due primarily to photoionisation (as the temperature within the slab cannot change).
 This increase in electron density affects line formation within the slab, both in terms of the line profiles, but also collisional rates and LTE populations.
 It overlaps well with the more complex features shown in the population change plots for the F10 model and shows that the atomic populations responsible for these chromospheric lines can be significantly affected by the incoming radiation.
 
@@ -1896,7 +1898,7 @@ The \Ha{} line profile is therefore closer to that expected from the time-depend
 This is not surprising following the analysis undertaken in Sec.~\ref{Sec:TimeDepSE}, but we note that this is only one timestep of the model.
 
 Attempts were made to compare these treatments at other timesteps but the process of converging a statistical equilibrium solution with the fixed electron density provided from the time-dependent model proved to be unreliable, and the models at $t=5,\,10,$ and \SI{11}{\second} failed to converge.
-This approach therefore appears unsuited to the models presented here, but from the comparison of the \CaLine{} line profiles and the analysis undertaken in the previous chapter it is plausible that a situation with a detailed static treatment of hydrogen, where the populations and electron density can be known approximately, through a method similar to \citet{Leenaarts2007} (built on Sollum\NeedRef{}, although this cannot directly handle the indirect illumination we investigate here), could produce relatively accurate \CaLine{} line profiles, at lower computational cost than the full time-dependent method employed in this chapter.
+This approach therefore appears unsuited to the models presented here, but from the comparison of the \CaLine{} line profiles and the analysis undertaken in the previous chapter it is plausible that a situation with a detailed static treatment of hydrogen, where the populations and electron density can be known approximately, could produce relatively accurate \CaLine{} line profiles, at lower computational cost than the full time-dependent method employed in this chapter.
 
 \subsection{Horizontal Resolution}\label{Sec:HorizontalResolution}
 
@@ -1996,14 +1998,15 @@ To analyse whether this resolution appears sufficient we shall compare the stati
 The incident radiation at the $x=\SI{0}{\mega\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
 In Figs.~\ref{Fig:HorizontalResolutionComparison05s}-\ref{Fig:HorizontalResolutionComparison15s} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) at $t=\{5, 10, \SI{15}{\second}\}$ respectively.
 The maximum fractional error in each panel is shown in the upper-left corner of each panel.
-The location of the peak differences between the treatments in the positive and negative $x$ regions appear to follow a pattern similar to those in considered in Sec.~\ref{Sec:2dTimeDepSE}, with the largest differences in positive $x$ appearing in region $B$ while those in negative $x$ appear in $a$.
+The location of the peak differences between the treatments in the positive and negative $x$ regions appear to follow a pattern similar to those considered in Sec.~\ref{Sec:2dTimeDepSE}, with the largest differences in positive $x$ appearing in region $B$ while those in negative $x$ appear in $a$.
 The maximum difference is found to be an enhancement of around 14\% in both line cores at $x\sim\SI{0.6}{\mega\metre}$ for the ratio of lower resolution simulation to the higher resolution.
-This is not an insignificant variation, but it does not appear to vary too dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
+This is not an insignificant variation, but it does not appear to vary dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
 
 The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
 Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate $\Lambda$ operator takes longer to cross the grid.
-For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation, and for primarily computational reasons, but being confident that the solution is reasonable, we opt to use the 41 point spatial grid in all models presented in this chapter.
-This scaling is more significant with the addition of points in $z$, which are already very dense in some regions.
+For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation,
+We therefore opted to use the 41 point spatial grid in all models presented in this chapter, primarily for computational reasons, but are confident that the solution obtained is reasonable.
+% This computational scaling is more significant with the addition of points in $z$, which are already very dense in some regions.
 
 
 \section{Observational Comparison}
