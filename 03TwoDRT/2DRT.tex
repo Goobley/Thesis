@@ -612,6 +612,7 @@ It is necessary to validate both the two-dimensional formal solver and its integ
 Here, we present a basic validation case, a horizontally homogenous FALC atmosphere, using five points in $x$, spaced \SI{5}{\kilo\metre} apart.
 The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no incoming radiation at the top of the atmosphere.
 The standard configuration of \Lw{} in two-dimensions is used, i.e. BESSER formal solver and linear interpolation.
+The 11th order angular quadrature with 6 rays per octant \citep{Stepan2020} is used when solving for the level populations.
 In Fig.~\ref{Fig:2DValidation} we show the comparison of a \CaLine{} computed using this two-dimensional method against the same model atom and atmosphere in a plane-parallel configuration.
 Both of these are iterated until the maximum relative change in the \Caii{} populations is less than $10^{-4}$.
 The outgoing radiation shown in the upper panel of this figure was synthesised for rays in the $x-z$ plane at $\mu_z = 0.9$.
@@ -693,22 +694,22 @@ These populations are then consistent with the adjacent plane-parallel atmospher
 There should not be any need to perform the same process at the quiet sun boundary, as it is placed \SI{2}{\mega\metre} away and should change very little over the course of the simulation, remaining consistent on both sides of the boundary.
 
 This configuration produces the outgoing intensity at 12 different angles from each of the 41 cells in $x$.
-We can use the symmetric definition of these to produce the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
+We can use the symmetric definition of these to synthesise the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
 This is shown in Fig.~\ref{Fig:2DSimFlipped}; for an observation inclined as shown we are observing the radiation along the blue arrows.
 For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.
 
-\begin{figure}
+\begin{figure}[htb]
 \centering
 \subimport{03TwoDRT/}{SimFlipped}
-\caption{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere.}
+\caption{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere. The angles of the rays shown in this diagram are exaggerated relative to those used in the results presented later, to better illustrate the configuration.}
 \label{Fig:2DSimFlipped}
 \end{figure}
 
 We will focus primarily on these inclined observations as flares are extremely unlikely to occur at exactly disc centre and the effects of inclination are therefore important.
 Even a slight inclination can have a large effect, and in the following we will focus primarily on the most vertical ray present in our quadrature, with an angle of approximately \SI{18}{\degree} ($\mu_z\approx0.95$) to the surface normal.
 Only $\sim$1/25 of the visible solar disc has a viewing angle smaller than this, so inclination effects will be at least this significant for the majority of observed flares.
-
-\TODO{FIX Viewing ray definition. mu\_y exists too... Ray is much more vertical in the x-z plane than we say here.}
+The two-dimensional model is assumed to be homogenous along $y$, and the rays of the angular quadrature used for integration have non-zero $y$ components to correctly sample the unit sphere.
+The most vertical ray has an inclination from the surface normal of \SI{18}{\degree} and an azimuth from the $x$-axis of \SI{83}{\degree}, meaning its projected inclination in the non-homogeneous $x-z$ plane is \SI{2.24}{\degree}.
 
 In this simulation we use the same model atoms as the previous chapter, with both hydrogen and calcium being set as active species.
 This simulation is carried out for two different flare models illuminating the 2D slab; F9 and F10 models with identical heating parameters to those of Chapter~\ref{Chap:TimeDepRt} including the Lyman line photoionisation effects, but with RADYN's in-built coronal irradiation enabled.
@@ -1046,7 +1047,7 @@ lFig.caption = r'Intensity at $t=\SI{10}{\second}$ in the F10 model for both \Ha
 Figs.~\ref{Fig:2DHaF9} -- \ref{Fig:2DCaF10} show the \Ha{} and \CaLine{} spectral lines in the F9 and F10 simulations respectively.
 The left-hand column shows the enhancement in three different wavelengths as a function of space and time, as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$ where the flare model is presumed to have infinitesimal width (in $x$) indicated by the horizontal red line.
 These three wavelengths sample the line core and secondary features on either side of the the line and are indicated in the by the vertical lines in the left-hand panel, with the line core indicated in blue and the two secondary wavelengths in dashed orange.
-This left-hand panel also shows the emergent intensity in this line at $x=\SI{500}{\kilo\metre}$ from the flare at different times throughout the simulation for viewing angle to the local surface normal is~$\approx18.1\degree$ ($\mu_z\approx0.951$) \TODO{Fix}.
+This left-hand panel also shows the emergent intensity in this line at $x=\SI{500}{\kilo\metre}$ from the flare at different times throughout the simulation for the viewing angle to the local surface normal in the $x-z$ plane of \SI{2.24}{\degree}.
 Blue and orange lines are also plotted on the left-hand panel and indicate the distance at which an enhancement of 40\% and 10\% (respectively) over the quiet boundary are observed for this wavelength and point in the simulation.
 The different thresholds are used for the positive and negative $x$ regions respectively as the scale of the enhancements vary significantly between these, with the effect in the negative $x$ region being notably smaller.
 
@@ -2165,10 +2166,12 @@ def plot_enhancement_dists_sim(fig, d, wl, wlOffset, position,
     ax = fig.gca()
     style = '--' if dashed else '-'
     label = None if dashed else 'Blue Wing'
-    ax.plot(d['time'], ((lineBlue - lineCore) / xAxis[1]).astype(int), style, c='C0', label=label)
+    # ax.plot(d['time'], np.round((lineBlue - lineCore) / xAxis[1]) * (50 / 42), style, c='C0', label=label)
+    ax.plot(d['time'], np.round((lineBlue - lineCore) / xAxis[1]), style, c='C0', label=label)
 #     ax.plot(d['time'])
     label = None if dashed else 'Red Wing'
-    ax.plot(d['time'], ((lineRed - lineCore) / xAxis[1]).astype(int), style, c='C3', label=label)
+    # ax.plot(d['time'], np.round((lineRed - lineCore) / xAxis[1]) * (50 / 42), style, c='C3', label=label)
+    ax.plot(d['time'], np.round((lineRed - lineCore) / xAxis[1]), style, c='C3', label=label)
     if not dashed:
         ax.legend()
     ax.set_xlabel('Time [s]')
@@ -2225,7 +2228,7 @@ These timeslices are then plotted for three different wavelengths, corresponding
 We take the right-hand edge of this region as representing an approximation the background intensity and compute the distance from the left-hand boundary at which a 40\% enhancement over this background level is seen.
 This extent is shown as the blue lines in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
 The bright expansion of the flare ribbon can be seen on these plots as the triangular region that collapses rapidly around 17:11.
-This plot is similar in concept to the imaging plots (Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10}) produced from our models, but the ``ribbon'' was held at a fixed location.
+This plot is similar in concept to the imaging plots (Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10}) produced from our models, but the ``ribbon'' was held at the $x=0$ boundary.
 
 We can compare the differences between the extents for these different spectral positions on both lines to investigate the differences in emission throughout the slab.
 This is shown for \CaLine{} and \Ha{} in Figs.~\ref{Fig:2dCrispCaEnhanceDists} and \ref{Fig:2dCrispHaEnhanceDists} respectively.
@@ -2233,41 +2236,41 @@ The comparison here is against the line core, so an offset of $0$\,{}px implies 
 For \CaLine{}, prior to 17:05, there is little difference between both line wings and the line core, although the blue wing enhancement on average extends slightly further than the red wings, and just prior to the flare peak, up to $5$\,{}px further than the line core.
 As the flare peaks, the enhancement of the line core extends consistently $5-10$\,{}px further from the ribbon than either of the wings, and this trend continues for the remainder of the dataset.
 For \Ha{}, before $\sim$17:07, the red wing enhancement remains $\sim$15\,{}px behind the line core, whilst the blue wing starts in this region, then extends past the line core at $\sim$17:00 before falling back to a similar offset to the red wing at $\sim$17:07.
-From this point onwards, both wings remain at a similar offset, typically remaining 10-30\,{}px less extended than the line core.
+From this point onwards, both wings remain at a similar offset, typically remaining $10-30$\,{}px less extended than the line core.
 
 We can compute this same metric for the two simulations presented in this chapter, and these are shown in Figs.~\ref{Fig:2dSimCaEnhanceDists} and \ref{Fig:2dSimHaEnhanceDists} respectively for the \CaLine{} and \Ha{} results.
 The red and blue wings are again shown with the same colours, the solid lines refer to the F9 simulation and the dashed lines the F10 simulation.
 We note that there is a substantial variation in viewing angle between these simulations and the set of observations investigated here.
-The simulations use a viewing angle $\mu_z\approx0.951$, whilst this observation was taken at $\mu\approx0.565$.
+The simulations use a viewing angle $\mu_z\approx0.951$ (an inclination of \SI{2.24}{\degree} when projected into the $x-z$ plane), whilst this observation was taken at $\mu\approx0.565$.
 If the same viewing angle is used with the simulation then all of the ``pixels'' at the top of the atmosphere ``look'' directly into the flaring boundary condition, and the effect we wish to investigate cannot be resolved without performing simulations with substantially larger extents in $x$.
-Due to the prohibitive computational cost of this (a similar resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
-In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation), so we compare these directly.
+Due to the prohibitive computational cost of this (a similar horizontal spatial resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
+In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation); whilst the pixels in the data are nominally smaller this effect does not include the effects of viewing the inclined solar surface so we compare these extents in pixels directly.
 
 The \CaLine{} line behaves similarly in both the F9 and F10 simulations, with the line core immediately extending significantly further than the wings (by $9-13$\,{}px) as the heating begins.
-At $\sim\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing remains approximately constant.
+At $\sim\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing remains approximately constant, slightly approaching the line core.
 This is not in agreement with the observations where the red wing offset decreases relative to the blue wing offset later in the cooling phase.
-The consistency of the red enhancement is likely due to the very strong red asymmetry present in the $A$ region of the simulation at later times, whilst the core remains notably enhanced further into the slab.
+The consistency of the red enhancement is likely due to the very strong red asymmetry present in region $A$ of the simulation at later times, whilst the core remains notably enhanced further into the slab.
 Nevertheless, the extent of the line core enhancement relative to the wings remains comparable to the observation, in the $5-20$\,{}px range.
 
 There are significant differences between the F9 and F10 simulations for the \Ha{} line.
 In the less energetic simulation, the line core offset rapidly jumps to $\sim$22\,{}px further than both the red and the blue wings.
 As the heating ends there is a short-term variation ($\sim\SI{1}{\second}$) in the red and blue wing extents, as both approach the line core extent.
 For the remainder of the cooling period, the line core remains $15-20$\,{}px more extended than both of the line wings.
-This is approximately comparable to the observed offset from 17:10 onwards ($10-30$\,{}px), and the short-term spike after the heating ends could be compared to the spike in the observation just prior to 17:10, although the time-scales are very different.
-For the F10 simulation, the difference in extent between the line core and the wings remains small, but after the heating ends increases relatively rapidly to $\sim$13\,{}px.
+This is approximately comparable to the observed offset from 17:10 onwards ($10-30$\,{}px), and the short-term spike after the heating ends could be compared to the spike in the observation just prior to 17:10, although the timescales are very different.
+For the F10 simulation, the difference in extent between the line core and the wings remains small during heating, but after the heating ends increases relatively rapidly to $\sim$13\,{}px.
 The red wing takes an additional $\sim\SI{8}{\second}$ to drop back to this level.
 
 Qualitatively, there are a number of features that agree between the simulations and this observation: from the flare peak onwards both line cores remain significantly more extended than their respective wings, and both simulations support this, with comparable changes in enhancement offset.
-Given the additional complexity of the observed configuration, the difference in viewing angle, timescale, and the likelihood of thermodynamic changes occurring in proximity to the flare (including Doppler shifts from plasma flows), it is unwise to attempt to interpret the comparison of these offsets in much greater depth than this qualitative agreement.
-For this event, after the peak of the flare, the line-core remains visibly extended into the quieter region adjacent to the western ribbon, up to 20\,{}px further than an equivalent enhancement in the wings.
+After the flare peak, the line-core remains visibly extended into the quieter region adjacent to the western ribbon, up to 20\,{}px further than an equivalent enhancement in the wings.
 In both the simulation and the observation this is in part due to the variation of the line profile shape, changing from either a full emission or centrally reversed emission line on the ribbon to an absorption line off-ribbon.
-The basic agreement between the simulation and observation suggests that this simulation is an accurate ``first-order'' approximation of this problem, and is capturing some of the observed effects, although further simulation of more complex configurations and in-depth comparisons are needed.
+Given the additional complexity of the observed configuration, the difference in viewing angle, timescale, and the likelihood of thermodynamic changes occurring in proximity to the flare (including Doppler shifts from plasma flows), it is unwise to attempt to interpret the comparison of these offsets in much greater depth than this qualitative agreement.
+The basic agreement between the simulation and observation suggests that this simulation is an accurate ``first-order'' approximation of this problem, and is capturing some of the observed effects through the treatment of radiation alone, although further simulation of more complex configurations and in-depth comparisons are needed.
 
 
 \section{Discussions}
 
 The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} show that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing significant enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
-Traditional inversion techniques performed on this region are likely to be led to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the local thermodynamic properties, but is instead significantly influenced by the incident radiation.
+Traditional inversion techniques performed on this region are likely to lead to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the slab's local thermodynamic properties, but is instead significantly influenced by the incident radiation.
 
 The enhancement effects are not uniform as a function of wavelength, with the line core enhancement typically extending up to several hundred \si{\kilo\metre} further than the enhancements in the line wings.
 This may have implications for the calculation of filling factors, due to the wavelength dependence of this ``smearing'', but more detailed simulation and analysis are needed to attempt to prescribe any functional form for this.
