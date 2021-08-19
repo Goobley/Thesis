@@ -34,7 +34,8 @@ Due to computational or conceptual limitations simplifying assumptions are often
 % \section{Modelling Flares and Observables}
 
 To design a model of solar flares it is first necessary to understand as much as possible from the available observations, so as to ascertain reasonable approximations and the most important processes to include.
-By the same, it is necessary to understand which observables between flares, to be able to exploit their specific sensitivities and choose those that are sufficiently variable to describe the processes at work and distinguish between flares.
+By the same, it is necessary to understand which observables vary between flares, to be able to exploit their specific sensitivities and choose those that are sufficiently variable to describe the processes at work and distinguish between flares.
+The following builds on many years of work by the solar physics community, and we start from the understanding that has slowly been accrued to present the current state of modelling, and why certain decisions are made.
 A more detailed description of flare observations and some of the ways these are exploited is undertaken in Chap.~\ref{Chap:FlareObservations}.
 
 \section{Radiation Hydrodynamics}
@@ -116,7 +117,9 @@ The manual forward-fitting process involved in attempting to reproduce these obs
 
 We will now present a more detailed overview of the physics involved in the most important terms of the RHD equations \eqref{Eq:RhdEquations}, starting with complexities of radiative transfer outside of local thermodynamic equilibrium.
 
-\section{Introduction to Radiative Transfer}
+\section{Introduction to Radiative Transfer}\label{Sec:IntroRT}
+
+\emph{The content of this section draws primarily from \citet{Hubeny2014} and the paper describing \Lw{} \citep{Osborne2021}}
 
 Radiative transfer is the science of how radiation propagates through a material; the absorptions, scatterings and emission that happens therein.
 Radiation is the close to the only conduit through which information can arrive from celestial bodies, and by far the most widely exploited.
@@ -465,12 +468,62 @@ Ignoring bulk plasma flows, the integrals over angle and frequency can then be s
 
 \section{The \Lw{} Framework}
 
-\TODO{Description of the structure of \Lw{}, its advantages, and validation.}
+The \Lw{} framework \citep{Osborne2021, LightweaverZenodo}\footnote{\Lw{} is freely available under the permissive MIT license and is developed on GitHub (\url{https://github.com/Goobley/Lightweaver}) with archival on Zenodo.} is a Python package built around a C++ core in which we have implemented the methods for numerical NLTE radiative transfer discussed in Sec.~\ref{Sec:IntroRT}.
+As can be seen from the referencing of the previous section, none of these methods are novel on their own -- they represent the most robust methods encountered in our survey of NLTE -- and it is in the combination of these methods and in the implementation strategies employed that \Lw{} differs from current \Sota{} RT codes.
+In the following we shall describe the most important design decisions made in \Lw{} and explain how they can enable new forms of RT simulations whilst also increasing productivity.
+
+\subsection{Philosophy}
+
+\subsection{Accessibility \& Code Overview}
+
+One of the aims of \Lw{} is to attempt to reduce the barrier to entry for new users, thus we ensure that it is simple to install with pre-compiled libraries available.
+Thus a user with a Python environment (version $\ge3.8$) using an x86-64 CPU supporting AVX vector extensions (essentially any Intel or AMD chip from the past decade) on any of macOS, Windows, or Linux, can install the package in one command using the python package manager \texttt{pip}.
+No additional compilation steps are necessary, and any additional libraries are automatically sourced during installation.
+Whilst slight performance benefits can likely be acquired by using a modern compiler to tune the code generated to the user's machine (and this option is available for advanced users), the option of automatically installing a tested release version of the library in under \SI{60}{\second} was an important goal that has easily been achieved thanks to Python's well-supported packaging systems.
+
+All interfaces to the framework are thoroughly documented through the Python docstring convention (internally to the source files) and can be used to automatically generate HTML or \LaTeX{} documentation.
+This can also be viewed online at \url{https://goobley.github.io/Lightweaver}.
+
+As of v0.7.3, excluding automatically generated code (of which we make extensive use), the \Lw{} frontend consists of 4520 lines of Python, with 2326 lines of comments and documentation.
+777 of these consist of an implementation of the equation of state originally authored by Wittmann following \citet{Mihalas1978}, and ported to Python by J. de la Cruz Rodriguez and is used here with permission.
+This is an LTE equation of state that has been used in both the SIR \citep{1992RuizCobo} and NICOLE \citep{Socas-Navarro2015} codes.
+
+The backend consists of 9896 code lines of personally authored C++, along with two external libraries: Faddeeva\footnote{\url{http://ab-initio.mit.edu/wiki/index.php/Faddeeva_Package}} (Steven G. Johnson, 2066 lines of code, MIT license) used for computing Voigt functions, and a lightweight multi-platform thread pool and scheduler\footnote{\url{https://github.com/vurtun/lib/blob/master/sched.h}} (Doug Binks \& Micha Mettke, 788 lines of code, zlib license).
+As both of these libraries are small and permissively licensed, they are included directly in \Lw{}'s distribution, so there is no concern about these links going stale.
+Multiple routines present in the calculation of the background terms are thread-safe reimplementations of those used in RH \citep{Uitenbroek2001}, with permission.
+There are also 2439 lines of Cython \citep{Behnel2011} code present in the backend.
+Cython is a language used to bridge the Python interfaces to the C++ core.
+It allows us to share NumPy \citep{Harris2020} arrays by reference between Python and C++, allowing changes to the array's contents to be visible from either language with no duplication necessary.
+This data sharing is not just efficient but allows the Python frontend to be ``involved'' with the RT calculations on a deep level in line with \Lw{}'s design goals.
+
+\subsection{Model Atoms}
+
+An oft-quoted aphorism in programming circles is that of \emph{Greenspun's tenth rule of programming}\footnote{e.g. \url{https://philip.greenspun.com/research/}} which states: ``Any sufficiently complicated C or Fortran program contains an ad hoc, informally-specified, bug-ridden, slow implementation of half of Common Lisp''.
+The implementation of model atoms in the codes the author is personally familiar with are examples of this.
+This is not to say that configuration files containing the data needed to run a program are bad, but we are instead referring to the large amount of logic associated with these files, that eventually turns into an \emph{ad hoc} domain specific language.
+These models are structured and contain methods of specifying the approximations to be used for different terms, such as van der Waals broadening and bound-free cross sections.
+Any new method that a user wishes to implement then has to be added to the custom interpreter responsible for parsing these files and propagating this information into the numeric core of the program.
+
+A different approach to the problem of needing the specify data and their \emph{associated} methods and approximations is to define a contract describing the information needed by the numerical core and allow the specific model to fulfil this contract through any means.
+It is this approach we take in \Lw{}.
+This means that models need to be ``smart'' and have the ability to execute arbitrary code.
+Implementing these models in Python makes this trivial, and its wide array of scientific libraries are also available\footnote{We stress that other languages could be used for this task, and they need not be dynamic ``scripting'' languages; a similar approach could be achieved in C/C++ through the use of dynamic libraries.}.
+As a ``free bonus'', thanks to the models being standard Python objects stored in source code, the Python interpreter will take care of parsing these models, through extremely well-tested code paths.
+
+An \texttt{AtomicModel} in \Lw{} is the definition of an object containing an element or isotope identifier, and a list of each of levels, lines, continua, and collisional rates.
+Each of these is terms is itself a Python object which must conform to a particular contract describing the form of the information it must be capable of supplying when a particular method is called.
+Many of these objects also contain components with their own contracts.
+These contracts are defined through the use of Python classes which can be extended with new functionality through inheritance.
+A user can therefore implement a new method for computing, say, the absorption profile of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
+
+\subsection{Lightspinner}
+
+\subsection{Validation}
 
 
 
 \section{Introduction to Hydrodynamics and Conservation Laws}
-\emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997}}
+\emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997,LeVeque2002}.}
 
 In the previous sections we have explained the basis of the radiative transfer methods used throughout this work.
 The difficulty in radiative transfer primarily lies in the nuance of implementing the various integration terms.
@@ -806,7 +859,7 @@ Whilst there are other important terms in the RHD equations, such as the heating
 
 We have also presented a description and validation of the \Lw{} radiative transfer framework and the intentions behind its design.
 Frameworks can substantially enhance productivity, and enable the construction of specialised tools without the need to focus on the implementation or performance of the common core of dense numerical code shared by programs of this style.
-The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of python can yield tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
+The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of Python can yield tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
 
 Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations.
 It is likely that significant progress will be made on these limitations in the coming 1-2 decades as computing power and numerical techniques improve.
