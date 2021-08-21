@@ -469,15 +469,36 @@ Ignoring bulk plasma flows, the integrals over angle and frequency can then be s
 \section{The \Lw{} Framework}
 
 The \Lw{} framework \citep{Osborne2021, LightweaverZenodo}\footnote{\Lw{} is freely available under the permissive MIT license and is developed on GitHub (\url{https://github.com/Goobley/Lightweaver}) with archival on Zenodo.} is a Python package built around a C++ core in which we have implemented the methods for numerical NLTE radiative transfer discussed in Sec.~\ref{Sec:IntroRT}.
-As can be seen from the referencing of the previous section, none of these methods are novel on their own -- they represent the most robust methods encountered in our survey of NLTE -- and it is in the combination of these methods and in the implementation strategies employed that \Lw{} differs from current \Sota{} RT codes.
-In the following we shall describe the most important design decisions made in \Lw{} and explain how they can enable new forms of RT simulations whilst also increasing productivity.
+As can be seen from the referencing of the previous section, none of these methods are novel on their own -- they represent the most robust methods encountered in our survey of NLTE RT -- and it is in the combination of these methods and in the implementation strategies employed that \Lw{} differs from current \Sota{} RT codes.
+An overview of the key components and functions that users will typically interact with is presented in \citet{Osborne2021}, in the following we describe the most important design decisions made in \Lw{} and explain how they can enable new forms of RT simulations whilst also increasing productivity.
 
 \subsection{Philosophy}
+
+The design of the \Lw{} framework is inspired by deep learning frameworks, such as PyTorch \citep{PyTorch}.
+These have risen to prominence in recent years, due to their low barrier to entry, whilst still providing a customisable, full-featured, interface to the underlying methods that can be manipulated with pure Python code.
+Machine learning frameworks provide a collection of building blocks that can be combined in multiple ways to allow researchers to construct new tools, specifically tailored to the problem they wish to address.
+Whilst there can be slight performance gains from using a specialised, optimised, \Sota{} method implemented in a performance-focused language for this particular task, the benefits are likely outweighed by the additional development time.
+This is especially true in research environments where tools are often used by a small group of researchers in a transient fashion, and the return on \emph{possible} optimisations is rarely sufficiently large compared to the benefits of increased development speed that a framework allows.
+The use of a tested framework also allows researchers confidence in the core numerics they are reusing, whether they understand every detail or not.
+
+The steps involved in solving the NLTE RT problem are quite modular, and we provide optimised methods for most of these following the standard techniques outlined previously.
+They are building blocks that can be combined in different ways (with some omitted), to produce different tools.
+These building blocks are the core offering of the \Lw{} framework, and are intended to be combined by the user in a new Python program to solve their particular problem.
+If at any point a user wishes to fully replace a core component of \Lw{}, this can be done in Python, inside their program, with no modification the framework itself, whilst the other components can continue to be used as before.
+This flexibility is encompassed by one of the core design goals, which is to allow Python code written by the user to ``interfere'' with all of the numerical treatment of the NLTE problem.
+
+All other RT codes that the author has interacted with have been designed with a strict limit of one simulation per computer process.
+Whilst this limitation does make the design of the program easier, especially in Fortran and C, it is not beneficial to an end user who may, for example, wish to couple multiple simulations with different atomic configurations, or use one as a radiative boundary condition for another.
+This latter configuration is applied extensively in Chap.~\ref{Chap:2DRT} where two plane-parallel models are used as boundary conditions for a two-dimensional slab.
+Whilst there are other solutions to this problem, such as saving necessary data and loading it in a reconfigured program, these are typically more error-prone than a simple program which can flexibly represent the coupling between these models in its code, even allowing for memory sharing of certain components.
+To this end, each RT simulation performed in \Lw{} occurs in a self-contained \texttt{Context}, a Python object containing all necessary configuration and storage needed for this model.
+These can be serialised using the \texttt{pickle} package of the Python standard library, allowing for a complete simulation to be dumped to disk or transferred between processes using the standard approach expected in the Python ecosystem.
+This has impacts on parallelisation which will be discussed in Sec.~\ref{Sec:LwParallelisation}.
 
 \subsection{Accessibility \& Code Overview}
 
 One of the aims of \Lw{} is to attempt to reduce the barrier to entry for new users, thus we ensure that it is simple to install with pre-compiled libraries available.
-Thus a user with a Python environment (version $\ge3.8$) using an x86-64 CPU supporting AVX vector extensions (essentially any Intel or AMD chip from the past decade) on any of macOS, Windows, or Linux, can install the package in one command using the python package manager \texttt{pip}.
+Thus a user with a Python environment (version $\ge3.8$) using an x86-64 CPU supporting AVX vector extensions (essentially any Intel or AMD chip from the past decade) on any of macOS\footnote{Preliminary support of Apple's ARM CPUs is present, but several underlying libraries do not yet support this.}, Windows, or Linux, can install the package in one command using the Python package manager \texttt{pip}.
 No additional compilation steps are necessary, and any additional libraries are automatically sourced during installation.
 Whilst slight performance benefits can likely be acquired by using a modern compiler to tune the code generated to the user's machine (and this option is available for advanced users), the option of automatically installing a tested release version of the library in under \SI{60}{\second} was an important goal that has easily been achieved thanks to Python's well-supported packaging systems.
 
@@ -504,23 +525,57 @@ This is not to say that configuration files containing the data needed to run a 
 These models are structured and contain methods of specifying the approximations to be used for different terms, such as van der Waals broadening and bound-free cross sections.
 Any new method that a user wishes to implement then has to be added to the custom interpreter responsible for parsing these files and propagating this information into the numeric core of the program.
 
-A different approach to the problem of needing the specify data and their \emph{associated} methods and approximations is to define a contract describing the information needed by the numerical core and allow the specific model to fulfil this contract through any means.
+A different approach to the problem of needing to specify data with \emph{associated} methods and approximations is to define a contract describing the information needed by the numerical core and allow the specific model to fulfil this contract through any means.
 It is this approach we take in \Lw{}.
-This means that models need to be ``smart'' and have the ability to execute arbitrary code.
-Implementing these models in Python makes this trivial, and its wide array of scientific libraries are also available\footnote{We stress that other languages could be used for this task, and they need not be dynamic ``scripting'' languages; a similar approach could be achieved in C/C++ through the use of dynamic libraries.}.
+This means that model atoms need to be ``smart'' and have the ability to execute arbitrary code.
+Implementing these models in Python makes this trivial, and its wide array of scientific libraries are also available\footnote{We stress that other languages could be used for this task, and they need not be dynamic ``scripting'' languages; for example, a similar approach could be achieved in C/C++ through the use of dynamic libraries.}.
 As a ``free bonus'', thanks to the models being standard Python objects stored in source code, the Python interpreter will take care of parsing these models, through extremely well-tested code paths.
 
-An \texttt{AtomicModel} in \Lw{} is the definition of an object containing an element or isotope identifier, and a list of each of levels, lines, continua, and collisional rates.
-Each of these is terms is itself a Python object which must conform to a particular contract describing the form of the information it must be capable of supplying when a particular method is called.
+An \texttt{AtomicModel} in \Lw{} is the definition of an object containing an element or isotope identifier, and a list of each of levels, lines, continua, and collisional rate approximations.
+Each of these terms is itself a Python object which must conform to a particular contract describing the form of the information it must be capable of supplying when a particular method is called.
 Many of these objects also contain components with their own contracts.
-These contracts are defined through the use of Python classes which can be extended with new functionality through inheritance.
-A user can therefore implement a new method for computing, say, the absorption profile of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
+These contracts are defined through the use of Python classes, and basic implementation of features, comparable to those in extant RT codes are implemented in the \Lw{} standard library.
+These can be further extended with new functionality through the use of inheritance.
+A user can therefore implement a new method for computing, say, the absorption profile \citep[e.g. the non Voigt profile of][]{Kowalski2017} of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
 
-\subsection{Lightspinner}
+Atomic models can be supplied to user code in two different ways, in the textual source code, which is both human and machine readable, or in a \texttt{pickle}, which is only machine readable, possibly from a previously serialised \texttt{Context}.
+The former of these is treated as a canonical form, and it can always be recovered by asking Python for the representation of the object (via the \texttt{repr} function).
+This imposes certain a minor constraint on the way user constructed classes extending the components of these models need to be defined i.e. they must define a \texttt{\_\_repr\_\_} function defining how to recover a textual representation of themselves.
+This is due to our adherence to the standard Python convention that \texttt{obj == eval(repr(obj))}, requiring that the evaluation (in the Python interpreter) of the textual representation of an object give an equivalent object.
+This is explained in depth with the examples shown in \citet{Osborne2021}.
+
+The use of Python objects and data structures to describe the model atoms does not only allow the models to execute arbitrary code, but also for the models to be manipulated for user code.
+This makes managing and modifying atomic models easier as transformations (modifications of parameters) can be undertaken in bulk by code, rather than a painstaking manual process.
+This is all achieved through the use of standard Python, with no custom code needed to support this.
+
+\subsection{Parallelisation}\label{Sec:LwParallelisation}
+
+The self-contained nature of the \texttt{Context} makes \Lw{} programs for computing grids of models easy to adapt to paradigms such as the Message Passing Interface \citep[MPI, e.g.][for an overview of the MPICH implementation]{Gropp1996} commonly used in high performance computing environments.
+A proof of concept implementation utilising MPI for a grid of models was undertaken by Asensio Ramos (\emph{private communication}), running 10,000 models in 4 hours across 15 CPUs with no need to modify \Lw{}.
+
+A secondary form of parallelisation is also incorporated into \Lw{}.
+This form of parallelisation consists of splitting time-consuming work from a single simulation over multiple threads in the same machine.
+This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any scattering integrals needed for PRD, which are parallelised over wavelength, and typically represent the vast majority of the program's runtime for non-trivial simulations.
+The calculation of line absorption profiles, when using atomic models with the default Voigt profile implementation, along with the optional \texttt{FastBackground} implementation of background opacities, emissivities, and scatterings, are also parallelised.
+The choices of the terms to parallelise has been motivated by our observations of the time-consuming processes when using \Lw{} to undertake the numerical experiments presented in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT}.
 
 \subsection{Validation}
 
+The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
+RH is a well-established code that serves as a cornerstone of NLTE RT in the solar physics community.
+It assumes a stationary, time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
+Using the MALI method with full preconditioning \citep{Rybicki1992} allows multiple atomic species with overlapping transitions to be considered, and implementations of angle-averaged and angle-dependent PRD are present following the method outlined in \citet{Uitenbroek2001}.
+RH can also treat molecules and molecular lines outside of instantaneous chemical equilibrium, but we do not make use of this here.
 
+SNAPI also uses a MALI method allowing for overlapping lines, with an implementation of the method entirely distinct to the one used in RH.
+It assumes a CRD treatment of all spectral lines.
+
+
+\subsection{\emph{Lightspinner}}
+
+During the development of \Lw{}, a simpler pedagogic framework was also constructed.
+This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.}\citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
+It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Kunasz1988} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
 \section{Introduction to Hydrodynamics and Conservation Laws}
 \emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997,LeVeque2002}.}
