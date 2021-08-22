@@ -6,7 +6,7 @@ name = 'FlareModelling'
 chFlareModelling = texfigure.Manager(
     pytex,
     './01aFlareModelling',
-    number=3,
+    number=1,
     python_dir='./01aFlareModelling/python',
     fig_dir=   './01aFlareModelling/Figs',
     data_dir=  './Data/01aFlareModelling'
@@ -564,17 +564,452 @@ The choices of the terms to parallelise has been motivated by our observations o
 The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
 RH is a well-established code that serves as a cornerstone of NLTE RT in the solar physics community.
 It assumes a stationary, time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
-Using the MALI method with full preconditioning \citep{Rybicki1992} allows multiple atomic species with overlapping transitions to be considered, and implementations of angle-averaged and angle-dependent PRD are present following the method outlined in \citet{Uitenbroek2001}.
-RH can also treat molecules and molecular lines outside of instantaneous chemical equilibrium, but we do not make use of this here.
+The MALI method with full preconditioning \citep{Rybicki1992} is used, allowing for multiple atomic species with overlapping transitions to be considered, and implementations of angle-averaged and angle-dependent PRD are present following the method outlined in \citet{Uitenbroek2001}.
+RH can also be used for NLTE modelling of molecular lines, but we do not make use of this here.
+In the examples presented here, we make use of v2 of the RH code, distributed by H. Uitenbroek, and not the massively parallel RH 1.5D presented in \citet{Pereira2015}.
 
-SNAPI also uses a MALI method allowing for overlapping lines, with an implementation of the method entirely distinct to the one used in RH.
+The synthesis module of SNAPI also uses a MALI method allowing for overlapping lines, with an implementation of the method entirely distinct to the one used in RH.
 It assumes a CRD treatment of all spectral lines.
+
+In the following we will present just a few of the validation cases that have been used during the development of \Lw{}.
+
+%spell-checker: disable
+\setpythontexautoprint{false}
+\begin{pycode}[FlareModelling]
+import lightweaver as lw
+from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom,  Si_atom, Al_atom, CaII_atom, Fe_atom, He_atom, MgII_atom, Mg_atom, N_atom, Na_atom, S_atom
+from helita.sim.rh import Rhout
+from lightweaver.fal import Falc82
+
+atmos = Falc82()
+atmos.quadrature(5)
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(),
+                        CaII_atom(), Fe_atom(), He_atom(), Mg_atom(), N_atom(),
+                        Na_atom(), S_atom()])
+aSet.set_active('H', 'Ca')
+spect = aSet.compute_wavelength_grid()
+
+molPaths = [lw.get_default_molecule_path() + m + '.molecule' for m in ['H2']]
+mols = lw.MolecularTable(molPaths)
+
+eqPops = aSet.compute_eq_pops(atmos, mols)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=8)
+for i in range(5):
+    ctx.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctx.formal_sol_gamma_matrices()
+    dPops = ctx.stat_equil()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+atmos = Falc82()
+atmos.quadrature(5)
+eqPopsChargeCons = aSet.iterate_lte_ne_eq_pops(atmos, mols)
+ctxCc = lw.Context(atmos, spect, eqPopsChargeCons, Nthreads=8, conserveCharge=True)
+for i in range(5):
+    ctxCc.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctxCc.formal_sol_gamma_matrices()
+    dPops = ctxCc.stat_equil()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+atmos = Falc82()
+atmos.quadrature(5)
+eqPopsLte = aSet.iterate_lte_ne_eq_pops(atmos, mols)
+ctxLte = lw.Context(atmos, spect, eqPopsLte, Nthreads=8, conserveCharge=False)
+for i in range(5):
+    ctxLte.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctxLte.formal_sol_gamma_matrices()
+    dPops = ctxLte.stat_equil()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+wave = np.linspace(853.9444, 854.9444, 1001)
+Iwave = ctx.compute_rays(wave, 1.0)
+IwaveCc = ctxCc.compute_rays(wave, 1.0)
+IwaveLte = ctxLte.compute_rays(wave, 1.0)
+
+rh = Rhout(chFlareModelling.data_file('LwRhComparison/RhConfigAndOutput'))
+rh.read_ray(chFlareModelling.data_file('LwRhComparison/RhConfigAndOutput/spectrum_1.00'))
+
+ca = CaII_atom()
+lambda0 = ca.lines[4].lambda0
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.0, height_ratio=0.55))
+plt.plot(rh.wave - lambda0, rh.int, label='RH')
+plt.plot(wave - lambda0, Iwave, '--', label='Lightweaver')
+plt.plot(wave - lambda0, IwaveLte, label='Lightweaver LTE $n_e$')
+plt.plot(wave - lambda0, IwaveCc, label='Lightweaver Charge Cons.')
+plt.xlabel(r'$\Delta\lambda$ [nm]')
+plt.ylabel(r'Intensity [J\,m$^{-2}$\,s$^{-1}$\,Hz$^{-1}$\,sr$^{-1}$]')
+plt.xlim(wave[0] - lambda0, wave[-1] - lambda0)
+plt.legend(frameon=False)
+lFig = chFlareModelling.save_figure('LwRhComparison', fig, fext='.pgf')
+lFig.caption = r'Comparison of \Lw{} and RH synthesis of \CaLine{} from the FALC atmosphere with different electron density solutions.'
+lFig.placement = 'htbp'
+\end{pycode}
+\begin{pycode}[FlareModelling]
+
+_, atmos = lw.read_multi_atmos(chFlareModelling.data_file('FalSillyVelRunRh/FalVelocity.atmos'))
+atmos.quadrature(5)
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(),
+                        CaII_atom(), Fe_atom(), He_atom(), Mg_atom(), N_atom(),
+                        Na_atom(), S_atom()])
+aSet.set_active('Ca')
+spect = aSet.compute_wavelength_grid()
+
+molPaths = [lw.get_default_molecule_path() + m + '.molecule' for m in ['H2']]
+mols = lw.MolecularTable(molPaths)
+
+eqPops = aSet.compute_eq_pops(atmos, mols)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=8)
+for i in range(5):
+    ctx.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctx.formal_sol_gamma_matrices()
+    dPops = ctx.stat_equil()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+wave = np.linspace(853.9444, 854.9444, 1001)
+Iwave = ctx.compute_rays(wave, 1.0)
+
+rh = Rhout(chFlareModelling.data_file('FalSillyVelRunRh'))
+rh.read_ray(chFlareModelling.data_file('FalSillyVelRunRh/spectrum_1.00'))
+
+ca = CaII_atom()
+lambda0 = ca.lines[4].lambda0
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.0, height_ratio=0.55))
+plt.plot(rh.wave - lambda0, rh.int, label='RH')
+plt.plot(wave - lambda0, Iwave, '--', label='Lightweaver')
+plt.xlabel(r'$\Delta\lambda$ [nm]')
+plt.ylabel(r'Intensity [J\,m$^{-2}$\,s$^{-1}$\,Hz$^{-1}$\,sr$^{-1}$]')
+plt.xlim(wave[0] - lambda0, wave[-1] - lambda0)
+plt.legend(frameon=False)
+lFig = chFlareModelling.save_figure('LwValidationSillyVel', fig, fext='.pgf')
+lFig.caption = r'Comparison of \Lw{} and RH synthesis of \CaLine{} from the FALC atmosphere with complex velocity profile.'
+lFig.placement = 'htbp'
+# TODO(cmo): Add SNAPI here.
+\end{pycode}
+\begin{pycode}[FlareModelling]
+
+_, atmos = lw.read_multi_atmos(chFlareModelling.data_file('RadynSnapT05NoPrd/Flat1e9NoIncRad_t05.atmos'))
+atmos.quadrature(5)
+
+aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(),
+                        CaII_atom(), Fe_atom(), He_atom(), MgII_atom(), N_atom(),
+                        Na_atom(), S_atom()])
+aSet.set_active('H', 'Ca')
+spect = aSet.compute_wavelength_grid()
+
+molPaths = [lw.get_default_molecule_path() + m + '.molecule' for m in ['H2']]
+mols = lw.MolecularTable(molPaths)
+
+eqPops = aSet.compute_eq_pops(atmos, mols)
+ctx = lw.Context(atmos, spect, eqPops, Nthreads=16)
+for i in range(5):
+    ctx.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctx.formal_sol_gamma_matrices()
+    dPops = ctx.stat_equil()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+eqPopsPrd = aSet.compute_eq_pops(atmos, mols)
+ctxPrd = lw.Context(atmos, spect, eqPopsPrd, Nthreads=16, hprd=False)
+for i in range(5):
+    ctxPrd.formal_sol_gamma_matrices()
+
+for i in range(300):
+    dJ = ctxPrd.formal_sol_gamma_matrices()
+    dPops = ctxPrd.stat_equil()
+    dRho = ctxPrd.prd_redistribute()
+
+    if dJ < 3e-3 and dPops < 1e-3:
+        break
+
+# eqPopsHPrd = aSet.compute_eq_pops(atmos, mols)
+# ctxHPrd = lw.Context(atmos, spect, eqPopsHPrd, Nthreads=16, hprd=True)
+# for i in range(5):
+#     ctxHPrd.formal_sol_gamma_matrices()
+
+# for i in range(300):
+#     dJ = ctxHPrd.formal_sol_gamma_matrices()
+#     dPops = ctxHPrd.stat_equil()
+#     dRho = ctxHPrd.prd_redistribute()
+
+#     if dJ < 3e-3 and dPops < 1e-3:
+#         break
+
+wave = np.linspace(393.377, 393.577, 1001)
+Iwave = ctx.compute_rays(wave, 1.0)
+IwavePrd = ctxPrd.compute_rays(wave, 1.0)
+# IwaveHPrd = ctxHPrd.compute_rays(wave, 1.0)
+
+rh = Rhout(chFlareModelling.data_file('RadynSnapT05NoPrd'))
+rh.read_ray(chFlareModelling.data_file('RadynSnapT05NoPrd/spectrum_1.00'))
+rhPrd = Rhout(chFlareModelling.data_file('RadynSnapT05Prd'))
+rhPrd.read_ray(chFlareModelling.data_file('RadynSnapT05Prd/spectrum_1.00'))
+
+ca = CaII_atom()
+lambda0 = ca.lines[1].lambda0
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.0, height_ratio=0.55))
+plt.plot(rh.wave - lambda0, rh.int, label='RH CRD')
+plt.plot(wave - lambda0, Iwave, '--', label='Lightweaver CRD')
+plt.plot(rhPrd.wave - lambda0, rhPrd.int, label='RH PRD')
+plt.plot(wave - lambda0, IwavePrd, '--', label='Lightweaver PRD')
+# plt.plot(wave - lambda0, IwaveHPrd, '--', label='Lightweaver PRD (Angle Approximate)')
+plt.yscale('log')
+plt.xlabel(r'$\Delta\lambda$ [nm]')
+plt.ylabel(r'Intensity [J\,m$^{-2}$\,s$^{-1}$\,Hz$^{-1}$\,sr$^{-1}$]')
+plt.ylim(1e-10, None)
+plt.xlim(wave[0] - lambda0, wave[-1] - lambda0)
+plt.legend(frameon=False)
+lFig = chFlareModelling.save_figure('LwValidationPrd', fig, fext='.pgf')
+lFig.caption = r'Comparison of \Lw{} and RH synthesis of \Caii{} K from a RADYN snapshot comparing the effects of PRD.'
+lFig.placement = 'htbp'
+\end{pycode}
+\begin{pycode}[FlareModelling]
+from lightweaver.rh_atoms import H_4_atom
+from matplotlib.ticker import MaxNLocator
+
+Prd = False
+
+def iterate_ctx(ctx, prd=True, Nscatter=3, NmaxIter=500):
+    for i in range(NmaxIter):
+        dJ = ctx.formal_sol_gamma_matrices()
+        if i < Nscatter:
+            continue
+        delta = ctx.stat_equil()
+        if prd:
+            dRho = ctx.prd_redistribute(maxIter=5)
+
+        if dJ < 3e-3 and delta < 1e-3:
+            print(i)
+            print('----------')
+            return
+
+atmos = Falc82()
+atmos.quadrature(5)
+if Prd:
+    aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(), Fe_atom(), He_atom(), MgII_atom(), N_atom(), Na_atom(), S_atom()])
+else:
+    aSet = lw.RadiativeSet([H_4_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(), Fe_atom(), He_atom(), MgII_atom(), N_atom(), Na_atom(), S_atom()])
+aSet.set_active('H')
+spect = aSet.compute_wavelength_grid()
+
+eqPops = aSet.compute_eq_pops(atmos)
+# eqPops = aSet.iterate_lte_ne_eq_pops(atmos)
+ctx = lw.Context(atmos, spect, eqPops,
+                 hprd=Prd, conserveCharge=False, Nthreads=8)
+iterate_ctx(ctx, prd=Prd)
+
+print('Achieved initial Stat Eq')
+
+dt = 0.1
+NtStep = int(60 / dt)
+NsubStep = 100
+
+prevT = np.copy(atmos.temperature)
+for i in range(11, 31):
+    di = (i - 20.0) / 3.0
+    atmos.temperature[i] *= 1.0 + 2.0 * np.exp(-di**2)
+
+hPops = [np.copy(eqPops['H'])]
+subIters = []
+for it in range(NtStep):
+    ctx.update_deps()
+
+    prevState = None
+    for sub in range(NsubStep):
+        dJ = ctx.formal_sol_gamma_matrices()
+        delta, prevState = ctx.time_dep_update(dt, prevState, ngUpdate=None)
+        # deltaNr = ctx.nr_post_update(timeDependentData={'dt': dt, 'nPrev': prevState})
+        # delta = max(delta, deltaNr)
+        if Prd:
+            ctx.prd_redistribute(maxIter=5)
+
+        if delta < 1e-3 and dJ < 3e-3:
+            subIters.append(sub)
+            break
+    else:
+        raise ValueError('No converge')
+
+    hPops.append(np.copy(eqPops['H']))
+    print('Iteration %d (%f s) done after %d sub iterations' % (it, (it+1)*dt, sub))
+
+
+initialAtmos = Falc82()
+
+fig, ax = plt.subplots(2,2, sharex=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
+ax = ax.flatten()
+cmass = np.log10(atmos.cmass/1e1)
+
+lowerIdx = np.searchsorted(cmass, -4.936)
+upperIdx = np.searchsorted(cmass, -4.930)
+
+ax[0].plot(cmass[lowerIdx:upperIdx], initialAtmos.temperature[lowerIdx:upperIdx], 'r', label='Initial')
+ax[0].plot(cmass[lowerIdx:upperIdx], atmos.temperature[lowerIdx:upperIdx], '-+b', label='Final')
+ax[0].legend(frameon=False)
+
+for p in hPops[1::5]:
+    ax[1].plot(cmass[lowerIdx:upperIdx], np.log10(p[0, lowerIdx:upperIdx]/1e6), 'k', lw=0.5)
+    ax[2].plot(cmass[lowerIdx:upperIdx], np.log10(p[1, lowerIdx:upperIdx]/1e6), 'k', lw=0.5)
+    ax[3].plot(cmass[lowerIdx:upperIdx], np.log10(p[-1, lowerIdx:upperIdx]/1e6), 'k', lw=0.5)
+
+p = hPops[0]
+ax[1].plot(cmass[lowerIdx:upperIdx], np.log10(p[0, lowerIdx:upperIdx]/1e6), 'r')
+ax[2].plot(cmass[lowerIdx:upperIdx], np.log10(p[1, lowerIdx:upperIdx]/1e6), 'r')
+ax[3].plot(cmass[lowerIdx:upperIdx], np.log10(p[-1, lowerIdx:upperIdx]/1e6), 'r')
+
+p = hPops[-1]
+ax[1].plot(cmass[lowerIdx:upperIdx], np.log10(p[0, lowerIdx:upperIdx]/1e6),  '-+b')
+ax[2].plot(cmass[lowerIdx:upperIdx], np.log10(p[1, lowerIdx:upperIdx]/1e6),  '-+b')
+ax[3].plot(cmass[lowerIdx:upperIdx], np.log10(p[-1,lowerIdx:upperIdx]/1e6), '-+b')
+
+ax[0].set_xlim(-4.935, -4.931)
+ax[0].xaxis.set_major_locator(MaxNLocator(3))
+ax[0].set_ylim(0, 6e4)
+ax[1].set_ylim(6, 11)
+ax[2].set_ylim(1, 6)
+ax[3].set_ylim(10, 11)
+
+ax[2].set_xlabel('$\log\,m$ [cm$^{-2}$]')
+ax[3].set_xlabel('$\log\,m$ [cm$^{-2}$]')
+
+ax[0].set_ylabel('$T$ [K]')
+ax[1].set_ylabel('$\log\,n(n=1)$ [cm$^{-3}$]')
+ax[2].set_ylabel('$\log\,n(n=2)$ [cm$^{-3}$]')
+ax[3].set_ylabel('$\log\,n(\kappa)$ [cm$^{-3}$]')
+
+fig.tight_layout()
+
+lFig = chFlareModelling.save_figure('LwValidationJudge', fig, fext='.pgf')
+lFig.caption = r'Validation of the time-dependent population update scheme in \Lw{}. Compare with Fig. 4 of \citet{Judge2017}, cgs units are employed to allow a direct comparison. The response of hydrogen levels ($n=1, 2$) and continuum ($\kappa$) are shown for an instantaneous perturbation of the temperature of the FALC model (top-left panel). Each black line shows the population densities once every \SI{0.5}{\second}.'
+lFig.placement = 'ht'
+\end{pycode}
+\setpythontexautoprint{true}
+
+\begin{pycode}[FlareModelling]
+from ReadAtmost import read_atmost
+import zarr
+
+atmost = read_atmost(chFlareModelling.data_file('Flat1e9NoIncRad/atmost.dat'))
+atmost.to_SI()
+
+data = zarr.convenience.open(chFlareModelling.data_file('Flat1e9NoIncRad/Flat1e9NoIncRadLIThesis.zip'), 'r')
+
+timesToPlot = [5, 11, 20, 40]
+fig, ax = plt.subplots(2, 2, figsize=texfigure.figsize(pytex, scale=1.0, height_ratio=0.7))
+ax = ax.ravel()
+
+for i, a in enumerate(ax):
+    time = timesToPlot[i]
+    radynIdx = np.searchsorted(atmost.time, time)
+    lwIdx = np.searchsorted(data['time'][...], time)
+
+    label = 'RADYN' if i == 0 else None
+    a.semilogy(atmost.z1[radynIdx] / 1e6, atmost.ne1[radynIdx], label=label)
+    label = 'Lightweaver' if i == 0 else None
+    a.semilogy(atmost.z1[radynIdx] / 1e6, data['ne'][lwIdx], '--', label=label)
+    a.set_xlim(None, 2.5)
+    a.set_title('{:.2f} s'.format(time))
+
+    if i in [0, 2]:
+        a.set_ylabel(r'$n_e$ [m$^{-3}$]')
+    else:
+        a.set_yticklabels([])
+
+    if i in [2, 3]:
+        a.set_xlabel(r'$z$ [Mm]')
+    else:
+        a.set_xticklabels([])
+
+ax[0].legend(frameon=False)
+fig.tight_layout()
+
+lFig = chFlareModelling.save_figure('LwValidationTimeDepNe', fig, fext='.pgf')
+lFig.caption = r'Comparison of electron density in a RADYN simulation and time-dependent reprocessing using \Lw{} that will be presented as the F9 model of Chap.~\ref{Chap:TimeDepRt}.'
+lFig.placement = 'ht'
+\end{pycode}
+
+\py[FlareModelling]|chFlareModelling.get_figure('LwRhComparison')|
+\py[FlareModelling]|chFlareModelling.get_figure('LwValidationSillyVel')|
+\py[FlareModelling]|chFlareModelling.get_figure('LwValidationPrd')|
+
+%spell-checker: enable
+
+Fig.~\ref{Fig:LwRhComparison} presents a comparison of the synthesis of \CaLine{} by \Lw{} and RH in the FALC atmosphere of \citet{Fontenla1993}.
+This is a static, semi-empirical quiet sun atmosphere, so the synthesis is performed in statistical equilibrium.
+RH's solution is shown in blue, with the \Lw{} solution overlaid in dashed orange.
+There is clearly very good agreement between these codes in this simple static test.
+This figure also shows the sensitivity of \CaLine to the electron density when computed under the assumption of LTE populations (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects (red).
+The line profile computed from the simulation with the charge conservation strategy approaches the reference solution, where the electron density is provided by the FAL model.
+The primary differences between these treatments is likely due to other species, such as Fe, being treated in LTE.
+
+\TODO{Add SNAPI if we get it}.
+In Fig.~\ref{Fig:LwValidationSillyVel} we once again present the synthesis of \CaLine{} in the FALC atmosphere, but here a complex velocity profile is imposed on the atmospheric model.
+The vertical velocity structure of the atmosphere is defined to be two periods of a sine wave with amplitude \SI{30}{\kilo\metre\per\second} mapped over the vertical extent of the FALC model (approximately \SI{2}{\mega\metre}).
+Here RH's solution is once again shown in blue, and \Lw{}'s in dashed orange.
+This problem serves primarily as a test of the formal solver; the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail.
+The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in both RH and \Lw{}, along with their standard MALI iteration machinery, provides a very similar solution from both codes.
+The slight differences apparent around $\Delta\lambda=\SI{-0.1}{\nano\metre}$ is likely to be caused by differences in the formal solver implementations; the version implemented in RH uses the method of \citet{Fritsch1984} to compute numerical estimates of the necessary derivatives, whereas we use the method of \citet{Steffen1990} in \Lw{} following the recommendation of \citet{Janett2018}, as the accuracy of \citet{Fritsch1984} falls to first-order on non-uniform grids.
+Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
+Nevertheless, the agreement between RH and \Lw{} is very good on this difficult test.
+
+Fig.~\ref{Fig:LwValidationPrd} shows a simple validation test for the PRD method implemented in \Lw{}.
+We show the synthesis of the \Caii{} K line in statistical equilibrium from a snapshot of a \Radyn{} simulation.
+This snapshot is taken from the F9 simulation discussed in Chap.~\ref{Chap:TimeDepRt}, at \SI{5}{\second} after flare heating starts.
+The CRD solutions are shown in blue and dashed orange for RH and \Lw{} respectively.
+The PRD solutions both employ angle-averaged PRD and are presented in green (RH) and dashed red (\Lw{}).
+The agreement between these solutions is again very good, with a slight observable difference around $|\Delta\lambda=\SI{0.012}{\nano\metre}|$ where the line in \Lw{}'s PRD solution appears slightly wider than in RH's.
+This difference is present only over a very small range of wavelengths and we consider the agreement between the two implementations to be very good.
+
+\py[FlareModelling]|chFlareModelling.get_figure('LwValidationJudge')|
+
+Slightly more complex examples are needed to test the time-dependent machinery present in \Lw{}, and neither SNAPI nor RH, with their time-independent viewpoints can be used for comparison here.
+We instead use the example of a perturbed FALC atmosphere presented by \citet{Judge2017}.
+After converging to the statistical equilibrium solution in a standard FALC atmosphere, the temperature is perturbed as presented in blue line of the top-left panel of Fig.~\ref{Fig:LwValidationJudge}.
+This model uses a three level plus continuum model hydrogen atom, and the populations of the ground, first excited, and continuum states are shown in the top-right, bottom-left, and bottom-right panels of this figure respectively.
+The red line shows their starting values, and the blue line their final values after the simulation has been allowed to run for \SI{60}{\second}.
+The black lines represent the solutions for each population every \SI{0.5}{\second}.
+The $x$-axis on these plots is the atmospheric column mass, and this figure is prepared in cgs to  allow direct comparison to the one presented by \citet{Judge2017}.
+We see good overall agreement with \citet{Judge2017}, but the differences are larger than those presented in the previous figures.
+The method used by \citet{Judge2017} is different to ours, and uses full preconditioning but with an approximate operator based on the escape probability formalism of \citet{Hummer1982}.
+This approach is much more approximate than the full MALI treatment applied in \Lw{}, as it only performs the formal solution at one wavelength per transition, and computes the integrals over wavelength and angle analytically.
+The advantage of this treatment is that it is much less computationally intensive.
+Thus, the use of this approximate method by \citet{Judge2017} is likely to be the origin of the differences between our results, and we find that the level populations converge to similar final solutions, at apparently similar rates.
+The most substantial difference between our results is for the $n=2$ population; in the results of \citet{Judge2017}, the points close to a column mass of \SI{-4.9315}{\per\square\centi\metre} do not vary from their initial values, whereas in our model they vary quite dramatically, with an enhancement of up to 1.5\,dex, but converge back to the expected final solution.
+This simple example is meant to illustrate that \Lw{}'s behaviour is reasonable when applied to time-dependent problems, and the quality of its treatment will become apparent in the in-depth comparisons with \Radyn{} presented in Chap.~\ref{Chap:TimeDepRt}.
+
+\py[FlareModelling]|chFlareModelling.get_figure('LwValidationTimeDepNe')|
+
+In Fig.~\ref{Fig:LwValidationTimeDepNe} we show the electron density in the lower atmosphere at four different timesteps of a \Radyn{} simulation that has been reprocessed using \Lw{}.
+This simulation is the F9 simulation that will be discussed in Chap.~\ref{Chap:TimeDepRt}, and the \Lw{} model presented is run with time-dependent charge conservation, starting from the same initial electron density as \Radyn{}, but maintaining self-consistency throughout the remainder of the simulation.
+The electron density in the \Radyn{} model is shown in blue, and the \Lw{} model in dashed orange.
+The agreement between the two models is extremely good, including the fine features around $z=\SI{1.2}{\mega\metre}$ shown in the \SI{11}{\second} panel.
+
+\Lw{} agrees well with the other models against which it has been tested here; it is easy to construct new validation tests for statistical equilibrium cases that can be run with many different extant RT codes, but the validation of time-dependent treatments on their own is more difficult, due to current tools often coupling these equations to hydrodynamics.
+Other tests have been undertaken to verify the performance of \Lw{}, but those presented here should be sufficient to demonstrate its capabilities.
 
 
 \subsection{\emph{Lightspinner}}
 
 During the development of \Lw{}, a simpler pedagogic framework was also constructed.
-This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.}\citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
+This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.} \citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
 It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Kunasz1988} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
 \section{Introduction to Hydrodynamics and Conservation Laws}

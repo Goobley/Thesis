@@ -1,6 +1,5 @@
 \chapter{Time-Dependent Radiative Transfer}\label{Chap:TimeDepRt}
 %TC:group pycode 0 0
-\setpythontexautoprint{false}
 \begin{pycode}[TimeDepRT]
 name = 'TimeDepRT'
 chRT = texfigure.Manager(
@@ -13,87 +12,6 @@ chRT = texfigure.Manager(
 )
 \end{pycode}
 
-% \begin{pycode}[TimeDepRT]
-% from lightweaver.fal import Falc82
-% from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom, Si_atom, Al_atom, CaII_atom, Fe_atom, He_atom, MgII_atom, N_atom, Na_atom, S_atom
-% import lightweaver as lw
-% import matplotlib.pyplot as plt
-% import numpy as np
-
-% def iterate_ctx(ctx, Nscatter=3, NmaxIter=500):
-%     for i in range(NmaxIter):
-%         dJ = ctx.formal_sol_gamma_matrices()
-%         # NOTE(cmo): Do some initial iterations without touching the
-%         # populations to lambda iterate the background scattering terms
-%         if i < Nscatter:
-%             continue
-%         delta = ctx.stat_equil()
-
-%         # NOTE(cmo): Check convergence
-%         if dJ < 3e-3 and delta < 1e-3:
-%             print('Iterations taken: %d' % (i+1))
-%             print('-'*60)
-%             return
-
-% wave = np.linspace(853.9444, 854.9444, 1001)
-% def synth_8542(atmos, conserve, useNe):
-%     # NOTE(cmo): Configure the Gauss-Legendre angular quadrature for 5 rays
-%     atmos.quadrature(5)
-
-%     # NOTE(cmo): Construct the RadiativeSet with the following atomic models
-%     aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(), CaII_atom(),
-%                             Fe_atom(), He_atom(), MgII_atom(), N_atom(), Na_atom(), S_atom()])
-%     # NOTE(cmo): Set Hydrogen and Calcium to active
-%     aSet.set_active('H', 'Ca')
-%     # NOTE(cmo): Compute the SpectrumConfiguration for this RadiativeSet
-%     spect = aSet.compute_wavelength_grid()
-
-%     # NOTE(cmo): If we're using the electron density provided with FAL C, then
-%     # compute the associated LTE populations, otherwise find a solution for
-%     # self consistent LTE populations and electron density.
-%     if useNe:
-%         eqPops = aSet.compute_eq_pops(atmos)
-%     else:
-%         eqPops = aSet.iterate_lte_ne_eq_pops(atmos)
-
-%     # NOTE(cmo): Construct the Context, optionally setting chargeConservation and the number of threads to use.
-%     ctx = lw.Context(atmos, spect, eqPops, conserveCharge=conserve, Nthreads=8)
-
-%     # NOTE(cmo): Iterate the NLTE problem to convergence
-%     iterate_ctx(ctx)
-%     # NOTE(cmo): Compute a detailed solution to Ca II 8542 on the 1 nm wavelength grid above
-%     Iwave = ctx.compute_rays(wave, [1.0], stokes=False)
-%     return Iwave
-
-% # NOTE(cmo): Load an atmosphere. In this case we include a copy of FAL C, but
-% # Lightweaver also supports loading atmospheres in the MULTI format, and it is
-% # also simple to do so from the raw data components
-% atmosRef = Falc82()
-% # NOTE(cmo): Ca II 8542 with the reference electron density in the FAL C atmosphere
-% IwaveRef = synth_8542(atmosRef, conserve=False, useNe=True)
-
-% atmosCons = Falc82()
-% # NOTE(cmo): Ca II 8542 with the electron density obtained from charge conservation
-% IwaveCons = synth_8542(atmosCons, conserve=True, useNe=False)
-
-% atmosLte = Falc82()
-% # NOTE(cmo): Ca II 8542 with LTE electron density
-% IwaveLte = synth_8542(atmosLte, conserve=False, useNe=False)
-
-% fig = plt.figure()
-% plt.plot(wave, IwaveRef, label='Reference')
-% plt.plot(wave, IwaveCons, '--', label='Conserved')
-% plt.plot(wave, IwaveLte, '--', label='LTE')
-% plt.title(r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities', y=1.04)
-% plt.ylabel(r'Intensity [SI]')
-% plt.xlabel(r'$\lambda$ [nm]')
-% plt.legend()
-% lFig = chRT.save_figure('EleDensComparison', fig, fext='.pgf')
-% lFig.caption = r'Comparison of Ca\,\textsc{ii} 854.2\,nm with different electron densities'
-% \end{pycode}
-% \setpythontexautoprint{false}
-
-% \py[TimeDepRT]|chRT.get_figure('EleDensComparison')|
 
 % \begin{itemize}
 %     \item Current problems not solved by RADYN and MS\_RADYN.
