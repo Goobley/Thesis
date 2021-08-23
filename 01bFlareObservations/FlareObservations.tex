@@ -46,10 +46,10 @@ As observed radiation is the only vector by which information can arrive from th
 \begin{figure}
 \centering
 \begin{tikzpicture}[line width=1pt, >=latex]
-    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
-    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
-    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
-    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+    \node (x1) {$T_1,\rho_1,\vec{\varv}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{\varv}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{\varv}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{\varv}_4, \vec{B}_4$};
 
     \node[above right=0.5cm and 4cm of x1] (y1) {$\vec{I}_1$};
     \node[below=of y1] (y2) {$\vec{I}_2$};
@@ -84,10 +84,10 @@ As observed radiation is the only vector by which information can arrive from th
 \begin{figure}
 \centering
 \begin{tikzpicture}[line width=1pt, >=latex]
-    \node (x1) {$T_1,\rho_1,\vec{v}_1, \vec{B}_1$};
-    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{v}_2, \vec{B}_2$};
-    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{v}_3, \vec{B}_3$};
-    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{v}_4, \vec{B}_4$};
+    \node (x1) {$T_1,\rho_1,\vec{\varv}_1, \vec{B}_1$};
+    \node[below=of x1] (x2) {$T_2,\rho_2,\vec{\varv}_2, \vec{B}_2$};
+    \node[below=of x2] (x3) {$T_3,\rho_3,\vec{\varv}_3, \vec{B}_3$};
+    \node[below=of x3] (x4) {$T_4,\rho_4,\vec{\varv}_4, \vec{B}_4$};
     \node[shape=ellipse,draw=black,minimum size=3cm,fit={(x1) (x4)}] (xSet) {};
 
     \node[above right=1cm and 3.5cm of xSet.center] (y1) {$(\vec{I}_2, z_1)$};
@@ -145,7 +145,7 @@ As observed radiation is the only vector by which information can arrive from th
 \end{figure}
 
 The forward process is described by the diagram in Fig.~\ref{Fig:DegenerateMapping}.
-Here elements of $\mathcal{X}$ are the parameters describing an atmosphere (in this description we choose temperature $T$, mass density $\rho$, velocity $\vec{v}$, and magnetic field $\vec{B}$, although there are many other similar formulations that can be used).
+Here elements of $\mathcal{X}$ are the parameters describing an atmosphere (in this description we choose temperature $T$, mass density $\rho$, velocity $\vec{\varv}$, and magnetic field $\vec{B}$, although there are many other similar formulations that can be used).
 The elements of $\mathcal{Y}$ are possible forms of the outgoing radiation that may be associated with different sets of atmospheric parameters.
 Fig.~\ref{Fig:DegenerateMapping} shows the theoretically degenerate nature of the problem; whilst the mapping $f$ from $\mathcal{X}$ to $\mathcal{Y}$ is always well-posed, the inverse $f^{-1}$ is not necessarily, and with only the information present in $\mathcal{Y}$ there is no way to immediately resolve this ambiguity (indicated by the question marks in this figure).
 

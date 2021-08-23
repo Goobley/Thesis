@@ -145,8 +145,8 @@ Whilst it is possible to continue to increase the depth of this network, this is
 RADYNVERSION is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
 The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time; in our case the temperature $T$, electron density $n_e$, and velocity $v$.
 These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
-The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $v\mapsto\mathrm{sign}(v)\log_{10} \left( |v_{\mathrm{km\, s^{-1}}}| + 1\right)$.
-The mapping for $v$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
+The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $\varv\mapsto\mathrm{sign}(\varv)\log_{10} \left( |\varv_{\mathrm{km\, s^{-1}}}| + 1\right)$.
+The mapping for $\varv$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
 These logarithmic mappings preserve detail better over each decade than a simple linear rescaling.
 
 The output consists of line profiles, in this case \Ha{} and \CaLine{}.
@@ -353,7 +353,7 @@ ax[2].plot(zMm, logvel_to_vel(forwards['xTrue'][0, 2]), c='C2')
 ax[0].set_ylabel(r'$\log{n_e}$ [\si{\cm\tothe{-3}}]', c='C0')
 ax[0].set_xlabel(r'$z$ [\si{\mega\metre}]')
 ax[1].set_ylabel(r'$\log{T}$ [\si{\K}]', c='C1')
-ax[2].set_ylabel(r'$v$ [\si{\kilo\metre\per\second}]', c='C2')
+ax[2].set_ylabel(r'$\varv$ [\si{\kilo\metre\per\second}]', c='C2')
 ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
 
 
@@ -433,7 +433,7 @@ ax[2].set_xlim(None, 10.5)
 ax[0].set_ylabel(r'$\log{n_e}$ [\si{\cm\tothe{-3}}]', c=cmapNe[-1])
 ax[0].set_xlabel(r'$z$ [\si{\mega\metre}]')
 ax[1].set_ylabel(r'$\log{T}$ [\si{\K}]', c=cmapTemp[-1])
-ax[2].set_ylabel(r'$v$ [\si{\kilo\metre\per\second}]', c=cmapVel[-1])
+ax[2].set_ylabel(r'$\varv$ [\si{\kilo\metre\per\second}]', c=cmapVel[-1])
 ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
 
 fig.tight_layout()
@@ -580,9 +580,9 @@ lFig = chRad.save_figure('LineProfilesToInvert', fig, fext='.pgf')
 lFig.caption = r'The spectral line profiles of \CaLine{} and \Ha{} for the two pixels marked in Fig.~\ref{Fig:CrispPlot}.'
 \end{pycode}
 
-
 % NOTE(cmo): To further adjust these in future go back to hephaistos and use the single_pixel_inversions notebook in ~/RadynversionRef.
 \begin{pycode}[Radynversion]
+
 import utils
 with open(chRad.data_file('InversionResults.pickle'), 'rb') as f:
     res = pickle.load(f)

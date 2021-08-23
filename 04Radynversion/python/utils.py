@@ -162,7 +162,7 @@ def inversion_plots(results,z,ca_data,ha_data, rasterizeHists=True, figsize=None
     ax[1].plot(z_local,np.median(results["vel"],axis=0),"--",c="k", linewidth=0.5)
     ax[0].set_xlim(None, 10.5)
     ax[1].set_xlim(None, 10.5)
-    ax[1].set_ylabel(r"$v$ [\si{\kilo\metre\per\second}]",color=cmap_vel[-1])
+    ax[1].set_ylabel(r"$\varv$ [\si{\kilo\metre\per\second}]",color=cmap_vel[-1])
     ax[1].set_xlabel(r"$z$ [\si{\mega\metre}]")
 
     return fig

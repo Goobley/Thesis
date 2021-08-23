@@ -39,38 +39,65 @@
 
 %% Fonts and dummy text
 \usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc} % modern encoding
+\usepackage{etoolbox}
 % \usepackage{mathpple}
-\usepackage{sourcesanspro}
-\usepackage[default,regular,semibold]{sourceserifpro}
 % \usepackage[default,regular,black]{sourceserifpro}
-\usepackage[scale=0.8, semibold]{sourcecodepro}
 % \usepackage[scaled=0.85]{beramono}
-\usepackage[small, T1]{eulervm}
-% \usepackage{fourier}
-\usepackage{gensymb}
 \usepackage{amsfonts,amssymb,amsmath}
+% \usepackage{fourier}
+% \usepackage[charter]{mathdesign}
+% \usepackage[notext, nosf, nott]{kpfonts}
+\usepackage[default,regular,semibold]{sourceserifpro}
+\usepackage[small, T1]{eulervm}
+\usepackage[scale=0.8, semibold]{sourcecodepro}
+\usepackage{sourcesanspro}
+\usepackage{gensymb}
+\usepackage[f]{esvect}
 % \usepackage[italic]{mathastext}
 % \makeatletter
+
+% \DeclareSymbolFont{EulerLetters}{T1}{zeur}{m}{n}
+% NOTE(cmo): This will only work with euler but will replace v in math mode with
+% \upsilon, which I personally never use. letters symbol font drawn directly
+% from euler.sty
+% Don't use this one, see below.
+% \DeclareMathSymbol{v}{\mathalpha}{letters}{"1D}
+% \DeclareMathSymbol{v}{\mathalpha}{letters}{"1D}
+
+% https://tex.stackexchange.com/q/611645/50104
+% Thanks to Ulrike Fischer who found a solution that doesn't break urls. But
+% shouldn't be necessary now
+
+% \DeclareMathSymbol{\REALV}{\mathalpha}{letters}{`v}
+% \DeclareMathSymbol{v}{\mathalpha}{letters}{"0A}
+% \makeatletter
+% \appto\UrlSpecials{\do\v{\REALV}}
+% \makeatother
+
+% Experiments adjusting characters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \DeclareSymbolFont{SSFLetters}{OT1}{\sfdefault}{m}{n}
 % \DeclareSymbolFont{CMletters}{OML}{cmm}{m}{it}
 % https://tex.stackexchange.com/a/27536/50104
-\DeclareFontEncoding{FML}{}{}%
-\DeclareFontSubstitution{FML}{futm}{m}{it}%
-\DeclareSymbolFont{fourier}{FML}{futm}{m}{it}
+% \DeclareFontEncoding{FML}{}{}%
+% \DeclareFontSubstitution{FML}{futm}{m}{it}%
+% \DeclareSymbolFont{fourier}{FML}{futm}{m}{it}
+% \DeclareMathSymbol{\nu}{\mathalpha}{fourier}{23}
+
 % \DeclareMathSymbol{v}{\mathalpha}{fourier}{`v}
-\DeclareMathSymbol{\nu}{\mathalpha}{fourier}{23}
 % % \DeclareMathSymbol{v}{\mathalpha}{SSFLetters}{`v}
 % % \DeclareMathSymbol{\nu}{\mathalpha}{CMletters}{23}
 % \DeclareMathSymbol{v}{\mathalpha}{CMletters}{`v}
 % \makeatother
 % \usepackage{concmath}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\usepackage[T1]{fontenc} % modern encoding
 \usepackage{lipsum}
 
 \renewcommand{\mathbf}{\mathbold} %for Eulervm, uses bold instead of bf
 % \let\oldhat\hat
-% \renewcommand{\vec}[1]{\mathbf{#1}} %vec gives bolded vectors
+% \renewcommand{\vec}[1]{\vv{#1}} %vec uses esvect
 % \renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
 \DeclareMathOperator{\spn}{span}
 \DeclareMathOperator{\row}{row}
@@ -114,8 +141,8 @@
 % \fancyhead[L]{\slshape \leftmark}
 \fancyhead[R]{\nouppercase{\rightmark}}
 \fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\footrulewidth}{0.2pt}
 \newlength{\quarterPage}
 \setlength{\quarterPage}{7.42cm}
 \usepackage[update,prepend]{epstopdf}
@@ -202,6 +229,7 @@
 \newcommand*{\NeedRef}{{\color{Red} REF}}
 \newcommand*{\ExpandMe}{{\color{Red} EXPAND}}
 \newcommand*{\TODO}[1]{{\color{Red} TODO: #1}}
+\newcommand*{\varv}{\upsilon}
 \DeclareSIUnit\erg{erg}
 
 \begin{document}

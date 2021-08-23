@@ -52,13 +52,13 @@ This gas dynamic system can be described by
 
 \begin{equation}
     \begin{aligned}
-    \frac{\partial \rho}{\partial t} + \frac{\partial \rho v}{\partial z} &= 0\\
-    \frac{\partial \rho v}{\partial t} + \frac{\partial \rho v^2}{\partial z} - \rho g + \frac{\partial P}{\partial z} - \frac{\partial}{\partial z}\left(\mu \frac{\partial v}{\partial z}\right) &= 0\\
-    \frac{\partial E}{\partial t} + \frac{\partial}{\partial z}\left( Ev + Pv - \kappa\frac{\partial T}{\partial z} \right)+ \mu\frac{\partial v^2}{\partial z} -\rho v g + L - S &= 0,
+    \frac{\partial \rho}{\partial t} + \frac{\partial \rho \varv}{\partial z} &= 0\\
+    \frac{\partial \rho \varv}{\partial t} + \frac{\partial \rho \varv^2}{\partial z} - \rho g + \frac{\partial P}{\partial z} - \frac{\partial}{\partial z}\left(\mu \frac{\partial \varv}{\partial z}\right) &= 0\\
+    \frac{\partial E}{\partial t} + \frac{\partial}{\partial z}\left( E\varv + P\varv - \kappa\frac{\partial T}{\partial z} \right)+ \mu\frac{\partial \varv^2}{\partial z} -\rho \varv g + L - S &= 0,
     \end{aligned}\label{Eq:RhdEquations}
 \end{equation}
 
-where $\rho$ is the mass density of the gas, $v$ is the bulk velocity, $z$ is the spatial coordinate, $g$ is the local gravitational acceleration, $P$ is the pressure, $\mu$ is the coefficient of dynamic viscosity, $L$ is the radiative loss term, and $S$ is all additional energy source terms, from radiative transfer and atmospheric heating.
+where $\rho$ is the mass density of the gas, $\varv$ is the bulk velocity, $z$ is the spatial coordinate, $g$ is the local gravitational acceleration, $P$ is the pressure, $\mu$ is the coefficient of dynamic viscosity, $L$ is the radiative loss term, and $S$ is all additional energy source terms, from radiative transfer and atmospheric heating.
 In these models the plasma is typically assumed to behave as an ideal gas, and therefore uses the equation of state
 $P = n_{\mathrm{tot}} k_B T$, where $n_{\mathrm{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa=\kappa_0 T^{5/2}$ is the coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
 
@@ -217,7 +217,7 @@ Thus for an $N$-level atom we have the total transition rate between levels $i$ 
 where $R_{ij}$ is the rate of radiative transitions and $C_{ij}$ is the rate of collisional transitions.
 As the total population of each element must remain constant we can write the kinetic equilibrium equation (which can be derived from the Boltzmann equation)
 \begin{equation}
-    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{v}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime}.
+    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{\varv}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime}.
     \label{Eq:KinEq}
 \end{equation}
 
@@ -956,7 +956,7 @@ Fig.~\ref{Fig:LwRhComparison} presents a comparison of the synthesis of \CaLine{
 This is a static, semi-empirical quiet sun atmosphere, so the synthesis is performed in statistical equilibrium.
 RH's solution is shown in blue, with the \Lw{} solution overlaid in dashed orange.
 There is clearly very good agreement between these codes in this simple static test.
-This figure also shows the sensitivity of \CaLine to the electron density when computed under the assumption of LTE populations (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects (red).
+This figure also shows the sensitivity of \CaLine{} to the electron density when computed under the assumption of LTE populations (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects (red).
 The line profile computed from the simulation with the charge conservation strategy approaches the reference solution, where the electron density is provided by the FAL model.
 The primary differences between these treatments is likely due to other species, such as Fe, being treated in LTE.
 
@@ -1044,9 +1044,9 @@ There is an inherent assumption that the flux function is local, and acts only o
 
 Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant in time.
 This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
-The simplest equation of this form is advection, which arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $v$ as
+The simplest equation of this form is advection, which arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and velocity $\varv$ as
 \begin{equation}\label{Eq:Advection}
-    \rho_t + (\rho v)_x = 0.
+    \rho_t + (\rho \varv)_x = 0.
 \end{equation}
 
 The advection equation can be augmented with two further equations to form the Euler equation set.
@@ -1055,9 +1055,9 @@ Together they describe the evolution of ideal fluids.
 The complete set is written
 \begin{equation}\label{Eq:EulerEqns}
 \begin{split}
-    \rho_t + (\rho v)_x &= 0,\\
-    (\rho v)_t + (\rho v^2 + p)_x &= 0,\\
-    E_t + (v(E + p))_x &= 0,
+    \rho_t + (\rho \varv)_x &= 0,\\
+    (\rho \varv)_t + (\rho \varv^2 + p)_x &= 0,\\
+    E_t + (\varv(E + p))_x &= 0,
 \end{split}
 \end{equation}
 where $E$ is the total energy and $p$ is the gas pressure.
@@ -1065,7 +1065,7 @@ This system is already recognisable as the simplified roots of the RHD equations
 As our three conserved quantities are the mass density, momentum density, and energy, the pressure must be expressed as a combination of these so as to be able to write this system in the form of \eqref{Eq:ConsLaw}.
 The simplest way to achieve this is to use the equation of state for an ideal gas
 \begin{equation}
-    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho v^2.
+    E = \frac{p}{\gamma-1} + \frac{1}{2}\rho \varv^2.
 \end{equation}
 Here $\gamma$ is the ratio of gas' specific heat at constant pressure and constant volume, which is 5/3 for monatomic gasses, typically assumed in the case of solar plasma.
 
@@ -1084,7 +1084,7 @@ The local gradient of the conserved quantities can then be estimated from pointw
 This method can be applied to discrete problems in both space and time.
 Applying a basic one-sided method to the advection equation \eqref{Eq:Advection} gives
 \begin{equation}\label{Eq:FdmAdvection}
-    \frac{q^{t+1}_i - q^t_i}{\Delta t} + v\left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
+    \frac{q^{t+1}_i - q^t_i}{\Delta t} + \varv \left( \frac{q^t_{i+1} - q^t_i}{\Delta x} \right),
 \end{equation}
 where the subscript refers to the location of the conserved quantity, the superscript the discrete timestep, with $\Delta x$ and $\Delta t$ being the local grid spacing and timestep duration respectively.
 
@@ -1095,7 +1095,7 @@ It is better to locally use the formulation such that information from points ``
 In this sense the information used to update points is following the fluid flow.
 Equation \eqref{Eq:FdmAdvection} can be rewritten to explicitly determine the approximate value of the quantity at the next timestep,
 \begin{equation}
-    q^{t+1}_i = q^t_i - \frac{v \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
+    q^{t+1}_i = q^t_i - \frac{\varv \Delta t}{\Delta x}\left( q^t_{i+1} - q^t_i \right).
 \end{equation}
 
 This simple first order accurate approach can be applied to any conservation law, and higher-order accurate methods can be derived from using finite difference methods over larger stencils, or deriving similar approaches from combinations of the local finite difference approximations using Taylor series.
@@ -1154,7 +1154,7 @@ ax[2].plot(grid, pressure)
 ax[3].plot(grid, totE)
 
 ax[0].set_ylabel(r'$\rho$')
-ax[1].set_ylabel(r'$u$')
+ax[1].set_ylabel(r'$\varv$')
 ax[2].set_ylabel(r'$p$')
 ax[3].set_ylabel(r'$E$')
 
@@ -1200,7 +1200,7 @@ Without loss of generality this discontinuity can be placed at $x=0$, and the va
 A very well studied Riemann problem, that is often used as a test case for numerical hydrodynamics, is that of the Sod shock tube \citep{Sod1978}.
 The problem is a single Riemann problem, with gas at a different pressure and density on each side of a membrane.
 At $t=0$ the membrane is removed, and multiple waves with different velocities are launched in both directions.
-A solution to the classic Sod shock tube with initial states $q_l = \{\rho=1, p=1, u=0\}, q_r = \{\rho=0.125, p=0.1, u=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
+A solution to the classic Sod shock tube with initial states $q_l = \{\rho=1, p=1, \varv=0\}, q_r = \{\rho=0.125, p=0.1, \varv=0\}$ at $t=\SI{0.2}{\second}$ is shown in Fig.~\ref{Fig:SodTubeAnalytic}.
 At this time, a complex pressure and density structure has formed in the shock tube.
 The Riemann problem is often considered in terms of the propagating waves.
 In Fig.~\ref{Fig:RiemannFan} we show the same density profile, but divided into regions by black lines, with grey lines showing a time-distance plot of the different waves in the system.
@@ -1215,7 +1215,7 @@ This is the original interface between the two gases at $t=0$, and it is advecte
 
 From analysis of the Jacobian of the flux function of the Euler equations, the structure of this solution can be revealed.
 There are three waves, associated with the eigenvalues of this Jacobian.
-The contact discontinuity propagates at the fluid velocity $u$ (as the fluid expands into the low density region), the other two eigenvalues are $u\pm c_s$, where $c_s$ is the sound speed of the fluid.
+The contact discontinuity propagates at the fluid velocity $\varv$ (as the fluid expands into the low density region), the other two eigenvalues are $\varv\pm c_s$, where $c_s$ is the sound speed of the fluid.
 Unfortunately these waves are non-linear and do not necessarily propagate at the characteristic velocity given by their associated eigenvalue.
 Instead it is necessary to apply the Rankine-Hugoniot jump conditions, at both the shock front and the contact discontinuity, and solve the resultant transcendental equation to determine the parameters of regions $\gamma$ and $\delta$.
 These problems can be solved using iterative methods and knowledge of the expected wave form of the solution.
@@ -1294,7 +1294,7 @@ This is a necessary, but not sufficient condition, and the exact requirements of
 For explicit methods the CFL condition sets the maximum timestep that can be used based on the current simulation conditions.
 In a hyperbolic system the CFL condition takes the form
 \begin{equation}
-    C = \frac{u\Delta t}{\Delta x},
+    C = \frac{\varv\Delta t}{\Delta x},
 \end{equation}
 and will be constrained to a maximum value ($\leq 1$) for stability of an explicit method.
 Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
@@ -1352,5 +1352,5 @@ Frameworks can substantially enhance productivity, and enable the construction o
 The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of Python can yield tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
 
 Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations.
-It is likely that significant progress will be made on these limitations in the coming 1-2 decades as computing power and numerical techniques improve.
+It is likely that significant progress will be made on these limitations in the coming 1--2 decades as computing power and numerical techniques improve.
 In the meantime, we can undertake numerical experiments to evaluate individual components of these larger treatments (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{} based experiments.

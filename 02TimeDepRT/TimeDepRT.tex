@@ -162,9 +162,9 @@ This technique has proven far more suited for reprocessing these simulations tha
 Only one application of the method (typically requiring at most five Newton-Raphson iterations) is needed for each timestep and the computational cost is $<0.1\,\%$ of the total CPU time.
 This approach remains harder to debug and modify due to its implicit nature, although this is simplified thanks to the finite difference method for computing the Jacobian which does not need to be adjusted if the equations are modified so long as the stencil remains the same.
 
-\section{On the Importance of \Caii{} Photoionisation by the Hydrogen Lyman Lines in Flare Models}\label{Sec:CaiiPhotoionisation}
+\section{On the Importance of \Caii{} Photoionisation by the Lyman Lines in Flare Models}\label{Sec:CaiiPhotoionisation}
 
-\emph{The content of this section is based on the work presented in \Caii{} paper \NeedRef{}.}
+\emph{The content of this section is based on the work presented in \citet{Osborne2021a}.}
 
 The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of the Lyman lines on \Caii{} photoionisation in these models.
 In \Radyn{} the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
@@ -300,12 +300,13 @@ from radynpy.cdf import LazyRadynData
 # Get the RADYN intensity for a line down a particular direction; in SI
 def line_intensity_with_cont(data, kr, muIdx):
     if not not data.cont[kr]:
-        print('line_intensity cannot compute bf intensity')
-        return
+        # print('line_intensity cannot compute bf intensity')
+        # return
+        raise ValueError('line_intensity cannot compute bf intensity')
 
     wl = data.alamb[kr] / (data.q[0:data.nq[kr], kr] *  data.qnorm * 1e5 / data.cc + 1)
     intens = (data.outint[:, 1:data.nq[kr]+1, muIdx, kr] + data.outint[:, 0, muIdx, kr][:, np.newaxis]) *  data.cc * 1e8 / (wl**2)[np.newaxis, :]
-    print(intens.shape)
+    # print(intens.shape)
     # wl is retruned in angstrom, intens in erg/cm^2/sr/A/s
     wl = wl[::-1] << u.Angstrom
     intens = lw.utils.convert_specific_intensity(wl, intens[:, ::-1] << u.erg / u.cm**2 / u.sr / u.Angstrom / u.s, 'J/m2/sr/Hz/s')
@@ -1094,10 +1095,14 @@ ca = CaII()
 
 for i, t in enumerate(plotTimes):
     zarrIdx = np.searchsorted(flarixComp['time'][...], t)
-    ax[i].plot(wave - ca.lines[-1].lambda0, flarixComp['Iwave'][zarrIdx, :, -1], c='C1', linewidth=1.0)
-    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompNoLy['Iwave'][zarrIdx, :, -1], c='C2', linewidth=1.0)
-    ax[i].plot(wave - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['Full'][:, -1], '--', c='C1')
-    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['NoLybb'][:, -1], '--', c='C2')
+    label = 'LI Time-Dep' if i == len(plotTimes) - 1 else None
+    ax[i].plot(wave - ca.lines[-1].lambda0, flarixComp['Iwave'][zarrIdx, :, -1], c='C1', linewidth=1.0, label=label)
+    label = 'LE Time-Dep' if i == len(plotTimes) - 1 else None
+    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompNoLy['Iwave'][zarrIdx, :, -1], c='C2', linewidth=1.0, label=label)
+    label = 'LI Stat Eq' if i == len(plotTimes) - 1 else None
+    ax[i].plot(wave - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['Full'][:, -1], '--', c='C1', label=label)
+    label = 'LE Stat Eq' if i == len(plotTimes) - 1 else None
+    ax[i].plot(waveNoLy - ca.lines[-1].lambda0, flarixCompSe['radOutput'][i]['NoLybb'][:, -1], '--', c='C2', label=label)
     ax[i].set_xlim(-0.07, 0.07)
     ax[i].set_ylim(None, maxI * 1.05)
     ax[i].set_title('{:.1f} s'.format(t))
@@ -1112,6 +1117,10 @@ for i, t in enumerate(plotTimes):
     else:
         ax[i].xaxis.set_major_locator(MaxNLocator(3))
         ax[i].set_xlabel(r'$\Delta\lambda$ [nm]')
+
+    if i == len(plotTimes) - 1:
+        ax[i].legend(frameon=False, fontsize=10, loc=(0.02, 0.47),
+                     handlelength=1.0, handletextpad=0.5, columnspacing=1.5)
 lFig = chRT.save_figure('TimeDepSEComparison', fig, fext='.pgf')
 lFig.caption = r'Comparison of time-dependent and statistical equilibrium treatments for the Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for LI and LE treatments in the simulation described in Section~\ref{Sec:TimeDepSE}. The time-dependent treatments are shown with solid lines, and the statistical equilibrium treatments with dashed lines. Orange is used for the LI treatment, and green for the LE treatment.'
 \end{pycode}
