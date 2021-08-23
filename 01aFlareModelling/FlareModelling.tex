@@ -200,15 +200,20 @@ As work continues on these higher resolution RMHD simulations an investigation i
 
 \subsection{LTE vs NLTE}
 
-\TODO{Rewrite from here}
+As stars radiate energy into the cosmos, it is clear that they cannot be in total thermal equilibrium.
+However, it is reasonable to suggest that if the atmosphere is sufficiently collisional then a form of local thermodynamic equilibrium holds, whereby local parcels of the plasma are effectively in thermodynamic equilibrium such that Kirchhoff's laws of radiation.
+If the radiative rates instead dominate the total transitional rates for the species then the particle distribution can no longer be governed by purely local parameters and we enter the realms of non-LTE, which simply describes all plasma that is not in LTE.
 
-With the formal solvers discussed in the previous section, and knowledge of the emissivity and opacity throughout an atmospheric model, the outgoing radiation can be computed directly. As the emissivity and opacity of the plasma depend primarily on the atomic level populations, knowledge of these is sufficient for computing the radiation.
-This is the case if the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, for example in the photosphere. The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
+Now that we understand how to design and implement formal solvers for the radiative transfer equation, we have the ability to compute the radiation leaving an atmosphere from the opacity and emissivity structure.
+The values of these will depend on the atomic populations, and their distribution across energy levels and ionisation states.
+If the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, then these populations can be known purely from local plasma parameters.
+This is the case in the photosphere.
+The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
 
-\TODO{https://science.sciencemag.org/content/132/3429/707}
-Unfortunately, the LTE description is inadequate, as discussed by Jefferies and Thomas \NeedRef{}, and everything outside of this is termed non-LTE (NLTE). In fact, due to the detailed balance of an LTE treatment, if detailed balance applied throughout the stellar atmosphere, no radiation would be able to escape. As photons are able to escape from the upper layers of the atmosphere, there is insufficient absorption processes to balance the emission processes and these layers must be NLTE. This is particularly clear for the chromosphere and transition region where a non-monotonic temperature gradient could not arise if the atmosphere were in LTE.
-Departures from an LTE description of the plasma are therefore expected when the radiative rates become comparable or larger than the collisional rates, and where the radiation field is not black-body like.
-We distinguish here, and in the following, between radiative transitions (due to spontaneous emission and absorption, and stimulated emission), and collisional transitions (due to collisions between particles).
+% \TODO{https://science.sciencemag.org/content/132/3429/707}
+% Unfortunately, the LTE description is inadequate, as discussed by Jefferies and Thomas \NeedRef{}, and everything outside of this is termed non-LTE (NLTE). In fact, due to the detailed balance of an LTE treatment, if detailed balance applied throughout the stellar atmosphere, no radiation would be able to escape. As photons are able to escape from the upper layers of the atmosphere, there is insufficient absorption processes to balance the emission processes and these layers must be NLTE. This is particularly clear for the chromosphere and transition region where a non-monotonic temperature gradient could not arise if the atmosphere were in LTE.
+% Departures from an LTE description of the plasma are therefore expected when the radiative rates become comparable or larger than the collisional rates, and where the radiation field is not black-body like.
+% We distinguish here, and in the following, between radiative transitions (due to spontaneous emission and absorption, and stimulated emission), and collisional transitions (due to collisions between particles).
 
 Thus for an $N$-level atom we have the total transition rate between levels $i$ and $j$ (by convention $i < j$)
 \begin{equation}
@@ -536,7 +541,7 @@ Each of these terms is itself a Python object which must conform to a particular
 Many of these objects also contain components with their own contracts.
 These contracts are defined through the use of Python classes, and basic implementation of features, comparable to those in extant RT codes are implemented in the \Lw{} standard library.
 These can be further extended with new functionality through the use of inheritance.
-A user can therefore implement a new method for computing, say, the absorption profile \citep[e.g. the non Voigt profile of][]{Kowalski2017} of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
+A user can therefore implement a new method for computing, say, the absorption profile \citep[e.g. the non-Voigt profile of][]{Kowalski2017} of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
 
 Atomic models can be supplied to user code in two different ways, in the textual source code, which is both human and machine readable, or in a \texttt{pickle}, which is only machine readable, possibly from a previously serialised \texttt{Context}.
 The former of these is treated as a canonical form, and it can always be recovered by asking Python for the representation of the object (via the \texttt{repr} function).
@@ -1012,7 +1017,7 @@ Other tests have been undertaken to verify the performance of \Lw{}, but those p
 
 During the development of \Lw{}, a simpler pedagogic framework was also constructed.
 This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.} \citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
-It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Kunasz1988} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
+It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
 \section{Introduction to Hydrodynamics and Conservation Laws}
 \emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997,LeVeque2002}.}
