@@ -658,7 +658,7 @@ lFig.placement = 'htbp'
 \end{pycode}
 \begin{pycode}[FlareModelling]
 
-_, atmos = lw.read_multi_atmos(chFlareModelling.data_file('FalSillyVelRunRh/FalVelocity.atmos'))
+_, atmos = lw.read_multi_atmos(chFlareModelling.data_file('FalSillyVelRunRh/FalVelocityLte.atmos'))
 atmos.quadrature(5)
 
 aSet = lw.RadiativeSet([H_6_atom(), C_atom(), O_atom(), Si_atom(), Al_atom(),
@@ -899,6 +899,7 @@ fig.tight_layout()
 
 lFig = chFlareModelling.save_figure('LwValidationJudge', fig, fext='.pgf')
 lFig.caption = r'Validation of the time-dependent population update scheme in \Lw{}. Compare with Fig. 4 of \citet{Judge2017}, cgs units are employed to allow a direct comparison. The response of hydrogen levels ($n=1, 2$) and continuum ($\kappa$) are shown for an instantaneous perturbation of the temperature of the FALC model (top-left panel). Each black line shows the population densities once every \SI{0.5}{\second}.'
+lFig.short_caption = r'Validation of \Lw{} time-dependent population update scheme.'
 lFig.placement = 'ht'
 \end{pycode}
 \setpythontexautoprint{true}
@@ -943,6 +944,7 @@ fig.tight_layout()
 
 lFig = chFlareModelling.save_figure('LwValidationTimeDepNe', fig, fext='.pgf')
 lFig.caption = r'Comparison of electron density in a RADYN simulation and time-dependent reprocessing using \Lw{} that will be presented as the F9 model of Chap.~\ref{Chap:TimeDepRt}.'
+lFig.short_caption = r'Validation of time-dependent charge conservation in \Lw{}.'
 lFig.placement = 'ht'
 \end{pycode}
 
@@ -1186,6 +1188,7 @@ ax2.set_ylabel(r'$t$')
 ax2.yaxis.set_major_locator(MaxNLocator(5))
 lFig = chFlareModelling.save_figure('RiemannFan', fig, fext='.pgf')
 lFig.caption = r'Riemann fan of different wave speeds and associated regions for the Sod shock tube problem.'
+lFig.short_caption = r'Riemann fan of different wave speeds for the Sod shock tube problem.'
 \end{pycode}
 
 \py[FlareModelling]|chFlareModelling.get_figure('SodTubeAnalytic')|

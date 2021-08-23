@@ -77,7 +77,7 @@ As observed radiation is the only vector by which information can arrive from th
     \draw[->] (x3) -- (y2.175);
     \draw[->] (x4) -- (y5.190);
 \end{tikzpicture}
-\caption{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
+\caption[The degeneracy present in traditional inversions.]{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
 \label{Fig:DegenerateMapping}
 \end{figure}
 
@@ -140,7 +140,7 @@ As observed radiation is the only vector by which information can arrive from th
 
 
 \end{tikzpicture}
-\caption{The bijective mapping $g$ can be used to resolve the problem of inversions upon the introduction of a latent space $\mathcal{Z}$ containing the information lost in the forward process. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
+\caption[Resolving the degeneracy of inversions through the addition of a latent space.]{The bijective mapping $g$ can be used to resolve the problem of inversions upon the introduction of a latent space $\mathcal{Z}$ containing the information lost in the forward process. For the sake of legibility we have only included the observed intensity vectors which were mapped to in Fig.~\ref{Fig:DegenerateMapping}.}
 \label{Fig:BijectiveMapping}
 \end{figure}
 
@@ -261,6 +261,7 @@ plt.legend(frameon=False, loc='lower right')
 
 lFig = chRad.save_figure('InferredSourceFn', fig, fext='.pgf')
 lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
+lFig.short_caption = r'Failure of pseudoinverse in inferring quadratic varying source function.'
 \end{pycode}
 %spell-checker: enable
 

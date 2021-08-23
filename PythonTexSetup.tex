@@ -8,6 +8,7 @@ import texfigure
 texfigure.preamble_setup()
 import seaborn as sns
 from cycler import cycler
+from matplotlib.colors import to_rgb
 
 rc = {
     'pgf.preamble': [
@@ -32,7 +33,21 @@ rc = {
 texfigure.configure_latex_plots(pytex, **rc)
 pytex.formatter = texfigure.repr_latex_formatter
 \end{pythontexcustomcode}
-% NOTE(cmo): This empty block ensures that python tex always "does something"
-% and fixes an issue with latexmk looking for the dependencies file
+
+% NOTE(cmo): Set up color names for our 10 standard plotting colours so we can label the text in them. Sadly this can't work as-is, since we can't spline into latex commands from pythontex. The empty environment prevents pythontex from having issues if no pycode blocks are present.
 \begin{pycode}
+# colorNames = ['Blue', 'Orange', 'Green', 'Red', 'Purple', 'Brown', 'Pink', 'Grey', 'Yellow', 'Cyan']
+# colorNumbers = ['C' + '{:d}'.format(i) for i in range(10)]
+# rgbTemplate = r'\definecolor{{{colorName}}}{{rgb}}{{{r:f},{g:f},{b:f}}}'
+# wordTemplate = r'\newcommand*{{\{commandName}}}{{{{\color{{{colorName}}}{word}}}}}'
+
+# for i, col in enumerate(plt.rcParams['axes.prop_cycle']):
+#     print(rgbTemplate.format(colorName='Mpl'+colorNames[i],
+#                              **dict(zip(('r', 'g', 'b'), to_rgb(col['color'])))))
+#     print(rgbTemplate.format(colorName='Mpl'+colorNumbers[i],
+#                              **dict(zip(('r', 'g', 'b'), to_rgb(col['color'])))))
+#     print(wordTemplate.format(commandName='Mpl'+colorNames[i]+'Word', colorName='Mpl'+colorNames[i],
+#                               word=colorNames[i].lower()))
+#     print(wordTemplate.format(commandName='Mpl'+colorNames[i]+'WordCap', colorName='Mpl'+colorNames[i],
+#                               word=colorNames[i]))
 \end{pycode}

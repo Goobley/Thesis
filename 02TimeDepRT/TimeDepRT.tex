@@ -234,6 +234,7 @@ plt.xlabel(r"$\lambda$ [nm]")
 plt.tight_layout()
 lFig = chRT.save_figure('CaIIOverlaps', fig, fext='.pgf')
 lFig.caption = r'The overlap betwen the hydrogen Lyman lines and continuum with the Ca\,\textsc{ii} continua present in the model atom used here. Both the Ca\,\textsc{ii} 3p$^6$ 4p and 3p$^6$ 3d levels contain two sub-levels with indistinguishably different continuum edges.'
+lFig.short_caption = r'Overlap between Lyman transitions and \Caii{} continua in model atoms used.'
 lFig.placement = 'hbtp'
 \end{pycode}
 
@@ -364,6 +365,7 @@ leData = zarr.convenience.open(chRT.data_file('Flat1e9NoIncRad/Flat1e9NoIncRadLE
 fig = plot_8542_profiles(liData, leData, radyn)
 lFig = chRT.save_figure('F9Profiles', fig, fext='.pgf')
 lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line profiles during the F9 simulation.'
+lFig.short_caption = r'Comparison of \CaLine{} treatments in the F9 simulation.'
 
 radynF10 = LazyRadynData(chRT.data_file('Flat1e10NoIncRad/radyn_out.cdf'))
 liDataF10 = zarr.convenience.open(chRT.data_file('Flat1e10NoIncRad/Flat1e10NoIncRadLIThesis.zip'), 'r')
@@ -371,6 +373,7 @@ leDataF10 = zarr.convenience.open(chRT.data_file('Flat1e10NoIncRad/Flat1e10NoInc
 fig = plot_8542_profiles(liDataF10, leDataF10, radynF10)
 lFig = chRT.save_figure('F10Profiles', fig, fext='.pgf')
 lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line profiles during the F10 simulation.'
+lFig.short_caption = r'Comparison of \CaLine{} treatments in the F10 simulation.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9Profiles')|
 \py[TimeDepRT]|chRT.get_figure('F10Profiles')|
@@ -616,6 +619,7 @@ for timeToPlot in plotTimes:
         lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The two left-hand panels show the contribution function, overlaid with the line profile in blue and the $\tau_\nu=1$ line in red. The right-hand panel shows the structure of the atmosphere, with populations from the LI treatment shown with solid lines and the LE treatment with dashed lines.'.format(timeToPlot)
     else:
         lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
+    lFig.short_caption = r'Contribution function and level populations for the two calcium treatments in the F9 simulation at $t = \SI{{{:.0f}}}{{\second}}$.'.format(timeToPlot)
     lFig.placement = r'htbp'
 
 F10Cfns = []
@@ -624,6 +628,7 @@ for timeToPlot in plotTimes:
     F10Cfns.append(cfnData)
     lFig = chRT.save_figure('F10ContFn{:.0f}s'.format(timeToPlot), fig, fext='.pgf', dpi=500)
     lFig.caption = r'Contribution function and level populations for the two calcium treatments in the F10 simulation at $t = \SI{{{:.0f}}}{{\second}}$. The panels present the same information as Fig.~\ref{{Fig:F9ContFn{:.0f}s}}.'.format(timeToPlot, plotTimes[0])
+    lFig.short_caption = r'Contribution function and level populations for the two calcium treatments in the F10 simulation at $t = \SI{{{:.0f}}}{{\second}}$.'.format(timeToPlot)
     lFig.placement = r'htbp'
 \end{pycode}
 
@@ -736,10 +741,12 @@ def plot_loss_comparison(liData, leData, radyn):
 fig, F9PanelData = plot_loss_comparison(liData, leData, radyn)
 lFig = chRT.save_figure('F9LossComparison', fig, fext='.pgf', dpi=500)
 lFig.caption = 'Time evolution of the calcium losses in the F9 simulation. The left-hand panel shows the absolute relative change in losses due to the different calcium treatments, and the right-hand panel shows the proportion of the total radiative losses due to the calcium lines.'
+lFig.short_caption = 'Time evolution of the calcium losses in the F9 simulation.'
 
 fig, F10PanelData = plot_loss_comparison(liDataF10, leDataF10, radynF10)
 lFig = chRT.save_figure('F10LossComparison', fig, fext='.pgf', dpi=500)
 lFig.caption = 'Time evolution of the calcium losses in the F10 simulation. The left-hand panel shows the absolute relative change in losses due to the different calcium treatments, and the right-hand panel shows the proportion of the total radiative losses due to the calcium lines.'
+lFig.short_caption = 'Time evolution of the calcium losses in the F10 simulation.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9LossComparison')|
 \py[TimeDepRT]|chRT.get_figure('F10LossComparison')|
@@ -776,6 +783,7 @@ def plot_loss_variation(F9LossData, F10LossData):
 fig = plot_loss_variation(F9PanelData, F10PanelData)
 lFig = chRT.save_figure('LossVariation', fig, fext='.pgf', dpi=500)
 lFig.caption = r'The absolute relative change of the radiative losses considered here due to the two different calcium treatments in each of the simulations (i.e. the product of the two panels in each of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison}).'
+lFig.short_caption = r'Effect of calcium losses on total radiative losses in the two simulations.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('LossVariation')|
 %spell-checker: enable
@@ -930,16 +938,18 @@ for i, t in enumerate(timesToPlot):
     fig = plot_cf_rf_comparison(F9Cfns[i], *rfs)
     lFig  = chRT.save_figure('F9RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
     if i == 0:
-        lFig.caption = r'Comparative plots of the temperature and velocity response functions and the contribution function for the Ca\,\textsc{{ii}} \SI{{854.2}}{{\nano\metre}} line in the F9 simulation at {:d} s. The upper row shows the LI treatment, and the lower row the LE treatment. For the response functions, enhancement to a positive perturbation is shown in red, and reduction in blue. The $\tau_\nu=1$ line is overlaid on each plot.'.format(t)
+        lFig.caption = r'Comparative plots of the temperature and velocity response functions and the contribution function for the Ca\,\textsc{{ii}} \SI{{854.2}}{{\nano\metre}} line in the F9 simulation at $t=\SI{{{:d}}}{{\second}}$. The upper row shows the LI treatment, and the lower row the LE treatment. For the response functions, enhancement to a positive perturbation is shown in red, and reduction in blue. The $\tau_\nu=1$ line is overlaid on each plot.'.format(t)
     else:
-        lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F9 simulation at {:d} s.'.format(t)
+        lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F9 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
+    lFig.short_caption = r'Comparison of contribution, temperature response, and velocity response functions for the F9 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
 
 for i, t in enumerate(timesToPlot):
     stepIdx = np.searchsorted(atmostF10.time, t)
     rfs = read_rfs('Flat1e10NoIncRad', stepIdx)
     fig = plot_cf_rf_comparison(F10Cfns[i], *rfs)
     lFig  = chRT.save_figure('F10RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
-    lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F10 simulation at {:d} s.'.format(t)
+    lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F10 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
+    lFig.short_caption = r'Comparison of contribution, temperature response, and velocity response functions for the F10 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
 \end{pycode}
 
 \py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
@@ -1121,8 +1131,10 @@ for i, t in enumerate(plotTimes):
     if i == len(plotTimes) - 1:
         ax[i].legend(frameon=False, fontsize=10, loc=(0.02, 0.47),
                      handlelength=1.0, handletextpad=0.5, columnspacing=1.5)
+
 lFig = chRT.save_figure('TimeDepSEComparison', fig, fext='.pgf')
 lFig.caption = r'Comparison of time-dependent and statistical equilibrium treatments for the Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for LI and LE treatments in the simulation described in Section~\ref{Sec:TimeDepSE}. The time-dependent treatments are shown with solid lines, and the statistical equilibrium treatments with dashed lines. Orange is used for the LI treatment, and green for the LE treatment.'
+lFig.short_caption = r'Comparison of time-dependent and statistical equilibrium treatment of \CaLine{}.'
 \end{pycode}
 
 \py[TimeDepRT]|chRT.get_figure('TimeDepSEComparison')|
@@ -1313,6 +1325,7 @@ lFig.caption = r'Comparison of the CRD and PRD treatments of the Ca\,\textsc{ii}
 fig = plot_K_losses(atmost, liData, prdData)
 lFig = chRT.save_figure('F9KLossesPrd', fig, fext='.pgf')
 lFig.caption = r'Comparison of the chromospheric radiative losses under CRD and PRD treatments of the Ca\,\textsc{ii} K line in the F9 model. A negative value indicates a radiative loss and a positive value a radiative gain.'
+lFig.short_caption = r'Comparison of the chromospheric radiative losses under CRD and PRD treatments of the \Caii{} K line in the F9 model.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9LyaProfiles')|
 \py[TimeDepRT]|chRT.get_figure('F9KProfiles')|

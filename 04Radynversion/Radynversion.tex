@@ -129,7 +129,7 @@ This layer shuffles the data in a random, but fixed order which is different for
     \draw[->, color=TolTeal] (Input.340 -| P1.north) -- (Input.340 -| Acl1.south);
     \draw[->, color=TolTeal] (Input.340 -| Acl1.north) -- (Input.340);
 \end{tikzpicture}
-\caption{Structure of the final RADYNVERSION network. The forward process is shown with the {\color{TolBlue}blue} arrows, and the inverse process with {\color{TolTeal}teal} arrows.}
+\caption[Structure of the invertible RADYNVERSION network.]{Structure of the final RADYNVERSION network. The forward process is shown with the {\color{TolBlue}blue} arrows, and the inverse process with {\color{TolTeal}teal} arrows.}
 \label{Fig:RadynversionDiagram}
 \end{figure}
 
@@ -378,6 +378,7 @@ ax[4].set_title(r'Ca\,\textsc{ii} \SI{854.2}{\nano\metre}')
 fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationForwards', fig, fext='.pgf')
 latexFig.caption = 'Validation of the RADYNVERSION forwards process on unseen data. The upper row shows the atmospheric input, and the lower row the expected output along with the predicition from the network.'
+latexFig.short_caption = r'Validation of RADYNVERSION forwards model.'
 \end{pycode}
 
 \begin{pycode}[Radynversion]
@@ -439,6 +440,7 @@ ax[2].set_xlabel(r'$z$ [\si{\mega\metre}]')
 fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf', dpi=500)
 latexFig.caption = r'Validation of the RADYNVERSION reverse process from the ground truth line profiles shown in Fig.~\ref{Fig:RadynversionValidationForwards}. The two-dimensional histograms show the probability density of the solution in each altitude node, and the black dashed lines the expected solution.'
+latexFig.short_caption = r'Validation of the RADYNVERSION reverse model.'
 \end{pycode}
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
@@ -535,7 +537,8 @@ ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
 
 lFig = chRad.save_figure('CrispPlot', fig, fext='.pgf', dpi=600)
-lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2019-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off-ribbon) and circle (on-ribbon). Wavelengths in this figure use their values in air.'
+lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2014-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off-ribbon) and circle (on-ribbon). Wavelengths in this figure use their values in air.'
+lFig.short_caption = r'CRISP context image of 2014-09-06 M1.1 flare just after flare peak.'
 \end{pycode}
 
 \begin{pycode}[Radynversion]
@@ -578,6 +581,7 @@ for axi in ax.flat:
     axi.yaxis.set_major_locator(plt.MaxNLocator(5))
 lFig = chRad.save_figure('LineProfilesToInvert', fig, fext='.pgf')
 lFig.caption = r'The spectral line profiles of \CaLine{} and \Ha{} for the two pixels marked in Fig.~\ref{Fig:CrispPlot}.'
+lFig.short_caption = r'Line profiles to invert, on- and off-ribbon.'
 \end{pycode}
 
 % NOTE(cmo): To further adjust these in future go back to hephaistos and use the single_pixel_inversions notebook in ~/RadynversionRef.
@@ -590,10 +594,12 @@ with open(chRad.data_file('InversionResults.pickle'), 'rb') as f:
 fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsFlare', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Inversion results for the on-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
+lFig.short_caption = r'Inversion results for the on-ribbon pixel.'
 
 fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsQuiet', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Inversion results for the off-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
+lFig.short_caption = r'Inversion results for off-ribbon pixel.'
 \end{pycode}
 % spell-checker: enable
 
