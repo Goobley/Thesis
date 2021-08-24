@@ -139,6 +139,7 @@ In the following we will discuss how to obtain the frequency- and direction-depe
 For a one-dimensional planar atmosphere the radiative transfer equation (RTE) can be written as
 \begin{equation}
     \frac{1}{c}\frac{\partial I(\nu, \vec{d})}{\partial t} + \mu \frac{\partial I(\nu, \vec{d})}{\partial z} = \eta(\nu, \vec{d}) - \chi(\nu, \vec{d})I(\nu, \vec{d}).
+    \label{Eq:FullTimeDepRte}
 \end{equation}
 We consider that the light crossing time for the propagation of light on a solar scale is small compared to the time-evolution of the atmosphere and our observations and therefore ignore the time-derivative term.
 Defining the source function $S(\mu, \vec{d}) = \eta(\nu, \vec{d}) / \chi(\nu, \vec{d})$, and the optical depth along a ray from the observer as the number of photon mean free paths along this segment $\tau(z, \nu, \vec{d}) = \int_z^{z_{\mathrm{obs}}} = \chi_\nu(z^\prime) / \mu\, dz^\prime$ we can write the RTE as.
@@ -200,76 +201,84 @@ As work continues on these higher resolution RMHD simulations an investigation i
 
 \subsection{LTE vs NLTE}
 
-As stars radiate energy into the cosmos, it is clear that they cannot be in total thermal equilibrium.
-However, it is reasonable to suggest that if the atmosphere is sufficiently collisional then a form of local thermodynamic equilibrium holds, whereby local parcels of the plasma are effectively in thermodynamic equilibrium such that Kirchhoff's laws of radiation.
-If the radiative rates instead dominate the total transitional rates for the species then the particle distribution can no longer be governed by purely local parameters and we enter the realms of non-LTE, which simply describes all plasma that is not in LTE.
+With the understanding of how to design and implement formal solvers for the radiative transfer equation, we have the ability to compute the radiation leaving an atmosphere from the opacity and emissivity structure.
+The values of these depend on the atomic populations, and their distribution across energy levels and ionisation states.
 
-Now that we understand how to design and implement formal solvers for the radiative transfer equation, we have the ability to compute the radiation leaving an atmosphere from the opacity and emissivity structure.
-The values of these will depend on the atomic populations, and their distribution across energy levels and ionisation states.
-If the plasma is in local thermodynamic equilibrium (LTE), which typically occurs if the plasma is sufficiently collisional, then these populations can be known purely from local plasma parameters.
-This is the case in the photosphere.
-The atomic populations are then described entirely by the thermodynamic properties (temperature and density) of the atmosphere and can be computed by application of the Saha-Boltzmann equation.\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
+As stars like the Sun radiate energy into the cosmos, it is clear that they cannot be in total thermal equilibrium.
+However, it is reasonable to suggest that if the atmosphere is sufficiently collisional then a form of local thermodynamic equilibrium (LTE) holds, whereby local parcels of the plasma are effectively in thermodynamic equilibrium such that Kirchhoff's laws of radiation.
+When a species within a plasma is in LTE its population distribution can be computed using the Saha-Boltzmann equation.
+This is the case for spectral lines that form in the photosphere, and the associated level populations, emissivity, and opacity can all be computed directly from local thermodynamic quantities\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
+If the radiative rates instead dominate the total transitional rates for the species then the particle distribution can no longer be governed by purely local parameters and we enter the realm of non-LTE (NLTE) physics.
+This occurs as we enter the chromosphere, where the collisional rates decrease, and the radiation field couples the atomic populations in different regions together.
+The core focus of NLTE radiative transfer is to determine atomic populations consistent with the local thermodynamic parameters of the atmosphere and the non-local radiation field.
+Until otherwise specified, we will consider that the electron density throughout the atmosphere is known and consider it part of the atmospheric model.
 
-% \TODO{https://science.sciencemag.org/content/132/3429/707}
-% Unfortunately, the LTE description is inadequate, as discussed by Jefferies and Thomas \NeedRef{}, and everything outside of this is termed non-LTE (NLTE). In fact, due to the detailed balance of an LTE treatment, if detailed balance applied throughout the stellar atmosphere, no radiation would be able to escape. As photons are able to escape from the upper layers of the atmosphere, there is insufficient absorption processes to balance the emission processes and these layers must be NLTE. This is particularly clear for the chromosphere and transition region where a non-monotonic temperature gradient could not arise if the atmosphere were in LTE.
-% Departures from an LTE description of the plasma are therefore expected when the radiative rates become comparable or larger than the collisional rates, and where the radiation field is not black-body like.
-% We distinguish here, and in the following, between radiative transitions (due to spontaneous emission and absorption, and stimulated emission), and collisional transitions (due to collisions between particles).
-
-Thus for an $N$-level atom we have the total transition rate between levels $i$ and $j$ (by convention $i < j$)
+Expressing this mathematically, we write the total transition rate $P_{ij}$ between levels $i$ and $j$ (with the convention that $i < j$) as
 \begin{equation}
     P_{ij} = R_{ij} + C_{ij},
 \end{equation}
-where $R_{ij}$ is the rate of radiative transitions and $C_{ij}$ is the rate of collisional transitions.
+where $R_{ij}$ is the rate of radiative transitions (due to absorption, spontaneous, and stimulated emission) and $C_{ij}$ is the rate of collisional transitions.
 As the total population of each element must remain constant we can write the kinetic equilibrium equation (which can be derived from the Boltzmann equation)
 \begin{equation}
-    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{\varv}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime}.
+    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{\varv}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime},
     \label{Eq:KinEq}
 \end{equation}
+where $n_l$ is the number density of level $l$ of the atomic species in question.
 
-Equation \eqref{Eq:KinEq} is commonly simplified to the statistical equilibrium equation, whereby the left-hand side is set to 0. In this case we are solving for a time-independent equilibrium value of the atomic populations, whereas the full kinetic equilibrium equation requires knowledge of the historic populations.
+Equation \eqref{Eq:KinEq} is frequently simplified to the statistical equilibrium equation, the left-hand side is set to 0 i.e.
+\begin{equation}
+\sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime} = 0.
+\label{Eq:StatEq}
+\end{equation}
+We will discuss in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} when the full time-dependent solution need be considered over the simpler statistical equilibrium solution.
+The former of these requires a history of the atomic populations in the atmosphere, typically from a time-evolving model such as an RHD simulation, whereas the latter associates a unique solution of atomic populations to a given atmosphere.\footnote{The uniqueness of the solution was proven by \citet{Rybicki1997} for the linear case presented here. I have found no equivalent proof for the non-linear system when a variable electron density is also considered.}
+In the following, even when considering the time-dependent problem, we assume that the timescale over which each step in our numerical simulation is integrated is long compared to the light-crossing time for the regions where each transition is optically thick.
+If this is not the case, then a different formulation of the formal solver will be required, so as to solve \eqref{Eq:FullTimeDepRte}.
 
-To solve \eqref{Eq:KinEq}, we require the values of $P_{ij}$ for the atoms present in the atmosphere; the collisional rates can be determined purely from local parameters, however due to the effects of stimulated emission the radiative rates are coupled to the local radiation field, which originates from elsewhere in the atmosphere. This effect couples all layers of the atmosphere together and is the primary source of the complexity of the NLTE problem. In collisional LTE plasmas the collisional rates dominate and the Saha-Boltzmann equation holds.
+\subsection{Collisional Rates}
 
-To mathematically describe these effects we must first arrive at a definition of emissivity and opacity.
+% To solve \eqref{Eq:KinEq} or \eqref{Eq:StatEq}, we require the values of $P_{ij}$ for the atoms of interest present in the atmosphere (and also any atom with strong transitions that overlap those of an atom we are interested in).
+
+\subsection{Emissivity and Opacity}
+
+To mathematically formulate the radiative rates that are so important to $P_{ij}$ in a NLTE context we must first formulate expressions for emissivity and opacity.
+There are two forms of transition we need to consider for atomic RT, spectral lines, and continua.
+In spectral lines, also known as bound-bound transitions there are three processes that need to be understood to develop a model for emissivity and opacity.
+These are spontaneous emission, where an atom in an excited state will spontaneously emit a photon and drop to a lower energy state, an absorption process, which is the reverse of spontaneous emission, and stimulated emission, where an atom in an excited state is \emph{induced} to emit by the presence of another photon with the same frequency, direction, and polarisation state as the photon this atom will emit.
+The magnitude of these terms are controlled by the Einstein coefficients $A_{ji}$, $B_{ij}$, and $B_{ji}$ respectively, which are related by the Einstein relations.
+
 Spectral lines have a rest frequency $\nu_{ij}$  defined by
 \begin{equation}
     \nu_{ij} = \frac{h}{\Delta E_{ji}},
 \end{equation}
 where $h$ is Planck's constant and $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$.
-Such a transition between states in a plasma with no bulk velocity is not infinitely fine, but is broadened by a number of factors such as natural broadening from uncertainty in the lifetime of the upper state, Doppler broadening due to random thermal motions in the plasma, and collisional broadening.
-The net effects of these processes typically leads to spectral line profiles being modelled as a Voigt function (the convolution of Gaussians and Lorentzians). The normalised line absorption profile then describes the probability of a photon with a certain energy being absorbed by the transition.
+Bound-bound transitions between states in a static plasma are not infinitely fine, but are instead broadened by a number of factors such as natural broadening from uncertainty in the lifetime of the upper state, Doppler broadening due to random thermal motions in the plasma, and collisional broadening (e.g. van der Waals, and Stark broadening\footnote{van der Waals broadening is due to an interaction between an excited atom and the dipole it induces over a neutral atom, whilst Stark broadening is due to the interaction between an atom and a charged particle.} %(linear Stark effect for hydrogen and quadratic for all species following the Weisskopf approximation of impact theory).}). N.B. Quadratic typically << 0.1x linear for H.
+The net effects of these processes typically leads to spectral line profiles being modelled as a Voigt function (the convolution of Gaussians and Lorentzians).
+The Gaussian terms are due to Doppler broadening, whilst the other terms are typically modelled as Lorentzians although more accurate treatments of Stark broadening such as those employed \citet{Kowalski2017} are non-Lorentzian, and must be separately convolved with the Voigt profile produced from the previous terms.
+The normalised line absorption profile then describes the probability of a photon with a certain energy being absorbed by the transition.
 
-\TODO{Discuss line profile construction in more depth, discuss emission/PRD.}
+Typically it is assumed that the plasma is sufficiently collisional for elastic collisions to redistribute the electrons of an atom in an excited state over all sub-states of an energy level prior to emission.
+If this is not the case then the frequency of the outgoing photon will be correlated with the frequency of the photon that excited the atom into this state.
+Thus the spectral line will have an emission profile distinct from its absorption profile.
+This effect is known as partial redistribution (PRD) and will be discussed in Sec.~\ref{Sec:Prd}.
+The typical state of affairs, where there is sufficient redistribution from elastic collisions for these two processes to be uncorrelated is known as complete redistribution (CRD).
+In the following, we will always express line emission processes through an emission profile for generality, even if they are treated as CRD.
 
-Returning now to the radiative rates for bound-bound processes; the Einstein coefficients $A_{ji}$, $B_{ij}$, and $B_{ji}$ respectively describe the spontaneous emission, absorption, and stimulated emission processes.
-The radiative rates can then be written
-\begin{align}
-    R_{ij} &= \oint \int B_{ij} \phi(\nu, \vec{d}) I(\nu, \vec{d})\,d\nu\,d\Omega,\\
-    R_{ji} &= \oint \int \left[\left(A_{ji} + B_{ji} I(\nu, \vec{d})\right)\psi(\nu, \vec{d}) \right]\,d\nu\,d\Omega,
-    \label{Eq:BbRates}
-\end{align}
-where $\phi$ is the line absorption profile, $\psi$ is the line emission profile, $A$ and $B$ are the Einstein coefficients for the transition, and $I(\nu, \vec{d})$ is the specific intensity at this location for a given frequency and direction.
-These can be expressed similarly for bound-free transitions
-\begin{align}
-    R_{ij} &= \oint \int \alpha_{ij}(\nu) I(\nu, \vec{d})\,d\nu\,d\Omega,\\
-    R_{ji} &= \oint \int \left[\left(I(\nu, \vec{d}) + \frac{2h\nu^3}{c^2}\right) \alpha_{ij}(\nu)n_e\Phi_{ij}(T) e^{-h\nu/k_B T} \right]\,d\nu\,d\Omega,
-\end{align}
-where $h$ is Planck's constant, $c$ is the speed of light, $\alpha_{ij}$ is the photoionisation cross-section, $k_B$ is Boltzmann's constant, and $n_e$ is the electron number density.
-$\Phi$ is the Saha-Boltzmann equation defined such that
-\begin{equation}
-    n_e\Phi_{ij}(T) = \frac{n^*_i}{n^*_j} = \frac{g_i}{2g_j}\left( \frac{h^2}
-    {2\pi m_e k_B T} \right)^{3/2} \exp{\left(  \frac{\Delta E_{ji}}{k_B T}\right)},
-\end{equation}
-where $n^*$ is the population of the species in LTE, $m_e$ is the electron mass, $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$, and $g_i$ is the statistical weight of level $i$.
+Continua, or bound-free transitions, depend instead on photoionisation cross-sections.
+In the case of hydrogenic ions these fall off with $1/\nu^3$ (for photons of frequency $\nu$) as the energy of the ionising photon increases away from the continuum edge.
+The edge of a continuum is defined by the ionisation potential for an atom in the bound-state of this transition, as only photons with an energy equal to or greater than this are capable of photoionising the element.
+In general these cross-sections have to be tabulated from laboratory analysis, but are only defined for energies higher than the continuum edge energy.
+The photoionisation cross-section describes how likely the atom is to interact with a photon of a particular energy through this bound-free transition.
+Its partner processes (like spontaneous and stimulated emission for bound-bound transitions) are spontaneous and stimulated recombination, whereby an electron is captured by the atom and a photon is released with energy equal to the excess energy of the system.
+These are related to the photoionisation cross-section and the local plasma parameters by the Milne relations.
 
-Following now the notation of \citet{Rybicki1992} and \citet{Uitenbroek2001} the emissivity $\eta$ and opacity $\chi$ for a transition are written
+Following the notation of \citet{Rybicki1992} and \citet{Uitenbroek2001} the emissivity $\eta$ and opacity $\chi$ for a transition can then written
 \begin{align}
     \label{Eq:Emis}
     \eta_{ij} &= n_j U_{ji}(\nu, \vec{d}), \\
     \label{Eq:Opac}
-    \chi_{ij} &= n_i V_{ij}(\nu, \vec{d}) - n_j V_{ji}(\nu, \vec{d}),
+    \chi_{ij} &= n_i V_{ij}(\nu, \vec{d}) - n_j V_{ji}(\nu, \vec{d}).
 \end{align}
-where $n_i$ is the population density level $i$.
 The $U$ and $V$ terms are defined for bound-bound and bound-free transitions as
 \newlength{\WidestCase}
 \settowidth{\WidestCase}{$n_e\Phi_{ij}(T)\left(\frac{2h\nu^3}{c^2}\right)e^{-h\nu/k_B T}\alpha_{ij}(\nu),$}
@@ -292,28 +301,47 @@ The $U$ and $V$ terms are defined for bound-bound and bound-free transitions as
     V_{ji} =&
     \begin{cases}
         \makebox[\WidestCase][l]{$\frac{h\nu}{4\pi}B_{ji}\psi_{ij}(\nu, \vec{d}),$} & \textrm{bound-bound} \\
-        \alpha_{ij}(\nu), & \textrm{bound-free}.
+        \alpha_{ij}(\nu), & \textrm{bound-free},
     \end{cases}
 \end{align}
-By convention we define $U_{ij} = U_{ii} = V_{ii} = 0$ and $\chi_{ij} = -\chi_{ji}$.
-
-In the approximation of complete redistribution (which we will return to later) we have $\phi_{ij} = \psi_{ij}$ then
-\begin{align}
-    R_{ij} &= B_{ij}\bar{J}_{ij} \\
-    R_{ji} &= A_{ji} + B_{ji}\bar{J}_{ij},
-\end{align}
-where $\bar{J}_{ij}$ is the absorption profile weighted integrated mean intensity, i.e.
+where $\phi$ is the line absorption profile, $\psi$ is the line emission profile, $alpha_{ij}$ is the photoionisation cross-section, $n_e$ is the local electron density, and $k_B$ is the Boltzmann constant.
+$\Phi$ is the Saha-Boltzmann equation defined as
 \begin{equation}
-    \bar{J}_{ij} = \frac{1}{4\pi}\oint\int \phi_{ij}(\nu, \vec{d}) I(\nu, \vec{d})\, d\nu\, d\Omega.
+    n_e\Phi_{ij}(T) = \frac{n^*_i}{n^*_j} = \frac{g_i}{2g_j}\left( \frac{h^2}
+    {2\pi m_e k_B T} \right)^{3/2} \exp{\left(  \frac{\Delta E_{ji}}{k_B T}\right)},
 \end{equation}
+where $n^*$ is the population of the species in LTE, $m_e$ is the electron mass, $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$, and $g_i$ is the statistical weight of level $i$.
+By convention we define $U_{ij} = U_{ii} = V_{ii} = 0$ and $\chi_{ij} = -\chi_{ji}$.
+From these definitions we see that the $U$ quantities relate to spontaneous emission, whereas the $V$ quantities describe stimulated processes.
+In the case of complete redistribution, where $\psi = \phi$, all of the $U$ and $V$ terms are constant at each location in a given atmosphere, and the variation in emissivity and opacity depends on the atomic populations.
+
+\subsection{Radiative Rates}
+
+The radiative rates that are needed to solve the kinetic or statistical equilibrium equations are an expression of the number of upward ($ij$) and downward ($ji$) due to absorption, spontaneous and stimulated emission processes (and the equivalent bound-free processes).
+The formulation of emissivity and opacity through $U$ and $V$ also allows us to express the radiative rates succinctly for both upwards and downwards transitions in lines and continua at each location in the atmosphere as
+\begin{equation}
+    R_{ll^\prime} = \oint \int \frac{1}{h\nu} \left( U_{ll^\prime}(\nu, \vec{d}) + V_{ll^\prime}(\nu, \vec{d})I(\nu, \vec{d}) \right)\,d\nu\,d\Omega,
+\end{equation}
+where $I(\nu, \vec{d})$ is the specific intensity at this location for a given frequency $\nu$ and direction $\vec{d}$.
+It is through $I$ that the non-locality of the radiation field enters the problem.
+
+\subsection{General Source Function}
 
 Where multiple atomic species are present, the total emissivity and opacity are simply the sum of the emissivity and opacity for every transition on each atom at the current frequency and direction. It is common to additionally consider scattering by processes such as Thomson scattering, in which case the source function will be written
 \begin{equation}
     S(\nu, \vec{d}) = \frac{\eta_\mathrm{tot}(\nu, \vec{d}) + \sigma(\nu)J(\nu)}{\chi_\mathrm{tot}(\nu, \vec{d})},
 \end{equation}
-where $\sigma$ describes the frequency dependent scattering cross-section, and $J(\nu)$ is the angle-averaged intensity at a frequency.
+where $\sigma$ describes the frequency-dependent coherent and isotropic continuum scattering cross-section, and
+\begin{equation}
+    J(\nu) = \frac{1}{4\pi}\oint I(\nu, \vec{d})\, d\Omega
+\end{equation}
+% NOTE(cmo): This angle-average term is what is computed directly from the sum_updown sum_i 0.5 * wmu_i * I, i.e., the averaging is rolled in when we use the integration. The 1/4pi vanishes due to normalisation and the fact we're in ``mu-space''. The 4pi terms all come back in wlambda, but check setup_wavelength on the _atom_ for this, it's not super clear.
+is the angle-averaged intensity at a frequency.
 
-Now we have an expression for the radiative rates in each line that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}. Clearly an iteration scheme will therefore be needed to find a stable set of populations yielding a self-consistent radiation field.
+\subsection{Iterative Solutions}
+
+Now we have an expression for the radiative rates in each line that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}.
+Clearly, an iteration scheme will therefore be needed to find a stable set of populations yielding a self-consistent radiation field.
 
 If we treat the formal solver as an operator yielding the intensity from the source function throughout the atmosphere, i.e.
 \begin{equation}
@@ -425,7 +453,7 @@ There are many collisional processes by which electrons can transition between l
 
 \NeedRef{}
 
-\subsection{Partial Frequency Redistribution}
+\subsection{Partial Frequency Redistribution}\label{Sec:Prd}
 
 Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds. That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission. In this case the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal. In lower density regions with strong (typically resonance) lines, where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level; a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
 In this case the emission and absorption profiles for the line differ and this coherent scattering must be treated explicitly. This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into MALI following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
