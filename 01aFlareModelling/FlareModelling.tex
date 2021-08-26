@@ -23,7 +23,7 @@ chFlareModelling = texfigure.Manager(
 Simulation is a powerful scientific approach that seeks both to validate our understanding of a phenomenon and also learn how it is influenced by various parameters.
 Contrary to its dictionary definition, which suggests deceit or merely a surface level resemblance, simulations are essential tools in an astrophysical context.
 Astrophysical observations differ greatly from laboratory experiments, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat particular events.
-They represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
+Simulations therefore represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
 A numerical approach is often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
 There will commonly be free parameters left in these models, some of which can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
 Due to computational or conceptual limitations simplifying assumptions are often required to make these models tractable.
@@ -35,15 +35,15 @@ Due to computational or conceptual limitations simplifying assumptions are often
 
 To design a model of solar flares it is first necessary to understand as much as possible from the available observations, so as to ascertain reasonable approximations and the most important processes to include.
 By the same, it is necessary to understand which observables vary between flares, to be able to exploit their specific sensitivities and choose those that are sufficiently variable to describe the processes at work and distinguish between flares.
-The following builds on many years of work by the solar physics community, and we start from the understanding that has slowly been accrued to present the current state of modelling, and why certain decisions are made.
-A more detailed description of flare observations and some of the ways these are exploited is undertaken in Chap.~\ref{Chap:FlareObservations}.
+The following builds on many years of work by the solar physics community, and we start from the understanding that has slowly been accrued to present the current state of flare modelling, and an introduction to some of the important numerical theory.
+A discussion of the flare observables we are focused on, as well as the techniques used to obtain these is presented in Chap.~\ref{Chap:FlareObservations}.
 
 \section{Radiation Hydrodynamics}
 
 % In our discussion of radiative transfer thus far we have treated the thermodynamic structure of the atmosphere as something constant, however given the short timescales flares evolve over, we know that this is a poor approximation.
 
 It is common to treat flares as a semi-ionised plasma consisting of a single compressible fluid, obeying the equations of hydrodynamics. The influence of the magnetic field can also be included, at which point the equations of magnetohydrodynamics (MHD) are used to describe the motion of the fluid.
-Due to the complexity, and resultant numerical difficulties in investigating the widely varying spatial scales (the entire atmosphere, but requiring a dense sampling of the chromosphere and transition region) that occur in flares with a three-dimensional MHD treatment, it is common to use one-dimensional field-aligned hydrodynamic code.
+Due to the complexity, and resultant numerical difficulties in investigating the widely varying spatial scales that occur in flares (the entire photosphere to coronal region, but requiring a dense sampling of the chromosphere and transition region) with a three-dimensional MHD treatment, it is common to use one-dimensional field-aligned hydrodynamic code.
 The assumption here is that the vast majority of observed fluid motions in a flare are along the magnetic field lines, so a single flaring loop can be approximated by a quasi-one-dimensional simulation describing the movement of a fluid through a tube, and the propagation of energy through this medium.
 This is due to the strength of the magnetic field, effectively locking the fluid within flux tubes to the field lines.
 These are therefore known as field-aligned radiation hydrodynamic codes.
@@ -60,21 +60,22 @@ This gas dynamic system can be described by
 
 where $\rho$ is the mass density of the gas, $\varv$ is the bulk velocity, $z$ is the spatial coordinate, $g$ is the local gravitational acceleration, $P$ is the pressure, $\mu$ is the coefficient of dynamic viscosity, $L$ is the radiative loss term, and $S$ is all additional energy source terms, from radiative transfer and atmospheric heating.
 In these models the plasma is typically assumed to behave as an ideal gas, and therefore uses the equation of state
-$P = n_{\mathrm{tot}} k_B T$, where $n_{\mathrm{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa=\kappa_0 T^{5/2}$ is the coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
+$P = n_{\mathrm{tot}} k_B T$, where $n_{\mathrm{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa$ is the temperature-dependent coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
 
 All of the quasi-one dimensional codes solve a variant the RHD equations in \eqref{Eq:RhdEquations}. The first of these describes mass continuity, the second conservation of momentum, and the third conservation of energy.
 The nuance typically occurs in ensuring that all terms are solved in a self-consistent fashion and the treatment of the optically thick radiation source and sink terms appearing in the energy equation.
 
 The first generation of hydrodynamic flare models \citet{Nagai1980,Mariska1982,McClymont1983} focused on capturing the gas dynamics of the flaring event, using simplified radiative treatment.
-These early models were much more limited in general due to computational constraints. \citet{Nagai1980} and \citet{Mariska1982} both employ optically thin losses with ad hoc corrections to avoid over-cooling the lower atmosphere.
+These early models were, in general, much more limited due to computational constraints. \citet{Nagai1980} and \citet{Mariska1982} both employ optically thin losses with ad hoc corrections to avoid over-cooling the lower atmosphere.
 \citet{McClymont1983} employ an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer, but vastly more accurate than assuming the chromosphere to be optically thin (or an ad hoc modulation thereof).
-Escape probability methods are unable to take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for strong solar optical transitions used to diagnose atmospheric properties.
+Escape probability methods are unable to directly take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for strong solar optical transitions used to diagnose atmospheric properties.
 
-The current generation of RHD codes consists of RADYN \citep{Carlsson1992a,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2003, Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses partially precomputed radiative rates for hydrogen (based on the treatment of Sollum \NeedRef{}) and radiative losses interpolated following the method of \citet{Carlsson2012}.
+The current generation of RHD codes consists of RADYN \citep{Carlsson1992a,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, and HYDRAD \citep{Bradshaw2003, Bradshaw2013}. RADYN and FLARIX both apply detailed treatment of the radiative losses for certain chromospheric transitions, whilst HYDRAD uses partially precomputed radiative rates for hydrogen (based on the treatment of \citet{Sollum1999}) and radiative losses following the approximations of \citet{Carlsson2012}.
 HYDRAD originally focused more on the investigation of non-equilibrium optically thin radiative losses in the corona, and less on the chromosphere, however, recent development has also moved in the direction of an improved chromospheric treatment.
-It also differs in its use of a two-fluid model, treating electrons and ions as separate, but coupled, fluids but in current applications this does not appear to provide significantly different results when applied to flare modelling.
+It also differs in its use of a two-fluid model, treating electrons and ions as separate, but coupled, fluids.
+In current applications this does not appear to provide significantly different results when applied to flare modelling.
 
-RADYN is derived from the MULTI RT code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
+RADYN is derived from the MULTI radiative transfer (RT) code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
 RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \citet{Abbett1999} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on electron beam energy deposition \citep{Allred2005, Allred2015}.
 
 
@@ -86,32 +87,34 @@ RADYN and FLARIX have recently been tested against each other and shown to provi
 
 Much scientific effort is being invested into the creation of three-dimensional radiative MHD (RMHD) models, which aim to accurately describe all of the physics of a flaring system through the use of large models on supercomputers. The two leading codes are \textit{Bifrost} \citep{Gudiksen2011}, and MURaM \citep{Rempel2009,Rempel2016}. MURaM was originally focused on photospheric magnetoconvection, but has been extended into the corona. It adopts a grey radiative transfer technique that treats all outgoing radiation using a wavelength averaged approach, but has successfully demonstrated the ability to drive self-consistent flare-like eruptions with time-dependent photospheric magnetograms as a boundary condition \citep{Cheung2019}.
 
-\textit{Bifrost} is more focused on a detailed chromospheric treatment; it currently uses multi-group opacities for wavelength dependent radiation transport and the Sollum model for hydrogen \NeedRef{} to better treat the radiative losses from this region.
-It has been used to investigate solar enhanced networks \citep{Carlsson2016}, the generation of spicules \citep{Martinez-Sykora2017}, and the magnitude of magnetic energy present in the chromosphere \citep{Martinez-Sykora2019} \TODO{Should probably reference the 2021 Martinez-Sykora on spicules too}.
+\textit{Bifrost} is more focused on a detailed chromospheric treatment; it can apply different combinations of physics modules including multi-group opacities for wavelength dependent radiation transport, the \citet{Sollum1999} model for hydrogen ionisation \citep[following the treatment of][]{Leenaarts2007}, and radiative losses following the method of \citet{Carlsson2012}.
+It has been used to investigate solar enhanced networks \citep{Carlsson2016}, the generation of spicules \citep{Martinez-Sykora2017}, and the magnitude of magnetic energy present in the chromosphere \citep{Martinez-Sykora2019}, amongst many other projects.
 
 Currently, neither code can handle the scale of the energy deposition used in the field-aligned flare models, or provide an equivalent chromospheric spatial resolution, but this is an area of very active development.
-The field-aligned models remain complementary to these much more complex and computationally intensive models allowing for more rapid investigation of the relative importance of phenomena to be implemented within the RMHD models, the use wider parameter spaces and higher energy inputs, whilst also remaining usable by smaller teams of researchers.
+The field-aligned models remain complementary to these much more complex and computationally intensive models, allowing for more rapid investigation of the relative importance of phenomena to be implemented within the RMHD models, the use wider parameter spaces and higher energy inputs, and easier more compact output that is easier to manipulate and interpret.
 
 
 \section{Solar Flare Heating}
 
-The aforementioned modern field-aligned RHD codes are primarily designed to simulate the response of a tube of initially quiet solar atmosphere to heating, typically presumed to be due to a beam of energetic electrons precipitating from the corona due to magnetic reconnection.
+The aforementioned modern field-aligned RHD codes are primarily designed to simulate the response of a tube of initially quiet solar atmosphere to heating.
+This is typically presumed to be due to a beam of energetic electrons precipitating from the corona due to magnetic reconnection.
 
 The direct effects of these electrons must also be considered, as their flux is sufficiently large that their collisions with particles in the lower atmosphere can substantially change the distribution of these particles, exciting and ionising them.
 The evolution of the atmosphere will also affect how and where it interacts with these precipitating electrons, coupling an additional problem to the extant RHD system.
 
-There are different methods of solving this problem, the simplest of which is the analytic solution of \citet{Emslie1978} which provides a simple solution to beam energy deposition along the column of plasma under the assumption that all electron energy is lost due to Coulomb collisions with the plasma acting as a cold target.
-This is a useful approximate treatment, however terms such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here, and ignored in this model. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module \NeedRef{}, whereas RADYN solves the Fokker-Planck equation \citep[e.g.][]{Hamilton1990}, but both also include the option to use the the simpler analytic Emslie formulation.
+There are different methods of solving this problem, the simplest of which is the analytic solution of \citet{Emslie1978} which provides an analytic solution to electron beam energy deposition along the column of plasma under the assumption that all electron energy is lost due to Coulomb collisions with the plasma acting as a cold target.
+This is a useful approximate treatment, however terms such as relativistic effects on high energy electrons, return current (heating the corona), and magnetic mirroring are all important here, and ignored in this model. RADYN and FLARIX both include more advanced treatments including these effects; FLARIX uses a test-particle module \citep{Varady2010}, whereas RADYN solves the Fokker-Planck equation \citep[now using the method of ][]{Allred2020}, but both also include the option to use the the simpler analytic Emslie formulation.
 
-Another proposed model for the energy transport and heating in flares is Alfvén heating \citep{Emslie1982, Fletcher2007}, which suggests that energy is transported by Alfvén waves\footnote{These  are transverse waves that propagate along the magnetic field \citep{TandbergHanssen1988}.} from the corona to the denser layers at the base of a flaring loop where electrons are locally accelerated.
+Another proposed model for the energy transport and heating in flares is Alfvén heating \citep{Emslie1982, Fletcher2007}, which suggests that energy is transported by Alfvén waves\footnote{These  are transverse waves that propagate along the magnetic field \citep[e.g. ][]{TandbergHanssen1988}.} from the corona to the denser layers at the base of a flaring loop where electrons are locally accelerated.
 One argument for this is the so-called ``number problem'' which expresses the difficulty in resupplying the acceleration site in the low density coronal plasma with sufficient electrons to reflect the number observed at their chromospheric impact (this number can be bounded from hard X-ray observations \citep[e.g.][]{Simoes2013}).
 The denser regions closer to the electrons' impact location do not suffer from this same scarcity of electrons, and thus represent a possible resolution to this problem.
 
-A simplified variant of this Alfvénic heating model has been investigated by \citet{Kerr2016} inside the \Radyn{} code, and produced notably different spectral line profiles which may agree better with observations than those from an electron beam model, however further investigation of the implementation of this method and its results are needed.
+A simplified variant of this Alfvénic heating model has been investigated by \citet{Kerr2016} inside the \Radyn{} code, and produced notably different spectral line profiles which may agree better with observations than those from an electron beam model.
+Further investigation of a more complete implementation of this method and its results are needed.
 This approach was also incorporated into HYDRAD by \citet{Reep2016}, which showed the viability of these waves heating the deep chromosphere and triggering explosive chromospheric evaporation.
 It is non-trivial to incorporate a full treatment of this phenomenon into RHD codes as it is coupled to the magnetic field, and future improvements are needed to more accurately model these effects and investigate to what extent Alfvénic and electron beam heating occurs simultaneously.
 
-The simulations of flares discussed here allow us to predict the line and continuum emission from the time-evolution of heating a starting atmosphere.
+The simulations of flares discussed thus far allow us to model the time-evolution of heating a starting atmosphere and in turn predict line and continuum emission through the tools of radiative transfer.
 These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,RubioDaCosta2016,Kowalski2017,Simoes2017}).
 The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult and lies close to the field of automated inversions, which we will address later in Chapters~\ref{Chap:FlareObservations} and \ref{Chap:Radynversion}.
 
@@ -119,12 +122,13 @@ We will now present a more detailed overview of the physics involved in the most
 
 \section{Introduction to Radiative Transfer}\label{Sec:IntroRT}
 
-\emph{The content of this section draws primarily from \citet{Hubeny2014} and the paper describing \Lw{} \citep{Osborne2021}}
+\emph{The content of this section draws primarily from \citet{Hubeny2014} and the paper describing the \Lw{} radiative transfer framework \citep{Osborne2021}.}
 
-Radiative transfer is the science of how radiation propagates through a material; the absorptions, scatterings and emission that happens therein.
-Radiation is the close to the only conduit through which information can arrive from celestial bodies, and by far the most widely exploited.
+Radiative transfer is the science of how radiation propagates through a material: the absorptions, scatterings and emission that happens therein.
+Radiation is close to the only conduit through which information can arrive from celestial bodies, and by far the most widely exploited.
 It allows us to derive proxies for \emph{in situ} measurements, that cannot otherwise be obtained, due to the distances and extreme conditions being observed.
-Everyone is familiar with the concept of images, which show the spatial variation of light but a lot of additional information can be gleaned by analysing it in terms of its wavelength variation and polarisation projections.
+
+Everyone is familiar with the concept of images, which show the spatial variation of light but a lot of additional information can be gleaned by analysing radiation in terms of its wavelength variation and polarisation projections.
 Using both of these properties is referred to as \emph{spectropolarimetry}, and \emph{spectroscopy} when only the unpolarised intensity is considered.
 The most basic property to consider here is the specific intensity, commonly denoted $I(\nu, \vec{d})$ for a particular frequency $\nu$ and direction $\vec{d}$ at a location in space with typical SI units \si{\joule\per\square\metre\per\s\per\hertz\per\steradian}.
 
@@ -136,19 +140,20 @@ In the following, we will discuss how to obtain the frequency- and direction-dep
 
 \subsection{The Formal Solution}
 
-For a one-dimensional planar atmosphere the radiative transfer equation (RTE) can be written as
+For a one-dimensional planar atmosphere the radiative transfer equation (RTE) for the specific intensity along a ray can be written as
 \begin{equation}
-    \frac{1}{c}\frac{\partial I(\nu, \vec{d})}{\partial t} + \mu \frac{\partial I(\nu, \vec{d})}{\partial z} = \eta(\nu, \vec{d}) - \chi(\nu, \vec{d})I(\nu, \vec{d}).
+    \frac{1}{c}\frac{\partial I(\nu, \vec{d})}{\partial t} + \mu \frac{\partial I(\nu, \vec{d})}{\partial z} = \eta(\nu, \vec{d}) - \chi(\nu, \vec{d})I(\nu, \vec{d}),
     \label{Eq:FullTimeDepRte}
 \end{equation}
-We consider that the light crossing time for the propagation of light on a solar scale is small compared to the time-evolution of the atmosphere and our observations and therefore ignore the time-derivative term.
+where $\eta$ is the plasma emissivity, $\chi$ is the plasma opacity, $z$ is the spatial coordinate of the stratification of the atmosphere, $t$ represents time, $c$ is the speed of light, and $\mu$ is the cosine of the ray's inclination to the surface normal of the plane-parallel configuration.
+We consider that the light crossing time for the propagation of light on a solar scale is small compared to the time-evolution of both the atmosphere and our observations so we ignore the time-derivative term.
 Defining the source function $S(\mu, \vec{d}) = \eta(\nu, \vec{d}) / \chi(\nu, \vec{d})$, and the optical depth along a ray from the observer as the number of photon mean free paths along this segment $\tau(z, \nu, \vec{d}) = \int_z^{z_{\mathrm{obs}}} = \chi_\nu(z^\prime) / \mu\, dz^\prime$ we can write the RTE as.
 \begin{equation}
     \frac{\partial I(\nu, \vec{d})}{\partial \tau(\nu, \vec{d})} = I(\nu, \vec{d}) - S(\nu, \vec{d}).
     \label{Eq:1DRte}
 \end{equation}
 
-Equation \ref{Eq:1DRte} is a first-order linear differential equation and can be solved with the integrating factor $e^{-\tau(\nu, \vec{d})}$ giving
+Equation \eqref{Eq:1DRte} is a first-order linear differential equation and can be solved with the integrating factor $e^{-\tau(\nu, \vec{d})}$ giving
 
 \begin{equation}
 I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_{\tau_0}^{\tau_1}S(t_\nu, \nu, \vec{d})e^{-(t_\nu - \tau_0)}\, dt_\nu,
@@ -156,12 +161,12 @@ I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_
 \end{equation}
 for $\tau_0$ the optical depth at the observer and $\tau_1 > \tau_0$ along the line of sight.
 
-The solution in equation \ref{Eq:IntegratedRte} prescribes nothing about the form of the source function in the atmosphere, and assumes that it varies continuously.
-Whilst there are approaches such as Feautrier's \citep{Feautrier1964} that involve casting the problem as a second order differential equation we shall focus on the so-called short-characteristic method consisting of solving the RTE directly between discrete points by prescribing a functional form for its variation between these points. Due to the Feautrier method solving the problem for both an up-going and a down-going ray simultaneously, it cannot handle both Doppler shifts and overlapping lines, for these reasons, we will not discuss it further.
+The solution in equation \eqref{Eq:IntegratedRte} prescribes nothing about the form of the source function in the atmosphere, and assumes that it varies continuously.
+Whilst there are approaches such as Feautrier's \citep{Feautrier1964} that involve casting the problem as a second order differential equation we shall focus on the so-called short-characteristic method consisting of solving the RTE directly between discrete points by prescribing a functional form for its variation between these points. Due to the Feautrier method solving the problem for both an up-going and a down-going ray simultaneously, it cannot handle both Doppler shifts and overlapping lines, and for these reasons we will not discuss it further.
 
 \subsection{Short-Characteristics Methods}\label{Sec:ShortChar}
 
-If a functional form with an analytic integral is chosen for the variation of the source function between defined points then an atmosphere can be treated as a sum of analytic integrals. We shall consider the simplest useful functional form, a linear variation as an illustrative example.
+If a functional form with an analytic integral is chosen for the variation of the source function between defined points then an atmosphere can be treated as a sum of analytic integrals. We shall consider the simplest useful functional form, a linear variation, as an illustrative example.
 This approach was first presented by \citet{Olson1987}.
 
 The RTE for one slab of a plane-parallel atmosphere (in the case of outgoing radiation (i.e. $\mu > 0$)) can then be written
@@ -188,7 +193,7 @@ This can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau
 
 In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, the intensity is overestimated, and underestimated for negative curvature. These effects can become quite significant in more sparsely sampled atmospheres.
 
-The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust alternative is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three point stencils, but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
+The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust formulation is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three point stencils, but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
 
 Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
 All of these methods can be derived analogously to the linear formal solver presented above.
@@ -196,7 +201,8 @@ All of these methods can be derived analogously to the linear formal solver pres
 \subsection{Other Formal Solvers}
 
 \citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
-As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed, but an accurate treatment of steep gradients and discontinuities is important to all RT modelling, as a reduction in the spatial resolution needed to correctly evaluate radiative transfer can lead to significant reductions in computational requirements, making more complex simulations possible.
+As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed.
+An accurate treatment of steep gradients and discontinuities is not just valuable to the RMHD models, but important to all RT modelling, as a reduction in the spatial resolution needed to correctly evaluate radiative transfer can lead to significant reductions in computational requirements, making more complex simulations possible.
 
 
 \subsection{LTE vs NLTE}
@@ -205,9 +211,10 @@ With the understanding of how to design and implement formal solvers for the rad
 The values of these depend on the atomic populations, and their distribution across energy levels and ionisation states.
 
 As stars like the Sun radiate energy into the cosmos, it is clear that they cannot be in total thermal equilibrium.
-However, it is reasonable to suggest that if the atmosphere is sufficiently collisional then a form of local thermodynamic equilibrium (LTE) holds, whereby local parcels of the plasma are effectively in thermodynamic equilibrium such that Kirchhoff's laws of radiation.
+However, it is reasonable to suggest that if the atmosphere is sufficiently collisional then a form of local thermodynamic equilibrium (LTE) holds, whereby local parcels of the plasma are effectively in thermodynamic equilibrium such that Kirchhoff's laws of radiation hold.
 When a species within a plasma is in LTE its population distribution can be computed using the Saha-Boltzmann equation.
-This is the case for spectral lines that form in the photosphere, and the associated level populations, emissivity, and opacity can all be computed directly from local thermodynamic quantities\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}
+This is the case for spectral lines that form in the photosphere, and the associated level populations, emissivity, and opacity can all be computed directly from local thermodynamic quantities\footnote{If the electron density is not known \textit{a priori} then an iteration scheme using the Saha-Boltzmann equation is necessary to determine consistent values of both the electron density and the atomic populations.}.
+
 If the radiative rates instead dominate the total transitional rates for the species then the particle distribution can no longer be governed by purely local parameters and we enter the realm of non-LTE (NLTE) physics.
 This occurs as we enter the chromosphere, where the collisional rates decrease, and the radiation field couples the atomic populations in different regions together.
 The core focus of NLTE radiative transfer is to determine atomic populations consistent with the local thermodynamic parameters of the atmosphere and the non-local radiation field.
@@ -225,12 +232,12 @@ As the total population of each element must remain constant we can write the ki
 \end{equation}
 where $n_l$ is the number density of level $l$ of the atomic species in question.
 
-Equation \eqref{Eq:KinEq} is frequently simplified to the statistical equilibrium equation, the left-hand side is set to 0 i.e.
+Equation \eqref{Eq:KinEq} is frequently simplified to the statistical equilibrium equation, by setting the left-hand side to 0 giving
 \begin{equation}
 \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime} = 0.
 \label{Eq:StatEq}
 \end{equation}
-We will discuss in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} when the full time-dependent solution need be considered over the simpler statistical equilibrium solution.
+In Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} we will discuss when the full time-dependent solution need be considered over the simpler statistical equilibrium solution.
 The former of these requires a history of the atomic populations in the atmosphere, typically from a time-evolving model such as an RHD simulation, whereas the latter associates a unique solution of atomic populations to a given atmosphere.\footnote{The uniqueness of the solution was proven by \citet{Rybicki1997} for the linear case presented here. I have found no equivalent proof for the non-linear system when a variable electron density is also considered.}
 In the following, even when considering the time-dependent problem, we assume that the timescale over which each step in our numerical simulation is integrated is long compared to the light-crossing time for the regions where each transition is optically thick.
 If this is not the case, then a different formulation of the formal solver will be required, so as to solve \eqref{Eq:FullTimeDepRte}.
@@ -247,7 +254,7 @@ This is not the case for non-thermal rates, such as those of \citet{1993Fang} wh
 \subsection{Emissivity and Opacity}
 
 To mathematically formulate the radiative rates that are so important to $P_{ij}$ in a NLTE context we must first formulate expressions for emissivity and opacity.
-There are two forms of transition we need to consider for atomic RT, spectral lines, and continua.
+There are two forms of transition we need to consider for atomic radiative transfer, spectral lines, and continua.
 In spectral lines, the three processes that need to be understood to develop a model for emissivity and opacity are spontaneous and stimulated emission, and absorption.
 The magnitude of these terms are controlled by the Einstein coefficients $A_{ji}$, $B_{ij}$, and $B_{ji}$ respectively, which are related by the Einstein relations.
 
@@ -258,7 +265,7 @@ Spectral lines have a rest frequency $\nu_{ij}$  defined by
 where $h$ is Planck's constant and $\Delta E_{ji}$ is the energy difference between levels $j$ and $i$.
 Bound-bound transitions between states in a static plasma are not infinitely fine, but are instead broadened by a number of factors such as natural broadening from uncertainty in the lifetime of the upper state, Doppler broadening due to random thermal motions in the plasma, and collisional broadening (e.g. van der Waals, and Stark broadening\footnote{van der Waals broadening is due to an interaction between an excited atom and the dipole it induces over a neutral atom, whilst Stark broadening is due to the interaction between an atom and a charged particle.} %(linear Stark effect for hydrogen and quadratic for all species following the Weisskopf approximation of impact theory).}). N.B. Quadratic typically << 0.1x linear for H.
 The net effects of these processes typically leads to spectral line profiles being modelled as a Voigt function (the convolution of Gaussians and Lorentzians).
-The Gaussian terms are due to Doppler broadening, whilst the other terms are typically modelled as Lorentzians although more accurate treatments of Stark broadening such as those employed \citet{Kowalski2017} are non-Lorentzian, and must be separately convolved with the Voigt profile produced from the previous terms.
+The Gaussian terms are due to Doppler broadening, whilst the other terms are typically modelled as Lorentzians, although more accurate treatments of Stark broadening such as those employed \citet{Kowalski2017} are non-Lorentzian, and must be separately convolved with the Voigt profile produced from the previous terms.
 The normalised line absorption profile then describes the probability of a photon with a certain energy being absorbed by the transition.
 
 Typically it is assumed that the plasma is sufficiently collisional for elastic collisions to redistribute the electrons of an atom in an excited state over all sub-states of an energy level prior to emission.
@@ -271,7 +278,7 @@ In the following, we will always express line emission processes through an emis
 Continua, or bound-free transitions, depend instead on photoionisation cross-sections.
 In the case of hydrogenic ions these fall off with $1/\nu^3$ (for photons of frequency $\nu$) as the energy of the ionising photon increases away from the continuum edge.
 The edge of a continuum is defined by the ionisation potential for an atom in the bound-state of this transition, as only photons with an energy equal to or greater than this are capable of photoionising the element.
-In general these cross-sections have to be tabulated from laboratory analysis, but are only defined for energies higher than the continuum edge energy.
+In general these cross-sections and their variations are determined from laboratory experiments and numerical solutions of the Schr\"{o}dinger equation.
 The photoionisation cross-section describes how likely the atom is to interact with a photon of a particular energy through this bound-free transition.
 Its partner processes (like spontaneous and stimulated emission for bound-bound transitions) are spontaneous and stimulated recombination, whereby an electron is captured by the atom and a photon is released with energy equal to the excess energy of the system.
 These are related to the photoionisation cross-section and the local plasma parameters by the Milne relations.
@@ -308,8 +315,8 @@ The $U$ and $V$ terms are defined for bound-bound and bound-free transitions as
         \alpha_{ij}(\nu), & \textrm{bound-free},
     \end{cases}
 \end{align}
-where $\phi$ is the line absorption profile, $\psi$ is the line emission profile, $alpha_{ij}$ is the photoionisation cross-section, $n_e$ is the local electron density, and $k_B$ is the Boltzmann constant.
-$\Phi$ is the Saha-Boltzmann equation defined as
+where $\phi$ is the line absorption profile, $\psi$ is the line emission profile, $\alpha_{ij}$ is the photoionisation cross-section, $n_e$ is the local electron density, and $k_B$ is the Boltzmann constant.
+$\Phi$ is the Saha-Boltzmann equation defined by
 \begin{equation}
     n_e\Phi_{ij}(T) = \frac{n^*_i}{n^*_j} = \frac{g_i}{2g_j}\left( \frac{h^2}
     {2\pi m_e k_B T} \right)^{3/2} \exp{\left(  \frac{\Delta E_{ji}}{k_B T}\right)},
@@ -321,7 +328,7 @@ In the case of complete redistribution, where $\psi = \phi$, all of the $U$ and 
 
 \subsection{Radiative Rates}
 
-The radiative rates that are needed to solve the kinetic or statistical equilibrium equations are an expression of the number of upward ($ij$) and downward ($ji$) due to absorption, spontaneous and stimulated emission processes (and the equivalent bound-free processes).
+The radiative rates that are needed to solve the kinetic or statistical equilibrium equations are an expression of the number of upward ($ij$) and downward ($ji$) transitions due to absorption, spontaneous and stimulated emission processes (and the equivalent bound-free processes).
 The formulation of emissivity and opacity through $U$ and $V$ also allows us to express the radiative rates succinctly for both upwards and downwards transitions in lines and continua at each location in the atmosphere as
 \begin{equation}
     \label{Eq:RadiativeRates}
@@ -336,7 +343,7 @@ Where multiple atomic species are present, the total emissivity and opacity are 
 \begin{equation}
     S(\nu, \vec{d}) = \frac{\eta_\mathrm{tot}(\nu, \vec{d}) + \sigma(\nu)J(\nu)}{\chi_\mathrm{tot}(\nu, \vec{d})},
 \end{equation}
-where $\sigma$ describes the frequency-dependent coherent and isotropic continuum scattering cross-section, and
+where the ``tot'' subscript refers to these terms being summed over all interacting species, $\sigma$ describes the frequency-dependent coherent and isotropic continuum scattering cross-section, and
 \begin{equation}
     J(\nu) = \frac{1}{4\pi}\oint I(\nu, \vec{d})\, d\Omega
 \end{equation}
@@ -346,9 +353,9 @@ is the angle-averaged intensity at frequency $\nu$.
 \subsection{Iterative Solutions}
 
 Now we have an expression for the radiative rates in each transition that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}.
-Clearly, an iteration scheme will therefore be needed to find a stable set of populations yielding a self-consistent radiation field.
+Clearly, an iterative scheme will be needed to find a stable set of populations yielding a self-consistent radiation field.
 
-If we treat the formal solver as an operator yielding the intensity from the source function throughout the atmosphere, i.e.
+If we treat the formal solver as an operator $\Lambda$ yielding the intensity from the source function throughout the atmosphere, i.e.
 \begin{equation}
     I(\nu, \vec{d}) = \Lambda_{\nu,\vec{d}}[S(\nu, \vec{d})],
     \label{Eq:LambdaOperator}
@@ -359,14 +366,15 @@ The failure of Lambda iteration can be remedied by a process known as operator s
 \begin{equation}
     \Lambda = \Lambda^* + (\Lambda - \Lambda^*),
 \end{equation}
-with $\Lambda^*$ an approximation of $\Lambda$. The iteration scheme them becomes
+with $\Lambda^*$ an approximation of $\Lambda$. The iterative scheme them becomes
 \begin{equation}
     I(\nu, \vec{d}) = \Lambda_{\nu, \vec{d}}^*[S(\nu, \vec{d})] + (\Lambda_{\nu, \vec{d}} - \Lambda_{\nu, \vec{d}}^*)[S^{\dagger}(\nu, \vec{d})],
     \label{Eq:Ali}
 \end{equation}
 where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections that would be computed by Lambda iteration at large optical depths, for an appropriately chosen $\Lambda^*$.
-From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$ (on which $I$) is also dependent. For a two-level atom this is discussed at length in Chaps 12 and 13 of \citet{Hubeny2014}.
-The full coupling of the terms in the multi-level NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field (see \eqref{Eq:RadiativeRates}).
+From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$, on which $I$ is also dependent.
+For a two-level atom this is discussed at length in Chaps 12 and 13 of \citet{Hubeny2014}.
+The full coupling of the terms in the multi-level NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field.
 
 A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$.
 \citet{Scharmer1981} presented an upper triangular approximate operator that fits these criteria and showed its relation to the core-saturation approach of \citet{Rybicki1972} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).
@@ -389,20 +397,22 @@ Starting from the radiative transfer equation \eqref{Eq:1DRte} and the kinetic e
 The primary term of interest is the right-hand side of \eqref{Eq:KinEq}, which is concerned with the atomic transition rates.
 This is also shared with the statistical equilibrium equations \eqref{Eq:StatEq}, and thus we will solve the latter of these and return to the former later.
 We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, which is known as Multi-level Accelerated Lambda Iteration (MALI) with full-preconditioning.
-The full pre-conditioning approach handles arbitrary overlaps of lines and continua for multiple multi-level atoms.
+The full-preconditioning approach handles arbitrary overlaps of lines and continua for multiple multilevel atoms.
 Earlier MALI methods \citep{Rybicki1991} are capable of handling lines overlying a constant background continuum, but not interacting with each other.
-They describe a form of radiative transfer that is still based on a transition by transition description of the problem.
-\citet{SocasNavarro1997} proved that this approach can be equivalent to the linearised ALI method of \citet{Scharmer1985} implemented in the MULTI code \citep{Carlsson1986,Carlsson1992} provided the same assumptions are made in the design of the local operator.
+These methods describe a form of radiative transfer that is still based on a transition by transition description of the problem.
+\citet{SocasNavarro1997} proved that this approach can be numerically equivalent to the linearised ALI method of \citet{Scharmer1985} implemented in the MULTI code \citep{Carlsson1986,Carlsson1992} provided the same assumptions are made in the design of the local operator.
 Note that we distinguish between the linearised ALI method and the older method of complete linearisation \citep[e.g. ][]{Auer1969, Auer1973, Auer1976}.
 The latter of these is significantly more computationally demanding and less numerically stable than the ALI based methods we are considering here \citep[a comparison of MULTI and LINEAR-B is shown in][]{Carlsson1986}.
+
 As MALI with full-preconditioning directly supports all forms of overlapping transitions and the interactions between them whilst retaining the convergence properties of the ALI method, we focus solely on this method in the following description of radiative transfer and inclusion in the \Lw{} framework.
-Whilst there are also more rapidly converging methods (which can be viewed as extensions and variants of the ALI approach) such as the Gauss-Seidel and successive-over-relaxation methods of \citet{TrujilloBueno1995}, (with the extension to multilevel systems presented by \citet{Paletou2007}), the forth-and-back implicit Lambda iteration of \citet{AtanackovicVukmanovic1997} (extended to multilevel systems by \citet{Kuzmanovska2017}), and even the multi-grid method of \citet{FabianiBendicho1997}, we opt for this well-tested method that has proven stable and reliable in a wide variety of situations.
-This is particularly key when considering modelling of flares, which present much larger variations in parameters and steeper gradients than the quiet Sun models or academic semi-empirical models often considered, but these other methods present possible avenues of improvement for \Lw{}.
+Whilst there are also more rapidly converging methods (which can be viewed as extensions and variants of the ALI approach) such as the Gauss-Seidel and successive-over-relaxation methods of \citet{TrujilloBueno1995} (with the extension to multilevel systems presented by \citet{Paletou2007}), the forth-and-back implicit Lambda iteration of \citet{AtanackovicVukmanovic1997} (extended to multilevel systems by \citet{Kuzmanovska2017}), and even the multi-grid method of \citet{FabianiBendicho1997}, we opt for this well-tested method that is proven stable and reliable in a wide variety of situations.
+This is particularly key when considering modelling of flares, which present much larger variations in parameters and steeper gradients than the quiet Sun models or academic semi-empirical models often considered.
+The other, more rapidly convergent, methods present possible avenues of improvement for \Lw{} in the future.
 
 Now, following \citet{Rybicki1992} and \citet{Uitenbroek2001} and substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:StatEq}, and subsequently expanding the radiative rates gives
 \begin{equation}
 \begin{aligned}
-   &\sum_{l^\prime\neq l} (n_{l^\prime}C_{l^\prime l}) +
+   \sum_{l^\prime\neq l} &(n_{l^\prime}C_{l^\prime l}) +
    \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} n_{l^\prime} (U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l} I(\nu, \vec{d}))\, d\nu\, d\Omega\\
    -
    n_l &\sum_{l^\prime\neq l} C_{l l^\prime} -
@@ -428,7 +438,7 @@ and then considering the effects on one atom, under the assumption that backgrou
                     - \sum_j\sum_{i<j}\Psi^*[n^\dagger_j U^\dagger_{ji}]
                     + \sum_j\sum_{i<j}\Psi^*[n_j U^\dagger_{ji}],
 \end{equation}
-where $i$ and $j$ refer to the atomic levels.
+where $i$ and $j$ refer to the levels present in the atomic model.
 
 The first two terms of this expression are often termed $I^\mathrm{eff}$ and in the case of a diagonal $\Psi^*$ operator this represents the non-local contribution to the radiation field from the current atom, and the contribution from all other species.
 
@@ -446,7 +456,7 @@ We can then write
 \end{split}
 \end{align}
 for $l\neq l^\prime$.
-The problem is now represented by a system of linear equations in the level populations.
+The problem is now represented by a system of equations linear in the level populations.
 Due to the necessity of total number conservation the sum of the entries in each column of $\Gamma$ must be 0, which allows us to compute the diagonal terms as
 \begin{equation}
     \Gamma_{ll} = -\sum_{m\neq l} \Gamma_{ml}.
@@ -454,18 +464,17 @@ Due to the necessity of total number conservation the sum of the entries in each
 
 An additional constraint must be applied to \eqref{Eq:StatEqMatVec} to determine the new populations, to avoid the trivial solution of $\vec{n} = \vec{0}$, which is otherwise always a valid solution.
 This constraint is typically expressed through local population conservation, which amounts to replacing one of the rows of $\Gamma$ with ones, and the associated entry in the right-hand-side zero-vector with the local species number density $n_\mathrm{total}$.
+There is then a $\Gamma$ matrix at each point in the atmosphere for each atomic species being considered in detail; each of these is square with dimension equal to the number of levels in the atomic model for this species.
 This system can then be solved for $\vec{n}$, independently at each location in the atmosphere, as the current estimate of non-local coupling through the radiation field is already present in the terms that compose $\Gamma$.
-There is then a $\Gamma$ matrix at each point in the atmosphere for each atomic species being considered in detail, each of these is square with dimension equal to the number of levels in the atomic model for this species.
 
 Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework.
 A more detailed description of the numerical implementation is provided in the \Lw{} paper \citep{Osborne2021}.
 
 \subsection{Time-Dependent Population Updates}\label{Sec:TimeDepPopUpdates}
 
-As discussed previously an update to the populations solving for statistical equilibrium can be phrased as $\Gamma \vec{n} = \vec{0}$.
-A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations.
-We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere).
-An overview of the methods used to numerically solve the conservation laws of hydrodynamics is provided in Sec.~\ref{Sec:IntroConsLaws}.
+As discussed previously, an iterative update to the populations in the statistical equilibrium case can be phrased as $\Gamma \vec{n} = \vec{0}$.
+A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations \eqref{Eq:KinEq}.
+We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere)\footnote{An overview of the methods used to numerically solve the conservation laws of hydrodynamics is provided in Sec.~\ref{Sec:IntroConsLaws}.}.
 We can, however, discretise $\partial n / \partial t = \Gamma \vec{n}$ as
 \begin{equation}
     \label{Eq:ThetaDisc}
@@ -477,7 +486,8 @@ $\vec{n}^{t+1}$ can then be found by rewriting \eqref{Eq:ThetaDisc} as
     \label{Eq:TimeDepSystem}
     (\mathbb{I} - \theta\Delta t \Gamma^{t+1}) \vec{n}^{t+1} = (1-\theta)\Delta t \Gamma^{t}\vec{n}^{t} + \vec{n}^{t},
 \end{equation}
-with $\mathbb{I}$ the identity matrix, and iterating until $\vec{n}^{t+1}$ converges, for a new evaluation of $\Gamma^{t+1}$ at each iterate.
+with $\mathbb{I}$ the identity matrix.
+This system is then iterated until $\vec{n}^{t+1}$ converges, for a new evaluation of $\Gamma^{t+1}$ at each iterate.
 This is known as a theta-method, and whilst semi-implicit schemes are possible by setting $0 < \theta < 1$, we have not found these necessary, and adopt the fully implicit $\theta=1$ in \Lw{}.
 
 \subsection{Partial Frequency Redistribution}\label{Sec:Prd}
@@ -485,13 +495,13 @@ This is known as a theta-method, and whilst semi-implicit schemes are possible b
 Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds.
 That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission.
 In this case, the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal.
-In lower density regions with strong, typically resonance, lines\footnote{A transition whose lower state is the ground state of the atom is known as a resonance transition.} where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level; a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
+In lower density regions with strong, typically resonance\footnote{A transition whose lower state is the ground state of the atom is known as a resonance transition.}, lines where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level: a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
 The line's emission and absorption profiles then differ and this coherent scattering must be treated explicitly.
 This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into the MALI framework following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
 
 We can define the emission profile coefficient $\rho_{ij} = \psi_{ij} / \phi_{ij}$, at which point all $U$ and $V$ terms can be rewritten in terms of $\rho_{ij}$ and $\phi$, and $\dagger$ on these terms refers to the value of $\rho_{ij}$ evaluated at the previous iterate (analogous to $n^\dagger$).
 
-From this definition of $\rho$, under the assumptions of a line with an infinitely sharp lower level and broadened upper level, and the validity of PRD being in the atomic frame being approximated by PRD in the observer's frame \citep{Uitenbroek2001}, following \citet{Hubeny2014} we have
+From this definition of $\rho_{ij}$, under the assumptions of a line with an infinitely sharp lower level and broadened upper level, and the validity of PRD being in the atomic frame being approximated by PRD in the observer's frame \citep{Uitenbroek2001}, following \citet{Hubeny2014} we have
 \begin{align}
 \begin{split}
     \rho_{ij}(\nu, \vec{d}) = 1 + &\gamma\frac{\sum_{l < j}n_j B_{lj}}{n_j P_j} \oint\frac{1}{4\pi}\int I(\nu^\prime, \vec{d}^\prime) \\ &\cdot \left[ \frac{R^{II}_{lji}(\nu^\prime, \vec{d}^\prime; \nu, \vec{d})}{\phi_{ij}(\nu, \vec{d})} - \phi_{lj}(\nu^\prime, \vec{d}) \right]\,d\nu^\prime\,d\Omega^\prime,
@@ -523,8 +533,8 @@ where
 \end{equation}
 is the frequency-integrated mean intensity across the transition.
 In the case of plasma flows we adopt the approximate hybrid treatment of \citet{Leenaarts2012}, using $J$ in the plasma's rest frame, to compute $\rho_{ij}$ in this same frame.
-Its value is then interpolated to find the value of $\rho$ at the Doppler shifted value in the observer's frame.
-The additional computational cost of this hybrid method over the angle-averaged method is very low, when compared to the complete angle-dependent method, and in most cases the results are comparable to the complete treatment \citet{Leenaarts2012a, Kerr2019}.
+Its value is then interpolated to find the value of $\rho_{ij}$ at the Doppler shifted value in the observer's frame.
+The additional computational cost of this hybrid method over the angle-averaged method is very low, and in most cases the results are comparable to the far more costly complete angle-dependent treatment \citep{Leenaarts2012a, Kerr2019}.
 
 \subsection{Charge Conservation}
 
@@ -550,7 +560,7 @@ Applying this procedure to the preconditioned statistical equilibrium equations 
     \label{Eq:LinNr}
     F_{s, i}(\widetilde{\vec{n}_s}, n_e^\dagger) =
     - \sum_j \left( \left.\frac{\partial F_{s,i}(\vec{n}_s, n_e)}{\partial n_j}\right\rvert_{(\widetilde{\vec{n}_s}, n_e^\dagger)} \delta n_j \right)
-    \hspace{2.5em}- \left.\frac{\partial F_{s,i}(\vec{n}_s, n_e)}{\partial n_e}\right\rvert_{(\widetilde{\vec{n}_s}, n_e^\dagger)} \delta n_e,
+    - \left.\frac{\partial F_{s,i}(\vec{n}_s, n_e)}{\partial n_e}\right\rvert_{(\widetilde{\vec{n}_s}, n_e^\dagger)} \delta n_e,
 \end{equation}
 where $\delta n_j$ and $\delta n_e$ are the necessary corrections to obtain self-consistent level populations and electron density.
 
@@ -565,14 +575,14 @@ for each species, while the latter is described by
 \begin{equation}
     \delta n_e - \sum_s \sum_j \mathion_s(j) \delta n_{s, j} = n_{e, \mathrm{bg}} + \sum_s \sum_j \mathion_s(j) - n_e^\dagger,
 \end{equation}
-where $\mathion_s(j)$ is the ionisation state of the $j$-th level of species $s$, and $n_{e, \mathrm{bg}}$ represents the electron density due to species not considered in detail here.
+where $\mathion_s(j)$ is the ionisation state of the $j$-th level of species $s$, and $n_{e, \mathrm{bg}}$ represents the electron density due to background species not considered in detail here.
 The left-hand side of the population conservation equation replaces one of the rows of the Jacobian for each species, analogously to the population conservation equation used in \eqref{Eq:StatEqMatVec}.
 The charge conservation equation is the ``extra'' equation in this system, and the left-hand side of the expression here forms one row of the Jacobian.
 
 The final Jacobian matrix is therefore block diagonal, with one row that couples these blocks to each other.
 The left-hand side of the system \eqref{Eq:LinNr} is given by the right-hand sides of the previous constraint equations, and $F_{s, i}(\widetilde{\vec{n}_s} n_e^\dagger) = \Gamma_s \widetilde{\vec{n}}$ for the remaining entries for each species $s$.
 This system can now be solved in the same fashion as \eqref{Eq:StatEqMatVec}, and the final populations can be computed from $n_j = \widetilde{n_j} + \delta n_j$ and $n_e = n_e^\dagger + \delta n_e$.
-The exact form of these derivatives used in the Jacobian can be computed analytically for all rates (although we resort to a finite-difference method for the collisional rates), and are presented in \citet{Osborne2021}.
+The exact form of these derivatives used in the Jacobian can be computed analytically for all rates (although we resort to a finite-difference method to handle arbitrary collisional rates), and are presented in \citet{Osborne2021}.
 We omit their form here as it is not found to be particularly insightful.
 
 The time-dependent case can be solved very similarly to the previous statistical equilibrium case.
@@ -583,37 +593,39 @@ Starting from the time-dependent population update equation \eqref{Eq:TimeDepSys
 \end{equation}
 and apply this secondary Newton-Raphson iteration process to $G$, using the same constraint equations as before.
 
-It is important to stress that only one Newton-Raphson iteration is needed following each standard preconditioned population update as the original MALI system was already preconditioned and linear in the populations.
-The iterative process proceeds by following each MALI population update with a secondary Newton-Raphson iteration evaluated using the updated $\Gamma$.
+It is important to stress that only one Newton-Raphson iteration is needed following each standard preconditioned population update, as the original MALI system was already preconditioned and linear in the populations.
+The iterative process proceeds by following each MALI population update with a secondary Newton-Raphson iteration evaluated using the updated $\Gamma$, and then returning to the evaluation of $\Gamma$ or $\rho_{ij}$ in the presence of transitions treated with PRD.
 
 \subsection{Determining Numerical Convergence}
 
 The iterative procedures presented in the previous sections yield refined estimates of the level populations throughout the model atmosphere for each additional iteration.
 This raises the question of when to stop iterating, and by what metric to measure convergence.
-The most important quantities to use when estimating convergence are the populations $n$, and $J$ due to its appearance in the source function.
 Convergence describes the difference between these values for two subsequent iterations, and how far they are from the true values for the model.
-As we do not generally have knowledge of the latter, the former is used to determine when to cease iterations.
+As we do not generally have knowledge of the latter, the former is typically used to determine when to cease iterations.
+The most important quantities to use when estimating convergence are the populations $n$, and radiation field $J$, due to their appearance in the source function.
+
 In NLTE problems, where spectral lines will often form in relatively compact regions of the atmosphere, the change may only be large in this region, so the $L^1$ or $L^2$ norms of the difference between successive iterates may not be very informative.
 Additionally, the value of both $J$ and $n$ will vary hugely throughout the atmosphere, thus the absolute change over an iteration may not be particularly meaningful.
-Instead, it is common to use the $L^\infty$ norm of this relative change of these parameters.
-For a population $n_i$, following \citet{Auer1994a} we denote this $R_c(itr, i)$ for level $i$ and iteration $itr$.
+Instead, it is common to use the $L^\infty$ norm of the relative change of these parameters.
+For a population $n_i$, following \citet{Auer1994a}, we denote the relative change $R_c(itr, i)$ for level $i$ and iteration $itr$.
 It can be expressed as
 \begin{equation}
     R_c(itr, i) = \mathrm{max}_k \left|\frac{n_i^{itr} - n_i^{itr-1}}{n_i^{itr}}\right|,
 \end{equation}
 where $k$ represents the location in the atmosphere, and $n_i^{itr}$ represents the population of level $i$ after iteration $itr$.
 By using this method we ensure that the largest update to a term is small relative to its current value.
-When applied to $J$, the relative change is computed across frequency and atmospheric depth.
+When applied to $J$, the relative change is typically computed across frequency and atmospheric depth.
+
 \citet{Auer1994a} and \citet{FabianiBendicho1997} provide a framework for estimating both the error from the fully converged solution, and the truncation error representing the error due to the discretisation onto the numerical grid, but in practice this is rarely employed outside of multi-grid strategies \citep[e.g.][]{FabianiBendicho1997,Leger2007}.
 Instead, we apply the more common technique of iterating until the maximum value of $R_c$ for the populations drops below a certain threshold (typically $\sim 10^{-3}$)\footnote{It is wise to also track $R_c$ for $J$, and although this is less commonly used as a convergence criterion, we often choose to do so as a safety factor. The $R_c$ of one of $n$ or $J$ being significantly larger than the other likely indicates that the spatial, frequency, or angular quadrature is ill-suited to the problem at hand.}.
-This approach has been applied with success to many modelling problems within the MULTI, RADYN, and RH \citet{Uitenbroek2001} codes (amongst others), but we note following \citet{Auer1994a} and \citet{FabianiBendicho1997} that a small value of $R_c$ does not guarantee convergence, whilst methods such as the multi-grid one they present can do so.
+This approach has been applied with success to many modelling problems within the MULTI, RADYN, and RH \citet{Uitenbroek2001} codes (amongst others), but we note, following \citet{Auer1994a} and \citet{FabianiBendicho1997}, that a small value of $R_c$ does not guarantee convergence, whilst methods such as the multi-grid one they present can do so.
 Unfortunately, these methods are significantly more complex than the MALI method presented here and appear to have difficulty in more realistic multi-dimensional models (Štěpán, \emph{private communication}).
 
 \section{The \Lw{} Framework}
 
 The \Lw{} framework \citep{Osborne2021, LightweaverZenodo}\footnote{\Lw{} is freely available under the permissive MIT license and is developed on GitHub (\url{https://github.com/Goobley/Lightweaver}) with archival on Zenodo.} is a Python package built around a C++ core in which we have implemented the methods for numerical NLTE radiative transfer discussed in Sec.~\ref{Sec:IntroRT}.
-As can be seen from the referencing of the previous section, none of these methods are novel on their own -- they represent the most robust methods encountered in our survey of NLTE RT -- and it is in the combination of these methods and in the implementation strategies employed that \Lw{} differs from current \Sota{} RT codes.
-An overview of the key components and functions that users will typically interact with is presented in \citet{Osborne2021}, in the following we describe the most important design decisions made in \Lw{} and explain how they can enable new forms of RT simulations whilst also increasing productivity.
+As can be seen from the referencing of the previous section, none of these methods are novel on their own -- they represent the most robust methods encountered in our survey of NLTE radiative transfer -- and it is in the combination of these methods and the implementation strategies employed that \Lw{} differs from current \Sota{} radiative transfer codes.
+An overview of the key components and functions that users will typically interact with is presented in \citet{Osborne2021}, in the following we describe the most important design decisions made in \Lw{} and explain how they can enable new forms of radiative transfer simulations whilst also increasing productivity.
 
 \subsection{Philosophy}
 
@@ -624,17 +636,17 @@ Whilst there can be slight performance gains from using a specialised, optimised
 This is especially true in research environments where tools are often used by a small group of researchers in a transient fashion, and the return on \emph{possible} optimisations is rarely sufficiently large compared to the benefits of increased development speed that a framework allows.
 The use of a tested framework also allows researchers confidence in the core numerics they are reusing, whether they understand every detail or not.
 
-The steps involved in solving the NLTE RT problem are quite modular, and we provide optimised methods for most of these following the standard techniques outlined previously.
-They are building blocks that can be combined in different ways (with some omitted), to produce different tools.
+The steps involved in solving the NLTE radiative transfer problem are quite modular, and we provide optimised methods for most of these following the standard techniques outlined previously.
+They are building blocks that can be combined in different ways, to produce different tools.
 These building blocks are the core offering of the \Lw{} framework, and are intended to be combined by the user in a new Python program to solve their particular problem.
 If at any point a user wishes to fully replace a core component of \Lw{}, this can be done in Python, inside their program, with no modification the framework itself, whilst the other components can continue to be used as before.
 This flexibility is encompassed by one of the core design goals, which is to allow Python code written by the user to ``interfere'' with all of the numerical treatment of the NLTE problem.
 
-All other RT codes that the author has interacted with have been designed with a strict limit of one simulation per computer process.
+All other radiative transfer codes that the author has interacted with have been designed with a strict limit of one simulation per computer process.
 Whilst this limitation does make the design of the program easier, especially in Fortran and C, it is not beneficial to an end user who may, for example, wish to couple multiple simulations with different atomic configurations, or use one as a radiative boundary condition for another.
 This latter configuration is applied extensively in Chap.~\ref{Chap:2DRT} where two plane-parallel models are used as boundary conditions for a two-dimensional slab.
 Whilst there are other solutions to this problem, such as saving necessary data and loading it in a reconfigured program, these are typically more error-prone than a simple program which can flexibly represent the coupling between these models in its code, even allowing for memory sharing of certain components.
-To this end, each RT simulation performed in \Lw{} occurs in a self-contained \texttt{Context}, a Python object containing all necessary configuration and storage needed for this model.
+To this end, each radiative transfer simulation performed in \Lw{} occurs in a self-contained \texttt{Context}, a Python object containing all necessary configuration and storage needed for this model.
 These can be serialised using the \texttt{pickle} package of the Python standard library, allowing for a complete simulation to be dumped to disk or transferred between processes using the standard approach expected in the Python ecosystem.
 This has impacts on parallelisation which will be discussed in Sec.~\ref{Sec:LwParallelisation}.
 
@@ -649,21 +661,21 @@ All interfaces to the framework are thoroughly documented through the Python doc
 This can also be viewed online at \url{https://goobley.github.io/Lightweaver}.
 
 As of v0.7.3, excluding automatically generated code (of which we make extensive use), the \Lw{} frontend consists of 4520 lines of Python, with 2326 lines of comments and documentation.
-777 of these consist of an implementation of the equation of state originally authored by Wittmann following \citet{Mihalas1978}, and ported to Python by J. de la Cruz Rodriguez and is used here with permission.
+777 of these consist of an implementation of the equation of state originally authored by Wittmann following \citet{Mihalas1978}, and ported to Python by J. de la Cruz Rodriguez (used here with permission).
 This is an LTE equation of state that has been used in both the SIR \citep{1992RuizCobo} and NICOLE \citep{Socas-Navarro2015} codes.
 
 The backend consists of 9896 code lines of personally authored C++, along with two external libraries: Faddeeva\footnote{\url{http://ab-initio.mit.edu/wiki/index.php/Faddeeva_Package}} (Steven G. Johnson, 2066 lines of code, MIT license) used for computing Voigt functions, and a lightweight multi-platform thread pool and scheduler\footnote{\url{https://github.com/vurtun/lib/blob/master/sched.h}} (Doug Binks \& Micha Mettke, 788 lines of code, zlib license).
 As both of these libraries are small and permissively licensed, they are included directly in \Lw{}'s distribution, so there is no concern about these links going stale.
 Multiple routines present in the calculation of the background terms are thread-safe reimplementations of those used in RH \citep{Uitenbroek2001}, with permission.
 There are also 2439 lines of Cython \citep{Behnel2011} code present in the backend.
-Cython is a language used to bridge the Python interfaces to the C++ core.
+Cython is the language used to bridge the Python interfaces to the C++ core.
 It allows us to share NumPy \citep{Harris2020} arrays by reference between Python and C++, allowing changes to the array's contents to be visible from either language with no duplication necessary.
 This data sharing is not just efficient but allows the Python frontend to be ``involved'' with the RT calculations on a deep level in line with \Lw{}'s design goals.
 
 \subsection{Model Atoms}
 
 An oft-quoted aphorism in programming circles is that of \emph{Greenspun's tenth rule of programming}\footnote{e.g. \url{https://philip.greenspun.com/research/}} which states: ``Any sufficiently complicated C or Fortran program contains an ad hoc, informally-specified, bug-ridden, slow implementation of half of Common Lisp''.
-The implementation of model atoms in the codes the author is personally familiar with are examples of this.
+The implementations of model atoms in the codes the author is personally familiar with are examples of this.
 This is not to say that configuration files containing the data needed to run a program are bad, but we are instead referring to the large amount of logic associated with these files, that eventually turns into an \emph{ad hoc} domain specific language.
 These models are structured and contain methods of specifying the approximations to be used for different terms, such as van der Waals broadening and bound-free cross sections.
 Any new method that a user wishes to implement then has to be added to the custom interpreter responsible for parsing these files and propagating this information into the numeric core of the program.
@@ -677,17 +689,17 @@ As a ``free bonus'', thanks to the models being standard Python objects stored i
 An \texttt{AtomicModel} in \Lw{} is the definition of an object containing an element or isotope identifier, and a list of each of levels, lines, continua, and collisional rate approximations.
 Each of these terms is itself a Python object which must conform to a particular contract describing the form of the information it must be capable of supplying when a particular method is called.
 Many of these objects also contain components with their own contracts.
-These contracts are defined through the use of Python classes, and basic implementation of features, comparable to those in extant RT codes are implemented in the \Lw{} standard library.
+These contracts are defined through the use of Python classes, and a basic implementation of features, comparable to those in extant radiative transfer codes, is present within the core of  \Lw{}.
 These can be further extended with new functionality through the use of inheritance.
 A user can therefore implement a new method for computing, say, the absorption profile \citep[e.g. the non-Voigt profile of][]{Kowalski2017} of a spectral line and employ this by defining a new model atom with no changes needed in the \Lw{} package.
 
-Atomic models can be supplied to user code in two different ways, in the textual source code, which is both human and machine readable, or in a \texttt{pickle}, which is only machine readable, possibly from a previously serialised \texttt{Context}.
+Atomic models can be supplied in two different ways, in textual source code, which is both human and machine readable, or in a \texttt{pickle}, which is only machine readable, possibly from a previously serialised \texttt{Context}.
 The former of these is treated as a canonical form, and it can always be recovered by asking Python for the representation of the object (via the \texttt{repr} function).
 This imposes certain a minor constraint on the way user constructed classes extending the components of these models need to be defined i.e. they must define a \texttt{\_\_repr\_\_} function defining how to recover a textual representation of themselves.
 This is due to our adherence to the standard Python convention that \texttt{obj == eval(repr(obj))}, requiring that the evaluation (in the Python interpreter) of the textual representation of an object give an equivalent object.
 This is explained in depth with the examples shown in \citet{Osborne2021}.
 
-The use of Python objects and data structures to describe the model atoms does not only allow the models to execute arbitrary code, but also for the models to be manipulated for user code.
+The use of Python objects and data structures to describe the model atoms does not only allow the models to execute arbitrary code, but also for the models to be manipulated via user code.
 This makes managing and modifying atomic models easier as transformations (modifications of parameters) can be undertaken in bulk by code, rather than a painstaking manual process.
 This is all achieved through the use of standard Python, with no custom code needed to support this.
 
@@ -700,14 +712,14 @@ A secondary form of parallelisation is also incorporated into \Lw{}.
 This form of parallelisation consists of splitting time-consuming work from a single simulation over multiple threads in the same machine.
 This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any scattering integrals needed for PRD, which are parallelised over wavelength, and typically represent the vast majority of the program's runtime for non-trivial simulations.
 The calculation of line absorption profiles, when using atomic models with the default Voigt profile implementation, along with the optional \texttt{FastBackground} implementation of background opacities, emissivities, and scatterings, are also parallelised.
-The choices of the terms to parallelise has been motivated by our observations of the time-consuming processes when using \Lw{} to undertake the numerical experiments presented in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT}.
+The choices of the terms to parallelise has been motivated by our observations of the most time-consuming processes when using \Lw{} to undertake the numerical experiments presented in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT}.
 
 \subsection{Validation}
 
 The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
 RH is a well-established code that serves as a cornerstone of NLTE RT in the solar physics community.
-It assumes a stationary, time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
-The MALI method with full preconditioning \citep{Rybicki1992} is used, allowing for multiple atomic species with overlapping transitions to be considered, and implementations of angle-averaged and angle-dependent PRD are present following the method outlined in \citet{Uitenbroek2001}.
+It assumes a single time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
+The MALI method with full preconditioning \citep{Rybicki1992} is used, and implementations of angle-averaged and angle-dependent PRD and cross-redistribution are present following the methods outlined in \citet{Uitenbroek2001,MillerRicci2002}.
 RH can also be used for NLTE modelling of molecular lines, but we do not make use of this here.
 In the examples presented here, we make use of v2 of the RH code, distributed by H. Uitenbroek, and not the massively parallel RH 1.5D presented in \citet{Pereira2015}.
 
@@ -1109,23 +1121,23 @@ Fig.~\ref{Fig:LwRhComparison} presents a comparison of the synthesis of \CaLine{
 This is a static, semi-empirical quiet sun atmosphere, so the synthesis is performed in statistical equilibrium.
 RH's solution is shown in blue, with the \Lw{} solution overlaid in dashed orange.
 There is clearly very good agreement between these codes in this simple static test.
-This figure also shows the sensitivity of \CaLine{} to the electron density when computed under the assumption of LTE populations (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects (red).
+This figure also shows the sensitivity of \CaLine{} to the electron density when computed under the assumption of LTE ionisation (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects when the electron density is not known \emph{a priori} (red).
 The line profile computed from the simulation with the charge conservation strategy approaches the reference solution, where the electron density is provided by the FAL model.
 The primary differences between these treatments is likely due to other species, such as Fe, being treated in LTE.
 
 In Fig.~\ref{Fig:LwValidationSillyVel} we once again present the synthesis of \CaLine{} in the FALC atmosphere, but here a complex velocity profile is imposed on the atmospheric model.
 The vertical velocity structure of the atmosphere is defined to be two periods of a sine wave with amplitude \SI{30}{\kilo\metre\per\second} mapped over the vertical extent of the FALC model (approximately \SI{2}{\mega\metre}).
-The electron density is set and held fixed, at the value given by the LTE ionisation state of the plasma.
+The electron density is set and held fixed at the value given by the LTE ionisation state of the plasma.
 This is to allow for easier comparison between the codes with different formulations for their model atmospheres.
 Here RH's solution is once again shown in blue, \Lw{}'s in dashed orange, and SNAPI's in dot-dashed green.
 This problem serves primarily as a test of the formal solver; the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail.
-The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in both RH and \Lw{}, along with their standard MALI iteration machinery, provides a very similar solution from both codes.
+The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in all three of these codes, along with their standard MALI iteration machinery, provides a very similar solution in all three cases.
 The slight differences apparent around $\Delta\lambda=\SI{-0.1}{\nano\metre}$ is likely to be caused by differences in the formal solver implementations; the version implemented in RH uses the method of \citet{Fritsch1984} to compute numerical estimates of the necessary derivatives, whereas we use the method of \citet{Steffen1990} in \Lw{} following the recommendation of \citet{Janett2018}, as the accuracy of \citet{Fritsch1984} falls to first-order on non-uniform grids.
 Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
-The differences between SNAPI and the other methods around $\Delta\lambda=\SI{0.02}{\nano\metre}$ and $\SI{-0.1}{\nano\metre}$ is also likely due to choices made when estimating the derivatives and limiting the control points.
+The differences between SNAPI and the other methods around $\Delta\lambda=\SI{0.02}{\nano\metre}$ is also likely due to choices made when estimating the derivatives and limiting the control points.
 SNAPI also uses a different formulation for the background emissivities and opacities, as well as parametrisations for the damping terms present in the Voigt profile.
 These are likely responsible for the differences in the $|\Delta\lambda| \geq \SI{0.15}{\nano\metre}$ far wing to continuum region.
-Nevertheless, we consider that the agreement between the three implementations is very good on this difficult test.
+Nevertheless, we consider that the agreement between the three implementations is very good on this challenging test.
 
 \py[FlareModelling]|chFlareModelling.get_figure('LwValidationPrd')|
 
@@ -1141,7 +1153,7 @@ This difference is present only over a very small range of wavelengths and we co
 
 Slightly more complex examples are needed to test the time-dependent machinery present in \Lw{}, and neither SNAPI nor RH, with their time-independent viewpoints can be used for comparison here.
 We instead use the example of a perturbed FALC atmosphere presented by \citet{Judge2017}.
-After converging to the statistical equilibrium solution in a standard FALC atmosphere, the temperature is perturbed as presented in blue line of the top-left panel of Fig.~\ref{Fig:LwValidationJudge}.
+After converging to the statistical equilibrium solution in a standard FALC atmosphere, the temperature is perturbed as shown by the blue line of the top-left panel of Fig.~\ref{Fig:LwValidationJudge}.
 This model uses a three level plus continuum model hydrogen atom, and the populations of the ground, first excited, and continuum states are shown in the top-right, bottom-left, and bottom-right panels of this figure respectively.
 The red line shows their starting values, and the blue line their final values after the simulation has been allowed to run for \SI{60}{\second}.
 The black lines represent the solutions for each population every \SI{0.5}{\second}.
@@ -1151,8 +1163,8 @@ The method used by \citet{Judge2017} is different to ours, and uses full precond
 This approach is much more approximate than the full MALI treatment applied in \Lw{}, as it only performs the formal solution at one wavelength per transition, and computes the integrals over wavelength and angle analytically.
 The advantage of this treatment is that it is much less computationally intensive.
 Thus, the use of this approximate method by \citet{Judge2017} is likely to be the origin of the differences between our results, and we find that the level populations converge to similar final solutions, at apparently similar rates.
-The most substantial difference between our results is for the $n=2$ population; in the results of \citet{Judge2017}, the points close to a column mass of \SI{-4.9315}{\per\square\centi\metre} do not vary from their initial values, whereas in our model they vary quite dramatically, with an enhancement of up to 1.5\,dex, but converge back to the expected final solution.
-This simple example is meant to illustrate that \Lw{}'s behaviour is reasonable when applied to time-dependent problems, and the quality of its treatment will become apparent in the in-depth comparisons with \Radyn{} presented in Chap.~\ref{Chap:TimeDepRt}.
+The most substantial difference between our results is for the $n=2$ population: in the results of \citet{Judge2017}, the points close to a column mass of \SI{-4.9315}{\per\square\centi\metre} do not vary from their initial values, whereas in our model they vary quite dramatically, with an enhancement of up to 1.5\,dex, but converge back to the expected final solution.
+This simple example illustrates that \Lw{}'s behaviour is reasonable when applied to time-dependent problems, and the quality of its treatment will become apparent in the in-depth comparisons with \Radyn{} presented in Chap.~\ref{Chap:TimeDepRt}.
 
 \py[FlareModelling]|chFlareModelling.get_figure('LwValidationTimeDepNe')|
 
@@ -1169,7 +1181,7 @@ Other tests have been undertaken to verify the performance of \Lw{}, but those p
 
 During the development of \Lw{}, a simpler pedagogic framework was also constructed.
 This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.} \citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
-It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
+It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE radiative transfer and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely, without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
 \section{Introduction to Hydrodynamics and Conservation Laws}\label{Sec:IntroConsLaws}
 \emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997,LeVeque2002}.}
@@ -1178,7 +1190,7 @@ In the previous sections we have explained the basis of the radiative transfer m
 The difficulty in radiative transfer primarily lies in the nuance of implementing the various integration terms.
 To provide a clear understanding of RHD we also need a numerical description of hydrodynamics, and an explanation of solving the coupled systems of partial differential equations (PDE) that represent the other major facet of RHD.
 
-The scalar radiative transfer equation, solved via the formal solver is a good example of an ordinary differential equation.
+The scalar radiative transfer equation, solved via the formal solver, is a good example of an ordinary differential equation.
 It is relatively easy to solve via a variety of methods, typically striving for a balance of speed, reliability, and accuracy.
 Unfortunately, PDEs are difficult to solve numerically in a general way.
 
@@ -1262,7 +1274,7 @@ This simple first order accurate approach can be applied to any conservation law
 Many other spatial and temporal discretisations can be devised for conservation laws, and it is important to choose a discretisation that introduces minimal error.
 In general, we term discretisations where $q^{t+1}$ depends only on $q^{t}$ as \emph{explicit}, and those also depending on $q^{t+1}$ as \emph{implicit}, necessitating the solution of a system of typically non-linear equations.
 
-Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
+Whilst the finite difference method provides an intuitive formulation for discretising these equations, it is difficult (but entirely possible) to ensure conservation of the quantities that we desire be conserved with only pointwise values and no formal description of the variation between these points.
 Instead the finite volume description is often preferable and consists of treating $q_i^t$ as the average value over a grid cell.
 Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
 This implies
@@ -1284,6 +1296,7 @@ In the case of an explicit method with a correctly chosen timestep for the grid,
 An important strength of this method for solving conservation law problems is that if $F_i$ and $F_{i+1}$ are respectively the left and right edge fluxes for cell $i$, then $F_{i+1}$ will be the left edge flux for cell $i+1$, and $F_{i}$ will be the right edge flux for cell $i-1$.
 Thus the numerical integration of $q^{t+1}$ is conserved with respect to $q^t$ as all numerical fluxes, other than the left- and right-most, will cancel due to the formulation of \eqref{Eq:FiniteVolumeMethod}.
 These left- and right-most fluxes will need to consider the boundary conditions of the finite simulation volume to ensure the correctness of the conservation law.
+Equivalent formulations can be found for finite-difference approaches, but are slightly harder to arrive at.
 
 
 \subsection{Riemann Problems}
@@ -1403,7 +1416,7 @@ This is a fundamental requirement of stability and will be discussed in more det
 This method provides a basic framework for solving conservation laws.
 It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for some of the most accurate numerical methods for conservation laws.
 \citet{VanLeer1979} provided one of the first higher order extension to Godunov's method.
-It is tempting to attempt to estimate the value of $q$ at cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
+It is tempting to attempt to estimate the value of $q$ at the cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
 The MUSCL method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under- or over-shoots to the data.
 This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
 If the current cell is an extremum then the slope is set to 0.
@@ -1411,7 +1424,7 @@ Different slope-limiters have been designed and present different trade-offs in 
 This method tracks the data to second-order in regions of smooth variation, but degenerates to the first-order Godunov method at discontinuities.
 
 There are further high-order extensions to the concept of reconstruction including the parabolic method of \citet{Colella1984} providing third-order accuracy in smooth regions, and the general weighted essentially non-oscillatory (WENO) methods.
-WENO methods are a cornerstone of reconstruction\footnote{The properties that make WENO methods a good choice for reconstruction also render them applicable to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume codes, and as such we will describe them briefly here.
+WENO methods are a cornerstone of reconstruction\footnote{The properties that make WENO methods a good choice for reconstruction also render them applicable to interpolation. Throughout \Lw{} and the other numerical tools presented in this thesis we make use of a fourth-order WENO interpolation method described by \citet{Janett2019} for its accuracy in smoothly varying regions and reliable behaviour around sharp variations.} in modern finite volume and finite difference codes, and as such we will describe them briefly here.
 
 WENO methods were first proposed by \citet{Liu1994}, and formalised for arbitrary order by \citet{Jiang1996}.
 These methods form a convex combination of polynomials over overlapping regions.
@@ -1420,17 +1433,19 @@ We can equivalently define a fifth-order polynomial over the stencil $\{x_1, \ld
 These linear weights can be further weighted by a term known as the \emph{smoothness indicator}, which estimates the local smoothness, such that the weight of each term is equal to its expected linear weight in smooth regions, and heavily biased towards a parabola in a smooth region if other regions present discontinuities.
 
 The process of computing these initial interpolating functions is somewhat complex due to the finite volume framework often applied in hydrodynamics.
-These should be computed such that the integral over the interpolating polynomial in each cell is close to the average value, rather than simply taking it as a pointwise value.
+These should be computed such that the integral over the interpolating polynomial in each cell is close to the average value, rather than simply taking it as a pointwise value (as is done for the finite difference case).
 For a fixed uniform grid, the integration weights for each interface can be computed analytically, and the lack of conditional branches in the calculation of the final weighted value renders the method highly performant.
 For non-uniform grids, the weights can be precalculated if the grid remains fixed, or computed on the fly if necessary.
 There are also a number of approximate methods for handling non-uniform grids at low computational cost such as WENO-NM \citep{Huang2018}.
 The WENO method has been extended many times to provide increased accuracy or meet certain requirements; its strong reconstructive ability and reliable behaviour around shocks makes it a workhorse of modern hydrodynamics and enables simpler flux functions to be reliably used, as will be discussed in the next section.
 
+We note that the discussion of reconstruction presents similarities with the discussion of stable, non-oscillatory methods used in modern formal solvers for radiative transfer.
+This has been discussed by \citet{Steiner2016}, and the methods employed in numerical hydrodynamics may present a future avenue for more robust, accurate, and efficient formal solvers.
 
 \subsection{Numerical Fluxes}
 
 Whilst there are many approximate Riemann solvers that can accurately and efficiently solve the Riemann problems arising from the Euler equations including the addition of source terms, it does not appear feasible to express the evolution of the entire RHD system in this way.
-Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces is used.
+Instead, in explicit methods we use numerical approximations to the flux based on the reconstructed values at the interfaces.
 For implicit methods we can instead use a Newton iterative scheme to minimise the residual of the discretised conservation law across the cell interfaces with the fluxes typically computed from the upwind value of the reconstructed parameter.
 
 With high-order reconstructions, simple expressions for the fluxes can be used and give accurate results.
@@ -1443,7 +1458,7 @@ This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{R
 Here $q_i^L$ and $q_i^R$ represent the left and right hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
 Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.
 General symmetric fluxes like this are simple and efficient, but tend to be diffusive, smearing features across many grid cells, especially if the first-order Godunov or van Leer-style reconstruction methods are used.
-This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques, although when available, a specialised Riemann solver for the current problem is often a better choice.
+This can be effectively combatted by the use of high-order reconstruction schemes and adaptive mesh refinement techniques.
 
 \subsection{Time Integration and Stability}\label{Sec:HydroStability}
 
@@ -1467,16 +1482,17 @@ That is, splitting an equation into two subproblems that can solved independentl
 An example of this would be the radioactive decay of an isotope transported by advection.
 Splitting this into an advection and a reaction problem allows for standard methods to be used in both of these problems, but clearly their results need to be coupled to each other.
 A naive first approach is to solve one of the subproblems over the timestep, and then solve the other, but this method cannot be better than first order accurate in time for coupled subproblems.
-A commonly used approach that is second order is known at Strang splitting \citep{Strang1968}, which consists of time-advancing the first subproblem by half the timestep, then the second by the whole timestep, before once again advancing the first subproblem by a timestep.
+A commonly used approach that is second order is known at Strang splitting \citep{Strang1968}, which consists of time-advancing the first subproblem by half the timestep, then the second by the whole timestep, before once again advancing the first subproblem by half the timestep.
 This method can provide second-order accuracy.
 Many more advanced splitting procedures have been developed, but Strang splitting remains widely used due to its ease of implementation.
 
-\citet{LeVeque1997} comments that in many situations the first-order splitting described above performs better than would be commonly expected from its formal first-order accuracy.
+\citet{LeVeque1997} comments that in many situations the first-order splitting described above performs better than would likely be expected from its formal first-order accuracy.
 This is because the errors introduced are equivalent to solving the problem at a slightly different time, differing by up to a single timestep.
 Whilst this renders the method first-order accurate, the quality of the solution is still primarily controlled by the quality of the methods used to solve the subproblems, and this exceedingly simple splitting scheme can often be applied with no problems.
 
 There are many nuances to each of the techniques needed to accurately and robustly solve conservation laws numerically, and no single \emph{correct} method to use.
-The above is intended to serve as an introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
+Indeed, formulations based on finite volume, finite difference, finite element, and discontinuous Galerkin methods are all in use in \Sota{} research codes.
+The above is intended to serve as a \emph{somewhat opinionated} introduction to the complexities of these methods, but by no means present a conclusion on how conservation laws should be solved.
 It is hoped that this introduction will improve general understanding of this aspect of RHD codes.
 
 \section{Conduction}\label{Sec:NumericalConduction}
@@ -1498,7 +1514,7 @@ This renders the conduction term stiff compared to the hydrodynamical terms and 
 Several alternative methods have been developed, such as expressing the parabolic equation as a hyperbolic wave equation \citep{Rempel2016}, implicit-explicit methods (which may also be used for integrating stiff source terms such as the atomic level population transition rates) \citep[e.g.][]{Ascher1995}, or accepting the cost of an explicit discretisation in exchange for simplicity and accuracy \citep{Bradshaw2003, Bradshaw2013}.
 
 Recently, discussion has emerged around the concept of turbulence suppressed conduction \citep{Bian2016}, where turbulence restricts the motion of electrons along the loop, and it has been suggested that the standard assumption of collisionally-dominated conduction may be a significant overestimation of true conduction rates.
-Simulations using the zero-dimensional enthalpy based EBTEL code \NeedRef{} currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents an important component of this effect \citep{Bian2018}.
+Simulations using the zero-dimensional enthalpy based EBTEL code \citep{Klimchuk2008} currently suggest that this turbulent suppression alone is insufficient to maintain the high coronal temperatures and slow cooling times seen in observations, but likely represents an important component of this effect \citep{Bian2018}.
 As part of further investigation, work is currently under way to integrate these effects in the \Radyn{} and HYDRAD codes.
 
 \section{Discussions}
@@ -1511,6 +1527,6 @@ We have also presented a description and validation of the \Lw{} radiative trans
 Frameworks can substantially enhance productivity, and enable the construction of specialised tools without the need to focus on the implementation or performance of the common core of dense numerical code shared by programs of this style.
 The power of this will be demonstrated with the experiments presented in Chapters~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT} which leverage \Lw{} significantly, and demonstrate how the addition of small amounts of Python can yield tools that would otherwise require in-depth modification and coupling of existing tools such as RH and \Radyn{}.
 
-Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations.
+Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations \citep[e.g.][]{Kerr2020}.
 It is likely that significant progress will be made on these limitations in the coming 1--2 decades as computing power and numerical techniques improve.
 In the meantime, we can undertake numerical experiments to evaluate individual components of these larger treatments (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{} based experiments.
