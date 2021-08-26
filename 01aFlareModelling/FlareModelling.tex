@@ -283,6 +283,9 @@ The photoionisation cross-section describes how likely the atom is to interact w
 Its partner processes (like spontaneous and stimulated emission for bound-bound transitions) are spontaneous and stimulated recombination, whereby an electron is captured by the atom and a photon is released with energy equal to the excess energy of the system.
 These are related to the photoionisation cross-section and the local plasma parameters by the Milne relations.
 
+There are also free-free interactions between particles (often known as \emph{bremsstrahlung}), where electrons and ions interact, and the electron gains or loses energy through absorption or emission of a photon.
+This process also has a characteristic cross-section and is considered as part of the background opacities and emissivities.
+
 Following the notation of \citet{Rybicki1992} and \citet{Uitenbroek2001} the emissivity $\eta$ and opacity $\chi$ for a transition can then written
 \begin{align}
     \label{Eq:Emis}
@@ -374,7 +377,7 @@ with $\Lambda^*$ an approximation of $\Lambda$. The iterative scheme them become
 where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections that would be computed by Lambda iteration at large optical depths, for an appropriately chosen $\Lambda^*$.
 From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$, on which $I$ is also dependent.
 For a two-level atom this is discussed at length in Chaps 12 and 13 of \citet{Hubeny2014}.
-The full coupling of the terms in the multi-level NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field.
+The full coupling of the terms in the multilevel NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field.
 
 A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$.
 \citet{Scharmer1981} presented an upper triangular approximate operator that fits these criteria and showed its relation to the core-saturation approach of \citet{Rybicki1972} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).

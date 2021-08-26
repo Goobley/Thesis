@@ -7,7 +7,7 @@ name = 'FlareObs'
 chRad = texfigure.Manager(
     pytex,
     './01bFlareObservations',
-    number=4,
+    number=1,
     python_dir='./01bFlareObservations/python',
     fig_dir=   './01bFlareObservations/Figs',
     data_dir=  './Data/01bFlareObservations'
@@ -15,24 +15,39 @@ chRad = texfigure.Manager(
 \end{pycode}
 % spell-checker: enable
 
-\begin{itemize}
-    \item How flares are observed.
-    \item Important optical spectral lines \Ha{}, \CaLine{}; observations thereof.
-    \item Forward Modelling
-    \item Inversions
-    \item Machine Learning
-\end{itemize}
+% \begin{itemize}
+%     \item How flares are observed.
+%     \item Important optical spectral lines \Ha{}, \CaLine{}; observations thereof.
+%     \item Forward Modelling
+%     \item Inversions
+%     \item Machine Learning
+% \end{itemize}
+
+Solar flares release a vast quantity of energy across the entire electromagnetic spectrum, observed from $\gamma$-rays to microwaves.
+Almost all of this presents significant diagnostic potential, and is observed by a plethora of advanced instruments.
+Many of these have to be situated above the Earth's atmosphere, which shields us from the biologically harmful wavelengths at which they observe.
+A in-depth review of different observatories, and the flaring signatures they observe is given in \citet{Fletcher2011}.
 
 \section{Important Optical Spectral Lines}
 
-Ground-based telescopes can be much larger and more complex than their space-based counterparts for an equivalent budget. In exchange for this they can only observe in limited bands (due to atmospheric effects), and suffer from the effects of atmospheric turbulence. With these telescopes we therefore focus on optical and near-infrared lines, which are the least affected.
+Ground-based telescopes can have much larger apertures and be more complex than their space-based counterparts for an equivalent budget, allowing for much better spatial resolution.
+In exchange for this they can only observe in limited spectral bands (due to the aforementioned atmospheric absorption effects), and suffer from the effects of atmospheric turbulence.
+To some degree the effects of atmospheric seeing can be accounted for and corrected, but the magnitude of these effects will vary on a daily basis.
+With these telescopes we therefore focus on visible optical and near-infrared lines, which are the least affected by atmospheric scattering and allow us to investigate lines forming in the chromosphere and photosphere.
 
-We shall focus on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\m}, and \CaLine{}. Both of these lines form in the chromosphere (albeit at different altitudes), and carry large amounts of information pertaining to the details of their formation.
+We shall focus primarily on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\m}, and \CaLine{}.
+The former of these is the first of the hydrogen Balmer series, and is emitted by an electron transitioning between from the $n=3$ and $n=2$ bound levels of hydrogen.
+Both of these lines form in the chromosphere (albeit at different altitudes), and carry large amounts of information pertaining to the details of their formation.
 
 \TODO{Discuss spectral line shapes (from templates) and nomenclature of various features.}
 
 \subsection{CRISP observations of these}\label{Sec:CRISP}
+
+What is it and how is it prepped?
+
 \subsection{DKIST, \& the future.}
+
+What resolution, when?
 
 \section{Introduction to Inverse Problems}\label{Sec:InverseProblems}
 
