@@ -723,6 +723,7 @@ import lightweaver as lw
 from lightweaver.rh_atoms import H_6_atom, C_atom, O_atom,  Si_atom, Al_atom, CaII_atom, Fe_atom, He_atom, MgII_atom, Mg_atom, N_atom, Na_atom, S_atom
 from helita.sim.rh import Rhout
 from lightweaver.fal import Falc82
+import astropy.units as u
 
 atmos = Falc82()
 atmos.quadrature(5)
@@ -831,19 +832,27 @@ Iwave = ctx.compute_rays(wave, 1.0)
 rh = Rhout(chFlareModelling.data_file('FalSillyVelRunRh'))
 rh.read_ray(chFlareModelling.data_file('FalSillyVelRunRh/spectrum_1.00'))
 
+snapi = np.loadtxt(chFlareModelling.data_file('snapi_test_8542.dat'))
+snapiWl = lw.air_to_vac(snapi[:, 0] * 1e7)
+snapiI = lw.convert_specific_intensity(snapiWl,
+                                       snapi[:, 1] << u.erg*u.cm**(-3)*u.s**(-1)*u.sr**(-1),
+                                       'J/m2/s/Hz/sr')
+# NOTE(cmo): SNAPI uses cgs for _everything_, wavelength, specific intensity... _everything_.
+
 ca = CaII_atom()
 lambda0 = ca.lines[4].lambda0
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1.0, height_ratio=0.55))
 plt.plot(rh.wave - lambda0, rh.int, label='RH')
 plt.plot(wave - lambda0, Iwave, '--', label='Lightweaver')
+plt.plot(snapiWl - lambda0, snapiI, '-.', label='SNAPI')
 plt.xlabel(r'$\Delta\lambda$ [nm]')
 plt.ylabel(r'Intensity [J\,m$^{-2}$\,s$^{-1}$\,Hz$^{-1}$\,sr$^{-1}$]')
-plt.xlim(wave[0] - lambda0, wave[-1] - lambda0)
+# plt.xlim(wave[0] - lambda0, wave[-1] - lambda0)
+plt.xlim(-0.45, 0.45) # slightly smaller grid to stay within SNAPI range.
 plt.legend(frameon=False)
 lFig = chFlareModelling.save_figure('LwValidationSillyVel', fig, fext='.pgf')
-lFig.caption = r'Comparison of \Lw{} and RH synthesis of \CaLine{} from the FALC atmosphere with complex velocity profile.'
+lFig.caption = r'Comparison of the \Lw{}, RH, and SNAPI synthesis of \CaLine{} from the FALC atmosphere with complex velocity profile and LTE electron density.'
 lFig.placement = 'htbp'
-# TODO(cmo): Add SNAPI here.
 \end{pycode}
 \begin{pycode}[FlareModelling]
 
@@ -1093,7 +1102,6 @@ lFig.placement = 'ht'
 
 \py[FlareModelling]|chFlareModelling.get_figure('LwRhComparison')|
 \py[FlareModelling]|chFlareModelling.get_figure('LwValidationSillyVel')|
-\py[FlareModelling]|chFlareModelling.get_figure('LwValidationPrd')|
 
 %spell-checker: enable
 
@@ -1105,15 +1113,21 @@ This figure also shows the sensitivity of \CaLine{} to the electron density when
 The line profile computed from the simulation with the charge conservation strategy approaches the reference solution, where the electron density is provided by the FAL model.
 The primary differences between these treatments is likely due to other species, such as Fe, being treated in LTE.
 
-\TODO{Add SNAPI if we get it}.
 In Fig.~\ref{Fig:LwValidationSillyVel} we once again present the synthesis of \CaLine{} in the FALC atmosphere, but here a complex velocity profile is imposed on the atmospheric model.
 The vertical velocity structure of the atmosphere is defined to be two periods of a sine wave with amplitude \SI{30}{\kilo\metre\per\second} mapped over the vertical extent of the FALC model (approximately \SI{2}{\mega\metre}).
-Here RH's solution is once again shown in blue, and \Lw{}'s in dashed orange.
+The electron density is set and held fixed, at the value given by the LTE ionisation state of the plasma.
+This is to allow for easier comparison between the codes with different formulations for their model atmospheres.
+Here RH's solution is once again shown in blue, \Lw{}'s in dashed orange, and SNAPI's in dot-dashed green.
 This problem serves primarily as a test of the formal solver; the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail.
 The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in both RH and \Lw{}, along with their standard MALI iteration machinery, provides a very similar solution from both codes.
 The slight differences apparent around $\Delta\lambda=\SI{-0.1}{\nano\metre}$ is likely to be caused by differences in the formal solver implementations; the version implemented in RH uses the method of \citet{Fritsch1984} to compute numerical estimates of the necessary derivatives, whereas we use the method of \citet{Steffen1990} in \Lw{} following the recommendation of \citet{Janett2018}, as the accuracy of \citet{Fritsch1984} falls to first-order on non-uniform grids.
 Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
-Nevertheless, the agreement between RH and \Lw{} is very good on this difficult test.
+The differences between SNAPI and the other methods around $\Delta\lambda=\SI{0.02}{\nano\metre}$ and $\SI{-0.1}{\nano\metre}$ is also likely due to choices made when estimating the derivatives and limiting the control points.
+SNAPI also uses a different formulation for the background emissivities and opacities, as well as parametrisations for the damping terms present in the Voigt profile.
+These are likely responsible for the differences in the $|\Delta\lambda| \geq \SI{0.15}{\nano\metre}$ far wing to continuum region.
+Nevertheless, we consider that the agreement between the three implementations is very good on this difficult test.
+
+\py[FlareModelling]|chFlareModelling.get_figure('LwValidationPrd')|
 
 Fig.~\ref{Fig:LwValidationPrd} shows a simple validation test for the PRD method implemented in \Lw{}.
 We show the synthesis of the \Caii{} K line in statistical equilibrium from a snapshot of a \Radyn{} simulation.
