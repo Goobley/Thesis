@@ -128,11 +128,11 @@ Everyone is familiar with the concept of images, which show the spatial variatio
 Using both of these properties is referred to as \emph{spectropolarimetry}, and \emph{spectroscopy} when only the unpolarised intensity is considered.
 The most basic property to consider here is the specific intensity, commonly denoted $I(\nu, \vec{d})$ for a particular frequency $\nu$ and direction $\vec{d}$ at a location in space with typical SI units \si{\joule\per\square\metre\per\s\per\hertz\per\steradian}.
 
-A ray propagating through a medium, such as a neutral gas or plasma, will gain a certain amount of energy per unit length due to emission processes, whilst also losing another amount due to absorption and scattering processes. These will depend on the local parameters of the plasma as well as the direction of the ray. For a plasma where the primary interacting species are atomic, we can distinguish bound-bound and bound-free transitions. In the former a bound electron moves between two different sublevels of an atom\footnote{Here "atom" refers to either a neutral atom or an ion}, whilst in the latter the atom either absorbs sufficient energy to free a previously bound electron, or an ion loses sufficient energy to recombine with a free electron.
+A ray propagating through a medium, such as a neutral gas or plasma, will gain a certain amount of energy per unit length due to emission processes, whilst also losing another amount due to absorption and scattering processes. These will depend on the local parameters of the plasma as well as the direction of the ray. For a plasma where the primary interacting species are atomic, we can distinguish bound-bound (spectral lines) and bound-free (continuum) transitions. In the former a bound electron moves between two different sublevels of an atom\footnote{Here "atom" refers to either a neutral atom or an ion}, whilst in the latter the atom either absorbs sufficient energy to free a previously bound electron, or an ion loses sufficient energy to recombine with a free electron.
 
 In addition to the obvious spontaneous emission and absorption processes, there is also a process of stimulated emission which is needed to balance the transitions. This occurs when an electron is stimulated to transition between levels by photons with the same frequency and direction as the photon produced by this transition.
 
-In the following we will discuss how to obtain the frequency- and direction-dependent outgoing radiation given the emissivity and opacity of the plasma, and how to obtain a self-consistent radiation field and populations for the atomic species outside of the approximations of local thermodynamic equilibrium.
+In the following, we will discuss how to obtain the frequency- and direction-dependent outgoing radiation given the emissivity and opacity of the plasma, and how to obtain a self-consistent radiation field and populations for the atomic species outside of the approximations of local thermodynamic equilibrium.
 
 \subsection{The Formal Solution}
 
@@ -191,7 +191,7 @@ In atmospheres with very well resolved spatial grids, this method works quite we
 The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust alternative is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three point stencils, but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
 
 Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
-All of these methods can be derived analagously to the linear formal solver presented above.
+All of these methods can be derived analogously to the linear formal solver presented above.
 
 \subsection{Other Formal Solvers}
 
@@ -237,14 +237,18 @@ If this is not the case, then a different formulation of the formal solver will 
 
 \subsection{Collisional Rates}
 
-% To solve \eqref{Eq:KinEq} or \eqref{Eq:StatEq}, we require the values of $P_{ij}$ for the atoms of interest present in the atmosphere (and also any atom with strong transitions that overlap those of an atom we are interested in).
+There are many collisional processes by which electrons can transition between energy levels in a plasma, including ionisation and recombination processes.
+These include excitation of ions by electrons, ionisation and excitation of neutral by electrons, excitation by protons and neutral hydrogen, as well as charge exchange with these species.
+There are more advanced formulations that depend on complex functional forms derived from laboratory work and theoretical analysis, such as those of \citet{Burgess1983, Arnaud1985}.
+
+In most cases, the collisional rates are assumed to only depend on local plasma properties, such as the temperature, total particle density, and electron density, with the particles locally following Maxwellian velocity distributions that connect the upwards and downwards collisional rates for a process through detailed balance i.e., $n_i^* C_{ij} = n_j^* C_{ji}$, where $n_i^*$ indicates the LTE population of level $i$.
+This is not the case for non-thermal rates, such as those of \citet{1993Fang} which consider collisional excitation by non-thermal electrons from the electron beams used in RHD simulations, but are still computed from local parameters.
 
 \subsection{Emissivity and Opacity}
 
 To mathematically formulate the radiative rates that are so important to $P_{ij}$ in a NLTE context we must first formulate expressions for emissivity and opacity.
 There are two forms of transition we need to consider for atomic RT, spectral lines, and continua.
-In spectral lines, also known as bound-bound transitions there are three processes that need to be understood to develop a model for emissivity and opacity.
-These are spontaneous emission, where an atom in an excited state will spontaneously emit a photon and drop to a lower energy state, an absorption process, which is the reverse of spontaneous emission, and stimulated emission, where an atom in an excited state is \emph{induced} to emit by the presence of another photon with the same frequency, direction, and polarisation state as the photon this atom will emit.
+In spectral lines, the three processes that need to be understood to develop a model for emissivity and opacity are spontaneous and stimulated emission, and absorption.
 The magnitude of these terms are controlled by the Einstein coefficients $A_{ji}$, $B_{ij}$, and $B_{ji}$ respectively, which are related by the Einstein relations.
 
 Spectral lines have a rest frequency $\nu_{ij}$  defined by
@@ -320,6 +324,7 @@ In the case of complete redistribution, where $\psi = \phi$, all of the $U$ and 
 The radiative rates that are needed to solve the kinetic or statistical equilibrium equations are an expression of the number of upward ($ij$) and downward ($ji$) due to absorption, spontaneous and stimulated emission processes (and the equivalent bound-free processes).
 The formulation of emissivity and opacity through $U$ and $V$ also allows us to express the radiative rates succinctly for both upwards and downwards transitions in lines and continua at each location in the atmosphere as
 \begin{equation}
+    \label{Eq:RadiativeRates}
     R_{ll^\prime} = \oint \int \frac{1}{h\nu} \left( U_{ll^\prime}(\nu, \vec{d}) + V_{ll^\prime}(\nu, \vec{d})I(\nu, \vec{d}) \right)\,d\nu\,d\Omega,
 \end{equation}
 where $I(\nu, \vec{d})$ is the specific intensity at this location for a given frequency $\nu$ and direction $\vec{d}$.
@@ -336,11 +341,11 @@ where $\sigma$ describes the frequency-dependent coherent and isotropic continuu
     J(\nu) = \frac{1}{4\pi}\oint I(\nu, \vec{d})\, d\Omega
 \end{equation}
 % NOTE(cmo): This angle-average term is what is computed directly from the sum_updown sum_i 0.5 * wmu_i * I, i.e., the averaging is rolled in when we use the integration. The 1/4pi vanishes due to normalisation and the fact we're in ``mu-space''. The 4pi terms all come back in wlambda, but check setup_wavelength on the _atom_ for this, it's not super clear.
-is the angle-averaged intensity at a frequency.
+is the angle-averaged intensity at frequency $\nu$.
 
 \subsection{Iterative Solutions}
 
-Now we have an expression for the radiative rates in each line that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}.
+Now we have an expression for the radiative rates in each transition that can be computed numerically given the local value of the intensity, however the radiation field is not known \textit{a priori}.
 Clearly, an iteration scheme will therefore be needed to find a stable set of populations yielding a self-consistent radiation field.
 
 If we treat the formal solver as an operator yielding the intensity from the source function throughout the atmosphere, i.e.
@@ -348,7 +353,7 @@ If we treat the formal solver as an operator yielding the intensity from the sou
     I(\nu, \vec{d}) = \Lambda_{\nu,\vec{d}}[S(\nu, \vec{d})],
     \label{Eq:LambdaOperator}
 \end{equation}
-then starting from an initial estimate of the atomic populations (e.g. LTE) we can compute the radiation field throughout the atmosphere and iteratively use this to update the populations by solving \eqref{Eq:KinEq}. This is known as Lambda iteration and presents woefully poor convergence in optically thick conditions as the size of the population updates stagnate long before the true NLTE populations are obtained.
+then starting from an initial estimate of the atomic populations (e.g. LTE) we can compute the radiation field throughout the atmosphere and iteratively use this to update the populations by solving \eqref{Eq:KinEq}. This is known as Lambda iteration (after the operator used) and presents woefully poor convergence in optically thick conditions as the size of the population updates stagnate long before the true NLTE populations are obtained.
 
 The failure of Lambda iteration can be remedied by a process known as operator splitting, first introduced by \citet{Cannon1973} whereby we set
 \begin{equation}
@@ -359,27 +364,42 @@ with $\Lambda^*$ an approximation of $\Lambda$. The iteration scheme them become
     I(\nu, \vec{d}) = \Lambda_{\nu, \vec{d}}^*[S(\nu, \vec{d})] + (\Lambda_{\nu, \vec{d}} - \Lambda_{\nu, \vec{d}}^*)[S^{\dagger}(\nu, \vec{d})],
     \label{Eq:Ali}
 \end{equation}
-where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections at large optical depths, for an appropriately chosen $\Lambda^*$.
-From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$ (on which $I$) is also dependent. For a two-level atom this is discussed at length in Chapters 12 and 13 of \citet{Hubeny2014}.
-The full coupling of these terms in the multi-level NLTE problem will be made explicit in a following section when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field (see \eqref{Eq:BbRates}).
+where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections that would be computed by Lambda iteration at large optical depths, for an appropriately chosen $\Lambda^*$.
+From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$ (on which $I$) is also dependent. For a two-level atom this is discussed at length in Chaps 12 and 13 of \citet{Hubeny2014}.
+The full coupling of the terms in the multi-level NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field (see \eqref{Eq:RadiativeRates}).
 
-A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$. \citet{Scharmer1981} presented an approximate operator that fits these criteria and showed its congruency with the core-saturation approach of Rybicki \NeedRef{} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).
+A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$.
+\citet{Scharmer1981} presented an upper triangular approximate operator that fits these criteria and showed its relation to the core-saturation approach of \citet{Rybicki1972} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).
 
-\citet{Olson1986} proposed the use of the diagonal of the true $\Lambda$ operator as an approximate operator, and showed that this is close to optimal, and is clearly trivial to invert (as it is a scalar). Now, the diagonal of $\Lambda$ is easy to obtain by setting a test source function $\mathcal{S}=\delta_{dd^\prime}$ (where $\delta$ is the Kronecker delta) and computing
+\citet{Olson1986} proposed the use of the diagonal of the true $\Lambda$ operator as an approximate operator, and showed that this is close to optimal, and is clearly trivial to invert (as it is a scalar at each location in the atmosphere).
+Now, the diagonal of $\Lambda$ is easy to obtain by setting a test source function $\mathcal{S}=\delta_{dd^\prime}$ (where $\delta$ is the Kronecker delta) and computing
 \begin{equation}
     \Lambda^* = \Lambda[\mathcal{S}].
 \end{equation}
 Taking the example of the linear short characteristic formal solver presented in Sec.~\ref{Sec:ShortChar} and substituting this definition of $\mathcal{S}$ we obtain
 \begin{equation}
-    \Lambda^*_{\nu, \vec{d}} = \frac{\Delta - 1 + \exp(-\Delta)}{\Delta}.
+    \Lambda^*_{\nu, \vec{d}} = \frac{\Delta - 1 + \exp(-\Delta)}{\Delta},
 \end{equation}
+where $\Delta$ is defined as in Sec.~\ref{Sec:ShortChar}.
 The approximate operator can be computed analogously for other formal solvers.
 
-\subsection{Solving the multilevel NLTE problem}
+\subsection{Solving the multilevel NLTE problem}\label{Sec:MALI}
 
-Starting from the radiative transfer equation \eqref{Eq:1DRte} and the kinetic equilibrium equation \eqref{Eq:KinEq} we can construct a framework with which to solve the multilevel NLTE problem. We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, and present the problem in statistical equilibrium, although it generalises directly to non-zero left-hand sides on \eqref{Eq:KinEq}.
+Starting from the radiative transfer equation \eqref{Eq:1DRte} and the kinetic equilibrium equation \eqref{Eq:KinEq} we can construct a framework with which to solve the multilevel NLTE problem.
+The primary term of interest is the right-hand side of \eqref{Eq:KinEq}, which is concerned with the atomic transition rates.
+This is also shared with the statistical equilibrium equations \eqref{Eq:StatEq}, and thus we will solve the latter of these and return to the former later.
+We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, which is known as Multi-level Accelerated Lambda Iteration (MALI) with full-preconditioning.
+The full pre-conditioning approach handles arbitrary overlaps of lines and continua for multiple multi-level atoms.
+Earlier MALI methods \citep{Rybicki1991} are capable of handling lines overlying a constant background continuum, but not interacting with each other.
+They describe a form of radiative transfer that is still based on a transition by transition description of the problem.
+\citet{SocasNavarro1997} proved that this approach can be equivalent to the linearised ALI method of \citet{Scharmer1985} implemented in the MULTI code \citep{Carlsson1986,Carlsson1992} provided the same assumptions are made in the design of the local operator.
+Note that we distinguish between the linearised ALI method and the older method of complete linearisation \citep[e.g. ][]{Auer1969, Auer1973, Auer1976}.
+The latter of these is significantly more computationally demanding and less numerically stable than the ALI based methods we are considering here \citep[a comparison of MULTI and LINEAR-B is shown in][]{Carlsson1986}.
+As MALI with full-preconditioning directly supports all forms of overlapping transitions and the interactions between them whilst retaining the convergence properties of the ALI method, we focus solely on this method in the following description of radiative transfer and inclusion in the \Lw{} framework.
+Whilst there are also more rapidly converging methods (which can be viewed as extensions and variants of the ALI approach) such as the Gauss-Seidel and successive-over-relaxation methods of \citet{TrujilloBueno1995}, (with the extension to multilevel systems presented by \citet{Paletou2007}), the forth-and-back implicit Lambda iteration of \citet{AtanackovicVukmanovic1997} (extended to multilevel systems by \citet{Kuzmanovska2017}), and even the multi-grid method of \citet{FabianiBendicho1997}, we opt for this well-tested method that has proven stable and reliable in a wide variety of situations.
+This is particularly key when considering modelling of flares, which present much larger variations in parameters and steeper gradients than the quiet Sun models or academic semi-empirical models often considered, but these other methods present possible avenues of improvement for \Lw{}.
 
-Substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:KinEq}, and expanding the radiative rates gives
+Now, following \citet{Rybicki1992} and \citet{Uitenbroek2001} and substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:StatEq}, and subsequently expanding the radiative rates gives
 \begin{equation}
 \begin{aligned}
    &\sum_{l^\prime\neq l} (n_{l^\prime}C_{l^\prime l}) +
@@ -391,14 +411,14 @@ Substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:KinEq}, and expanding the 
    \label{Eq:StatEqExpanded}
 \end{aligned}
 \end{equation}
-$U$ and $V$ are marked with daggers despite their constant appear in the CRD case, as this will be needed when discussing partial frequency redistribution later.
+$U$ and $V$ are marked with daggers so as to later incorporate the necessary PRD effects.
 \citet{Rybicki1992} defined a new operator $\Psi$ such that
 \begin{equation}
     \Psi_{\nu, \vec{d}}[y] = \Lambda_{\nu, \vec{d}}[(\chi^\dagger)^{-1}y]
 \end{equation}
-These two operators are equivalent for a converged solution as $\chi^\dagger = \chi$.
+These two operators are equivalent for a converged solution as $\chi^\dagger = \chi$, but the use of this operator is necessary to obtain the form of statistical equilibrium equations preconditioned to be linear in the atomic populations that is core to this method.
 
-The operator splitting technique can again be applied here. We then have
+The operator splitting technique is again applied here. We then have
 \begin{equation}
     I(\nu, \vec{d}) = \Psi^*[\eta(\nu, \vec{d})] + (\Psi - \Psi^*)[\eta^\dagger(\nu, \vec{d})],
 \end{equation}
@@ -406,17 +426,18 @@ and then considering the effects on one atom, under the assumption that backgrou
 \begin{equation}
     I(\nu, \vec{d}) = I^\dagger(\nu, \vec{d})
                     - \sum_j\sum_{i<j}\Psi^*[n^\dagger_j U^\dagger_{ji}]
-                    + \sum_j\sum_{i<j}\Psi^*[n_j U^\dagger_{ji}].
+                    + \sum_j\sum_{i<j}\Psi^*[n_j U^\dagger_{ji}],
 \end{equation}
+where $i$ and $j$ refer to the atomic levels.
 
 The first two terms of this expression are often termed $I^\mathrm{eff}$ and in the case of a diagonal $\Psi^*$ operator this represents the non-local contribution to the radiation field from the current atom, and the contribution from all other species.
 
 We can write \eqref{Eq:StatEqExpanded} as
 \begin{equation}
-    \Gamma \vec{n} = 0,
+    \Gamma \vec{n} = \vec{0},
     \label{Eq:StatEqMatVec}
 \end{equation}
-where $\Gamma$ is a matrix consisting of the sum of $\Gamma^R$ due to the radiative contributions, and $\Gamma^C$ from the collisional contributions. $\vec{n}$ is the vector of the current level populations for the species at this point in the atmosphere.
+where $\Gamma$ is a matrix consisting of the sum of $\Gamma^R$ due to the radiative contributions, and $\Gamma^C$ from the collisional contributions. $\vec{n}$ is the vector of the updated level populations for the species at this point in the atmosphere.
 We can then write
 \begin{align}
 \begin{split}\label{Eq:GammaR}
@@ -424,80 +445,169 @@ We can then write
     \left(\sum_{m\neq l}\chi^\dagger_{lm}\right) \Psi^*_{\nu, \vec{d}} \left[ \sum_p U^\dagger_{l^\prime p} \right] \bigg)\, d\nu\,d\Omega
 \end{split}
 \end{align}
-for $l\neq l^\prime$. The problem is now represented by a system of linear equations. Due to the necessity of total number conservation each column of $\Gamma$ must be 0, which allows us to compute the diagonal terms as
+for $l\neq l^\prime$.
+The problem is now represented by a system of linear equations in the level populations.
+Due to the necessity of total number conservation the sum of the entries in each column of $\Gamma$ must be 0, which allows us to compute the diagonal terms as
 \begin{equation}
     \Gamma_{ll} = -\sum_{m\neq l} \Gamma_{ml}.
 \end{equation}
 
-Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework. More detail on the implementation are provided in the associated technical report \citep{Osborne2021} and in the documentation \NeedRef{}.
+An additional constraint must be applied to \eqref{Eq:StatEqMatVec} to determine the new populations, to avoid the trivial solution of $\vec{n} = \vec{0}$, which is otherwise always a valid solution.
+This constraint is typically expressed through local population conservation, which amounts to replacing one of the rows of $\Gamma$ with ones, and the associated entry in the right-hand-side zero-vector with the local species number density $n_\mathrm{total}$.
+This system can then be solved for $\vec{n}$, independently at each location in the atmosphere, as the current estimate of non-local coupling through the radiation field is already present in the terms that compose $\Gamma$.
+There is then a $\Gamma$ matrix at each point in the atmosphere for each atomic species being considered in detail, each of these is square with dimension equal to the number of levels in the atomic model for this species.
+
+Iterating the populations through \eqref{Eq:StatEqMatVec} with interleaved formal solutions gives us a reliable and rapidly converging method for solving the multilevel NLTE problem with multiple atoms and overlapping transitions as used in the \Lw{} framework.
+A more detailed description of the numerical implementation is provided in the \Lw{} paper \citep{Osborne2021}.
 
 \subsection{Time-Dependent Population Updates}\label{Sec:TimeDepPopUpdates}
 
-As discussed previously an update to the populations solving for statistical equilibrium can be phrased as $\Gamma \vec{n} = \vec{0}$. A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations. We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere).
+As discussed previously an update to the populations solving for statistical equilibrium can be phrased as $\Gamma \vec{n} = \vec{0}$.
+A variant of this method can also be applied to the time-dependent form of the kinetic equilibrium equations.
+We will not directly treat the advection term of equation \eqref{Eq:KinEq}, as this requires consideration of hydrodynamic effects and the discretisation schemes used therein (due to the large gradients of these populations that occur in the solar atmosphere).
+An overview of the methods used to numerically solve the conservation laws of hydrodynamics is provided in Sec.~\ref{Sec:IntroConsLaws}.
 We can, however, discretise $\partial n / \partial t = \Gamma \vec{n}$ as
 \begin{equation}
     \label{Eq:ThetaDisc}
     \frac{\vec{n}^{t+1} - \vec{n}^t}{\Delta t} = \theta \Gamma^{t+1} \vec{n}^{t+1} + (1-\theta)\Gamma^{t} \vec{n}^{t},
 \end{equation}
-where $\theta$ indicates the degree of implicitness, the $t$ and $t+1$ indices indicate the start and end of the timestep being integreated respectively, and $\Delta t$ the duration of the timestep.
+where $\theta$ indicates the degree of implicitness, the $t$ and $t+1$ indices indicate the start and end of the timestep being integrated respectively, and $\Delta t$ the duration of the timestep.
 $\vec{n}^{t+1}$ can then be found by rewriting \eqref{Eq:ThetaDisc} as
 \begin{equation}
     \label{Eq:TimeDepSystem}
     (\mathbb{I} - \theta\Delta t \Gamma^{t+1}) \vec{n}^{t+1} = (1-\theta)\Delta t \Gamma^{t}\vec{n}^{t} + \vec{n}^{t},
 \end{equation}
 with $\mathbb{I}$ the identity matrix, and iterating until $\vec{n}^{t+1}$ converges, for a new evaluation of $\Gamma^{t+1}$ at each iterate.
-
-\subsection{Collisional Rates}
-
-There are many collisional processes by which electrons can transition between levels in a plasma, including ionisation and recombination processes. These include excitation of ions by electrons, ionisation and excitation of neutral by electrons, excitation by protons and neutral hydrogen, as well as charge exchange with these species. There are other more advanced formulations too. Typically these are all empirical functional fits from laboratory and observational data, and are simply provided in a tabulated form. They are assumed to only depend on local plasma properties, such as the temperature, total particle density and electron density.
-
-\NeedRef{}
+This is known as a theta-method, and whilst semi-implicit schemes are possible by setting $0 < \theta < 1$, we have not found these necessary, and adopt the fully implicit $\theta=1$ in \Lw{}.
 
 \subsection{Partial Frequency Redistribution}\label{Sec:Prd}
 
-Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds. That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission. In this case the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal. In lower density regions with strong (typically resonance) lines, where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level; a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
-In this case the emission and absorption profiles for the line differ and this coherent scattering must be treated explicitly. This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into MALI following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
+Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds.
+That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission.
+In this case, the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal.
+In lower density regions with strong, typically resonance, lines\footnote{A transition whose lower state is the ground state of the atom is known as a resonance transition.} where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level; a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
+The line's emission and absorption profiles then differ and this coherent scattering must be treated explicitly.
+This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into the MALI framework following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
 
-We can define the emission profile coefficient $\rho_{ij} = \psi_{ij} / \phi_{ij}$, at which point all $U$ and $V$ terms can be rewritten in terms of $\rho$ and $\phi$, and $\dagger$ on these terms refers to the value of $\rho_{ij}$ evaluated at the previous iterate (analogous to $n^\dagger$).
+We can define the emission profile coefficient $\rho_{ij} = \psi_{ij} / \phi_{ij}$, at which point all $U$ and $V$ terms can be rewritten in terms of $\rho_{ij}$ and $\phi$, and $\dagger$ on these terms refers to the value of $\rho_{ij}$ evaluated at the previous iterate (analogous to $n^\dagger$).
 
-From this definition of $\rho$, under the assumptions of a line with an infinitely sharp lower level and broadened upper level, and the validity of PRD being in the atomic frame being approximated by PRD in the observer's frame \citep{Uitenbroek2001}, following \citet{Hubeny2014} we then have
+From this definition of $\rho$, under the assumptions of a line with an infinitely sharp lower level and broadened upper level, and the validity of PRD being in the atomic frame being approximated by PRD in the observer's frame \citep{Uitenbroek2001}, following \citet{Hubeny2014} we have
 \begin{align}
 \begin{split}
     \rho_{ij}(\nu, \vec{d}) = 1 + &\gamma\frac{\sum_{l < j}n_j B_{lj}}{n_j P_j} \oint\frac{1}{4\pi}\int I(\nu^\prime, \vec{d}^\prime) \\ &\cdot \left[ \frac{R^{II}_{lji}(\nu^\prime, \vec{d}^\prime; \nu, \vec{d})}{\phi_{ij}(\nu, \vec{d})} - \phi_{lj}(\nu^\prime, \vec{d}) \right]\,d\nu^\prime\,d\Omega^\prime,
 \end{split}
 \end{align}
+where $R^{II}$ is the generalised redistribution function for transitions of this kind \citep{Hubeny1982}, and $\gamma$ is the coherency fraction.
+The $lji$ subscript on $R^{II}$ describes the scattering process, indicating that electrons can start from any level in the range $[i, j)$.
+These scattering processes are then summed.
+The cross-redistribution, or Raman scattering, processes for which $l\neq i$ are typically less important than resonance scattering ($l = i$).
+Only considering the latter of these simplifies the evaluation $\rho_{ij}$.
+The redistribution function describes the probability that a photon with frequency $\nu^\prime$ and direction $\vec{d}^\prime$ is re-emitted with frequency $\nu$ and direction $\vec{d}$.
 
-where $R^{II}$ is the generalised redistribution function for transitions of this kind \citep{Hubeny1982}, and $\gamma$ is the branching ratio, or coherency fraction.
-The summation over $l$ and $lji$ subscript on $R^{II}$ describe the scattering process.
-When ignoring cross-redistribution (Raman scattering), we have $l=i$, and the summation is replaced by a single term, as we are only considering resonance scattering within the line $i\rightarrow j$.
-
-The coherency fraction $\gamma$ describes the normalised probability of a photons being re-emitted from the same sublevel of energy level $j$ before an elastic collision that will redistribute it across sublevels, provided that it is re-emitted at all.
-This is then given by
+The coherency fraction $\gamma$ describes the probability of a photon being emitted from its current sublevel of the energy level $j$, prior to an elastic collision that would redistribute it across the sublevels of $j$.
+This is computed as
 \begin{equation}
     \gamma = \frac{P_j}{P_j + Q_j},
 \end{equation}
-where $P_j$ is the total rate of transitions out of level $j$ (depopulation rate), and $Q_j$ is the total rate of elastic collisions affecting this level.
+where $P_j$ is the total depopulation rate of level $j$, and $Q_j$ is the total rate of elastic collisions affecting this level.
 
-Defining $g_{II}(\nu, \nu^\prime) = R^{II}(\nu, \nu^\prime)/\phi_{ij}(\nu^\prime)$, which is normalised such that
+Ignoring bulk plasma motions that create anisotropy in the radiation field, the integrals over angle and frequency can be split, and render the calculation of this angle-averaged form of $\rho_{ij}$ much simpler and less computationally demanding.
+Also defining $g_{II}(\nu, \nu^\prime) = R^{II}(\nu, \nu^\prime)/\phi_{ij}(\nu^\prime)$ such that the fast approximation of \citet{Gouttebroze1986} and \citet{Uitenbroek1989} can be employed, and ignoring cross redistribution terms we have
 \begin{equation}
-    \label{Eq:gIINorm}
-    \frac{1}{4\pi}\oint\int g_{II}(\nu, \nu^\prime) \,d\nu^\prime\,d\Omega= 1,
+    \label{Eq:RhoPrdAa}
+    \rho_{ij}(\nu) = 1 + \gamma \frac{n_i B_{ij}}{n_j P_j} \left( \int g_{II}(\nu, \nu^\prime) J(\nu^\prime)\,d\nu^\prime - \bar{J}_{ij} \right),
 \end{equation}
-as per \citet{Gouttebroze1986} and \citet{Uitenbroek1989} wherein fast approximations to this function are derived, and ignoring cross-redistribution we then have
-\begin{align}
-\begin{split}
-    \label{Eq:RhoPrd}
-    \rho_{ij}(\nu, \vec{d}) = 1 + & \gamma \frac{n_i B_{ij}}{n_j P_j} \oint \frac{1}{4\pi} \int I(\nu^\prime, \vec{d}^\prime) \\ & \cdot\left[ g_{II}(\nu, \nu^\prime) - \phi_{ij}(\nu^\prime, \vec{d}) \right]\,d\Omega^\prime\,d\nu^\prime.
-\end{split}
-\end{align}
-
-Ignoring bulk plasma flows, the integrals over angle and frequency can then be split, providing an angle-averaged form of $\rho$ that is much easier to compute. The hybrid PRD method of \citet{Leenaarts2012} provides an approximate solution to the angle-dependent PRD problem with bulk flows, by interpolating the radiation field to the rest frame of the plasma where this simpler form approximately holds.
+where
+\begin{equation}
+\bar{J}_{ij} = \frac{1}{4\pi} \oint \int I(\nu, \vec{d}) \phi(\nu, \vec{d})\,d\nu\,d\Omega = \frac{R_{ij}}{B_{ij}}
+\end{equation}
+is the frequency-integrated mean intensity across the transition.
+In the case of plasma flows we adopt the approximate hybrid treatment of \citet{Leenaarts2012}, using $J$ in the plasma's rest frame, to compute $\rho_{ij}$ in this same frame.
+Its value is then interpolated to find the value of $\rho$ at the Doppler shifted value in the observer's frame.
+The additional computational cost of this hybrid method over the angle-averaged method is very low, when compared to the complete angle-dependent method, and in most cases the results are comparable to the complete treatment \citet{Leenaarts2012a, Kerr2019}.
 
 \subsection{Charge Conservation}
-\subsubsection{Statistical Equilibrium}
-\subsubsection{Time-Dependent}
+
+We have thus far assumed that the electron density is known \emph{a priori} as part of the atmospheric model.
+Unfortunately, it is also insufficient to assume that the electron density follows the LTE ionisation state of the plasma, as many species (in particular hydrogen) with important NLTE spectral lines will be far from their LTE ionisation state \citep{Heinzel1995,Paletou1995,Bjorgen2019}.
+Synthesis of lines with an incorrect electron density will often converge to different final populations, and produce different spectral line shapes.
+A secondary iteration process is needed to determine the electron density in self-consistent way within the MALI framework.
+This is achieved through a Newton-Raphson iteration first proposed by \citet{Heinzel1995} and \citet{Paletou1995}.
+
+The statistical equilibrium equations of level $i$ of species $s$ can be written as a function of the species' level populations and the electron density
+\begin{equation}
+    \label{Eq:EseFn}
+    F_{s, i}(\vec{n}_s, n_e) = \sum_{j\neq i} n_j P_{ji}(\vec{n}_s, n_e) - n_i\sum_{j\neq i} P_{ij}(\vec{n}_s, n_e) = 0.
+\end{equation}
+Under our previous assumption of fixed electron density this expression is linear in unknown populations and reduces to the preconditioned system of the MALI method \eqref{Eq:StatEqMatVec}.
+We first obtain the solution to this system and denote this intermediate result $\widetilde{\vec{n}_s}$.
+
+A Newton-Raphson iteration is applied to this system to compute the correction to the level populations and electron density that will drive the $F_{s,i}(\vec{n}_s, n_e)$ towards 0.
+This is achieved by using the Jacobian of $F$.
+For an arbitrary function $f(\vec{x})$, to compute the correction $\delta x$ to an initial parameter $\vec{x_0}$ such that $f(\vec{x_0} + \vec{\delta x}) = 0$ it is sufficient to solve $-J\vec{\delta x} = f(\vec{x_0})$ for $\vec{\delta x}$, where $J$ is the Jacobian of $f$ evaluated at $\vec{x_0}$.
+Applying this procedure to the preconditioned statistical equilibrium equations gives
+\begin{equation}
+    \label{Eq:LinNr}
+    F_{s, i}(\widetilde{\vec{n}_s}, n_e^\dagger) =
+    - \sum_j \left( \left.\frac{\partial F_{s,i}(\vec{n}_s, n_e)}{\partial n_j}\right\rvert_{(\widetilde{\vec{n}_s}, n_e^\dagger)} \delta n_j \right)
+    \hspace{2.5em}- \left.\frac{\partial F_{s,i}(\vec{n}_s, n_e)}{\partial n_e}\right\rvert_{(\widetilde{\vec{n}_s}, n_e^\dagger)} \delta n_e,
+\end{equation}
+where $\delta n_j$ and $\delta n_e$ are the necessary corrections to obtain self-consistent level populations and electron density.
+
+This system applies \emph{simultaneously} to all species to be considered in the determination of the self-consistent electron density, and contains $\sum_s N_{\mathrm{level}, s} + 1$ equations, where $N_{\mathrm{level}, s}$ is the number of levels in the model of species $s$.
+Similarly to the initial population update through the MALI method \eqref{Eq:StatEqMatVec}, constraints are needed to ensure that all parameters are correctly conserved.
+Here we require constraints on the population of each species, and on the charge neutrality of the system.
+The former of these is expressed as
+\begin{equation}
+    \sum_j \delta n_j = n_\mathrm{total} - \sum_j \widetilde{n_j},
+\end{equation}
+for each species, while the latter is described by
+\begin{equation}
+    \delta n_e - \sum_s \sum_j \mathion_s(j) \delta n_{s, j} = n_{e, \mathrm{bg}} + \sum_s \sum_j \mathion_s(j) - n_e^\dagger,
+\end{equation}
+where $\mathion_s(j)$ is the ionisation state of the $j$-th level of species $s$, and $n_{e, \mathrm{bg}}$ represents the electron density due to species not considered in detail here.
+The left-hand side of the population conservation equation replaces one of the rows of the Jacobian for each species, analogously to the population conservation equation used in \eqref{Eq:StatEqMatVec}.
+The charge conservation equation is the ``extra'' equation in this system, and the left-hand side of the expression here forms one row of the Jacobian.
+
+The final Jacobian matrix is therefore block diagonal, with one row that couples these blocks to each other.
+The left-hand side of the system \eqref{Eq:LinNr} is given by the right-hand sides of the previous constraint equations, and $F_{s, i}(\widetilde{\vec{n}_s} n_e^\dagger) = \Gamma_s \widetilde{\vec{n}}$ for the remaining entries for each species $s$.
+This system can now be solved in the same fashion as \eqref{Eq:StatEqMatVec}, and the final populations can be computed from $n_j = \widetilde{n_j} + \delta n_j$ and $n_e = n_e^\dagger + \delta n_e$.
+The exact form of these derivatives used in the Jacobian can be computed analytically for all rates (although we resort to a finite-difference method for the collisional rates), and are presented in \citet{Osborne2021}.
+We omit their form here as it is not found to be particularly insightful.
+
+The time-dependent case can be solved very similarly to the previous statistical equilibrium case.
+Starting from the time-dependent population update equation \eqref{Eq:TimeDepSystem}, we can define
+\begin{equation}
+    \label{Eq:TimeDepNrFn}
+    G_{s,i}(\vec{n}^{t+1}_s, n_e) = n^{t+1}_{s,i} - \theta \Delta t F_{s,i}(\vec{n}^{t+1}_s, n_e) - (1-\theta)\Delta t \Gamma^t_s \vec{n}^t_s - n^t_{s,i} = 0,
+\end{equation}
+and apply this secondary Newton-Raphson iteration process to $G$, using the same constraint equations as before.
+
+It is important to stress that only one Newton-Raphson iteration is needed following each standard preconditioned population update as the original MALI system was already preconditioned and linear in the populations.
+The iterative process proceeds by following each MALI population update with a secondary Newton-Raphson iteration evaluated using the updated $\Gamma$.
 
 \subsection{Determining Numerical Convergence}
+
+The iterative procedures presented in the previous sections yield refined estimates of the level populations throughout the model atmosphere for each additional iteration.
+This raises the question of when to stop iterating, and by what metric to measure convergence.
+The most important quantities to use when estimating convergence are the populations $n$, and $J$ due to its appearance in the source function.
+Convergence describes the difference between these values for two subsequent iterations, and how far they are from the true values for the model.
+As we do not generally have knowledge of the latter, the former is used to determine when to cease iterations.
+In NLTE problems, where spectral lines will often form in relatively compact regions of the atmosphere, the change may only be large in this region, so the $L^1$ or $L^2$ norms of the difference between successive iterates may not be very informative.
+Additionally, the value of both $J$ and $n$ will vary hugely throughout the atmosphere, thus the absolute change over an iteration may not be particularly meaningful.
+Instead, it is common to use the $L^\infty$ norm of this relative change of these parameters.
+For a population $n_i$, following \citet{Auer1994a} we denote this $R_c(itr, i)$ for level $i$ and iteration $itr$.
+It can be expressed as
+\begin{equation}
+    R_c(itr, i) = \mathrm{max}_k \left|\frac{n_i^{itr} - n_i^{itr-1}}{n_i^{itr}}\right|,
+\end{equation}
+where $k$ represents the location in the atmosphere, and $n_i^{itr}$ represents the population of level $i$ after iteration $itr$.
+By using this method we ensure that the largest update to a term is small relative to its current value.
+When applied to $J$, the relative change is computed across frequency and atmospheric depth.
+\citet{Auer1994a} and \citet{FabianiBendicho1997} provide a framework for estimating both the error from the fully converged solution, and the truncation error representing the error due to the discretisation onto the numerical grid, but in practice this is rarely employed outside of multi-grid strategies \citep[e.g.][]{FabianiBendicho1997,Leger2007}.
+Instead, we apply the more common technique of iterating until the maximum value of $R_c$ for the populations drops below a certain threshold (typically $\sim 10^{-3}$)\footnote{It is wise to also track $R_c$ for $J$, and although this is less commonly used as a convergence criterion, we often choose to do so as a safety factor. The $R_c$ of one of $n$ or $J$ being significantly larger than the other likely indicates that the spatial, frequency, or angular quadrature is ill-suited to the problem at hand.}.
+This approach has been applied with success to many modelling problems within the MULTI, RADYN, and RH \citet{Uitenbroek2001} codes (amongst others), but we note following \citet{Auer1994a} and \citet{FabianiBendicho1997} that a small value of $R_c$ does not guarantee convergence, whilst methods such as the multi-grid one they present can do so.
+Unfortunately, these methods are significantly more complex than the MALI method presented here and appear to have difficulty in more realistic multi-dimensional models (Štěpán, \emph{private communication}).
 
 \section{The \Lw{} Framework}
 
@@ -1047,7 +1157,7 @@ During the development of \Lw{}, a simpler pedagogic framework was also construc
 This framework, \emph{Lightspinner}\footnote{Developed on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.} \citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
 It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE RT and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
-\section{Introduction to Hydrodynamics and Conservation Laws}
+\section{Introduction to Hydrodynamics and Conservation Laws}\label{Sec:IntroConsLaws}
 \emph{The majority of the basic theory in this section follows the two texts by \citet{LeVeque1997,LeVeque2002}.}
 
 In the previous sections we have explained the basis of the radiative transfer methods used throughout this work.
