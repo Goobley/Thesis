@@ -1,16 +1,16 @@
-\chapter{Flare Observations}\label{Chap:FlareObservations}
+\chapter{Optical Flare Observations and Inversions}\label{Chap:FlareObservations}
 % spell-checker: disable
 %TC:group pycode 0 0
 %TC:group tikzpicture 0 0
 \begin{pycode}[FlareObs]
 name = 'FlareObs'
-chRad = texfigure.Manager(
+chFlareObs = texfigure.Manager(
     pytex,
     './01bFlareObservations',
     number=1,
     python_dir='./01bFlareObservations/python',
     fig_dir=   './01bFlareObservations/Figs',
-    data_dir=  './Data/01bFlareObservations'
+    data_dir=  './Data/01aFlareModelling'
 )
 \end{pycode}
 % spell-checker: enable
@@ -26,26 +26,292 @@ chRad = texfigure.Manager(
 Solar flares release a vast quantity of energy across the entire electromagnetic spectrum, observed from $\gamma$-rays to microwaves.
 Almost all of this presents significant diagnostic potential, and is observed by a plethora of advanced instruments.
 Many of these have to be situated above the Earth's atmosphere, which shields us from the biologically harmful wavelengths at which they observe.
-A in-depth review of different observatories, and the flaring signatures they observe is given in \citet{Fletcher2011}.
+An in-depth review of different observatories, and the flaring signatures they observe is given in \citet{Fletcher2011}.
 
 \section{Important Optical Spectral Lines}
 
+% spell-checker: disable
+\begin{pycode}[FlareObs]
+from lightweaver.rh_atoms import CaII_atom, H_4_atom
+import lightweaver as lw
+# NOTE(cmo): This is adapted from the default Lw version for thesis style/adjustability.
+def grotrian_diagram(atom : 'AtomicModel', ax=None, orbitalLabels=None,
+                     vacuumWavelength=True, highlightLines=None, adjustTextPositions=False,
+                     labelLevels=True, wavelengthLabels=True, continuumEdgeLabels=False,
+                     boundOnly=False, fontSize=9, suppressLineLabels=None, rotateLabels=True,
+                     lineLabelYLocs=None):
+    '''
+    Produce a Grotrian (term) diagram for a model atom.
+
+    Parameters
+    ----------
+    atom : AtomicModel
+        The model atom for which to produce the diagram.
+    ax : matplotlib.axis.Axes, optional
+        The axes on which to create the plot.
+    orbitalLabels : Optional[List[str]]
+        The labels for the oribtals on the x-axis.
+    vacuumWavelength : bool
+        Whether to plot the wavelengths with their vacuum values, or convert
+        to air. Default: True i.e. vacuum.
+    highlightLines : Optional[List[int]]
+        The indices of lines in atom.lines to highlight. These will be
+        plotted in red, whereas the others will be plotted in green.
+    adjustTextPositions: bool
+        Whether to move the wavelength labels around to avoid the level
+        labels and each other. Default: False.
+    labelLevels: bool or List[str]
+        Whether to label the levels (parsing the names for these from
+        atom.levels[i].label if True), or uses the provided strings (one per
+        level) if a List[str], or not label at all (False). Default: True.
+    wavelengthLabels : bool
+        Whether to label the wavelengths for each bound-bound transition.
+        Default: True.
+    continuumEdgeLabels : bool
+        Label the continuum edge wavelengths (only if wavelengthLabels also True).
+        Default: False.
+    boundOnly : bool
+        Whether to only show the bound terms of the model.
+        Default: False.
+    fontSize: float
+        Font size to use for the annotations. Default: 9
+    suppressLineLabels : Optional[List[int]]
+        List of line indices to not print wavelength labels for. Default: None.
+    rotateLabels : bool
+        Whether to rotate the wavelength labels to lie along the line
+        transitions, does not work well with `adjustTextPositions`. Default: True
+    '''
+    from typing import List, Sequence
+    import lightweaver.constants as C
+    import matplotlib.pyplot as plt
+    from copy import copy
+    if adjustTextPositions:
+        from adjustText import adjust_text
+
+    if ax is None:
+        ax = plt.gca()
+
+    if highlightLines is None:
+        highlightLines = []
+
+    orbits = ['S', 'P', 'D', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Q', 'R', 'T', 'U', 'V', 'W', 'X']
+
+    levels = [copy(l) for l in atom.levels]
+    levelTrueEEv = [level.E_eV for level in atom.levels]
+    # NOTE(cmo): Just assume that it is, even if it has a defined L (e.g. for
+    # polarisation reasons)
+    # if atom.levels[-1].L is not None:
+    #     raise ValueError('Last level should be ground term')
+
+    ls = sorted(list(set([l.L for l in atom.levels[:-1]])))
+
+    avoidLevelLabels = []
+    # NOTE(cmo): Draw levels in
+    MinLevelGap = 0.2
+    for currentL in ls:
+        currentEnergies = []
+        for level in levels[:-1]:
+            if level.L == currentL:
+                e = level.E_eV
+                if len(currentEnergies) != 0:
+                    energyDiff = np.array([e - ee for ee in currentEnergies])
+                    idx = np.argmin(np.abs(energyDiff))
+                    if np.abs(energyDiff[idx]) < MinLevelGap:
+                        e = currentEnergies[idx] + np.sign(energyDiff[idx]) * MinLevelGap
+                ax.plot([level.L-0.25, level.L+0.25], [e, e], c='k')
+                currentEnergies.append(e)
+                level.E = e * C.EV * C.CM_TO_M / C.HC
+
+
+    texts = []
+    if not boundOnly:
+        # NOTE(cmo): Draw overlying cont
+        ax.plot([min(ls)-0.25, max(ls)+0.25], [levels[-1].E_eV, levels[-1].E_eV], '--', c='C0')
+
+        # NOTE(cmo): Draw b-f
+        contPerCol = {L: 0 for L in ls}
+        for cont in atom.continua:
+            lu = levels[cont.j]
+            ll = levels[cont.i]
+            nc = contPerCol[ll.L]
+            contPerCol[ll.L] += 1
+            xLoc = ll.L + 0.05 * nc
+            ax.annotate("", xy=(xLoc,lu.E_eV), xytext=(xLoc, ll.E_eV), arrowprops={'arrowstyle':'->','color':'y'})
+            if wavelengthLabels and continuumEdgeLabels:
+                textX = ll.L
+                # textY = lu.E_eV - 0.05 * (ll.E_eV + lu.E_eV)
+                textY = lu.E_eV - 0.5
+                lambdaEdge = cont.lambdaEdge if vacuumWavelength else vac_to_air(cont.lambdaEdge)
+                a = ax.annotate('%.2f' % lambdaEdge, xy=(textX, textY),
+                                fontsize=fontSize, ha='center')
+                texts.append(a)
+
+
+    ax.relim()
+    ax.autoscale_view()
+
+
+    # NOTE(cmo): Draw b-b
+    for idx, line in enumerate(atom.lines):
+        lu = levels[line.j]
+        ll = levels[line.i]
+        lineColor = 'r' if idx in highlightLines else 'k'
+        ax.annotate("", xy=(ll.L,ll.E_eV), xytext=(lu.L, lu.E_eV),arrowprops={'arrowstyle':'->','color': lineColor, 'alpha':0.5})
+        if wavelengthLabels:
+            if suppressLineLabels is not None and idx in suppressLineLabels:
+                continue
+            textX = 0.5 * (ll.L + lu.L)
+            textY = 0.5 * (ll.E_eV + lu.E_eV)
+            lambda0 = line.lambda0 if vacuumWavelength else vac_to_air(line.lambda0)
+            if rotateLabels:
+                angle = np.rad2deg(np.arctan2(lu.E_eV - ll.E_eV, lu.L - ll.L))
+                if angle > 90:
+                    angle -= 180.0
+                offset = max(0.01 * max(ax.get_ylim()), 0.04)
+                if lineLabelYLocs:
+                    textY = lineLabelYLocs[idx]
+                else:
+                    textX += offset
+                    textY -= offset
+                a = ax.text(textX, textY, '%.2f nm' % lambda0,# xy=(textX, textY),
+                                fontsize=fontSize, rotation=angle, transform_rotates_text=True, ha='center', va='center')
+            else:
+                if lineLabelYLocs:
+                    textY = lineLabelYLocs[idx]
+                a = ax.annotate('%.2f nm' % lambda0, xy=(textX, textY),
+                                fontsize=fontSize)
+            texts.append(a)
+
+    # NOTE(cmo): Label levels on top
+    if labelLevels:
+        if not isinstance(labelLevels, Sequence):
+            labelsUsed = []
+            for i, level in enumerate(levels[:-1]):
+                endIdx = [level.label.upper().rfind(x) for x in ['E', 'O']]
+                maxIdx = max(endIdx)
+                if maxIdx == -1:
+                    raise ValueError("Unable to determine parity of level %s" % (repr(level)))
+                label = level.label[:maxIdx+1].upper()
+                words: List[str] = label.split()
+                label = ' '.join(words[:-1])
+                if any(label == l for l in labelsUsed):
+                    continue
+                labelsUsed.append(label)
+                offsetY = min(max(0.04 * max(ax.get_ylim()), 0.05), 0.5)
+                offsetX = min(max(0.1 * max(ax.get_ylim()), 0.2), 0.4)
+                labelY = level.E_eV - offsetY if level.E_eV != 0 else level.E_eV + offsetY / 2
+                labelX = level.L - offsetX if level.E_eV != 0 else level.L + offsetX / 3
+                a = ax.annotate(label, xy=(labelX, labelY), fontsize=fontSize)
+                avoidLevelLabels.append(a)
+            if not boundOnly:
+                a = ax.annotate(levels[-1].label, xy=(-0.25, levels[-1].E_eV + 0.04), color='b', fontsize=fontSize)
+                # bbox={'boxstyle': 'round,pad=0.3', 'fc': 'w', 'alpha': 0.2})
+                avoidLevelLabels.append(a)
+        else:
+            for i, level in enumerate(levels[:-1]):
+                offsetY = min(max(0.04 * max(ax.get_ylim()), 0.1), 0.5)
+                offsetX = min(max(0.1 * max(ax.get_ylim()), 0.2), 0.4)
+                labelY = level.E_eV - offsetY if level.E_eV != 0 else level.E_eV + offsetY / 2
+                labelX = level.L - offsetX if level.E_eV != 0 else level.L + offsetX / 3
+                a = ax.annotate(labelLevels[i], xy=(labelX, labelY), fontsize=fontSize)
+                avoidLevelLabels.append(a)
+            a = ax.annotate(labelLevels[-1], xy=(-0.25, levels[-1].E_eV + 0.04), fontsize=fontSize, bbox={'boxstyle': 'round,pad=0.3', 'fc': 'w', 'alpha': 0.2})
+            avoidLevelLabels.append(a)
+
+
+    if adjustTextPositions and wavelengthLabels:
+        adjust_text(texts, autoalign='xy', expand_text=(1.05, 1.05),
+                    force_text=(0.05, 0.05), arrowprops={'arrowstyle': 'wedge'},
+                    # bbox={'boxstyle': 'round,pad=0.3', 'fc': 'g', 'alpha': 0.2},
+                    # avoid_self=False,
+                    add_objects=avoidLevelLabels, lim=200 )
+
+    if orbitalLabels is None:
+        orbitalLabels = {}
+        labelled = []
+        for level in levels[:-1]:
+            if level.L in labelled:
+                continue
+            labelled.append(level.L)
+            label = level.label
+            split = label.split()
+            idx = len(split) - 1
+            while idx >= 0:
+                if len(split[idx]) > 1:
+                    break
+                idx -= 1
+
+            orbitalLabels[level.L] = split[idx]
+        orbitalLabels = [orbitalLabels[k] for k in sorted(orbitalLabels.keys())]
+    if len(ls) != len(orbitalLabels):
+        raise ValueError('Length of orbital labels does not match provided number of different Ls in the model atom')
+    ax.set_xticks(ls)
+    ax.set_xticklabels(orbitalLabels)
+
+    ax.set_ylabel('Energy [eV]')
+
+ca = CaII_atom()
+
+if False:
+    h = H_4_atom()
+    fig, ax = plt.subplots(1, 2, figsize=texfigure.figsize(pytex, scale=1))
+    grotrian_diagram(h, ax=ax[0], continuumEdgeLabels=False, wavelengthLabels=True, fontSize=9, rotateLabels=True, adjustTextPositions=False, highlightLines=[2], boundOnly=True, lineLabelYLocs=[5.65,6.45,10.85], orbitalLabels=[r'S', r'P', r'D'], labelLevels=['1s', '2p', '3d'])
+    grotrian_diagram(ca, ax=ax[1], continuumEdgeLabels=False, wavelengthLabels=True, fontSize=9, rotateLabels=True, adjustTextPositions=False, highlightLines=[4], boundOnly=True, lineLabelYLocs=[1.3,1.85,2.25,2.5,2.75], orbitalLabels=[r'$^2$S', r'$^2$P', r'$^2$D'], labelLevels=['4s', '', '3d', '', '4p'])
+    ax[1].set_ylabel('')
+    fig.tight_layout()
+    lFig = chFlareObs.save_figure('Grotrians', fig, fext='.pgf')
+    lFig.caption = r'Grotrian (term) diagram of primary H and \Caii{} bound terms of interest. The \Ha{} and \CaLine{} transitions are highlighted in red.'
+    lFig.short_caption = r'Grotrian (term) diagram of primary H and \Caii{} bound terms of interest.'
+else:
+    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1))
+    ax = fig.gca()
+    grotrian_diagram(ca, ax=ax, continuumEdgeLabels=False, wavelengthLabels=True, fontSize=9, rotateLabels=True, adjustTextPositions=False, highlightLines=[4], boundOnly=True, lineLabelYLocs=[1.4,1.8,2.3,2.5,2.7], orbitalLabels=[r'$^2$S', r'$^2$P', r'$^2$D'], labelLevels=['4s', '', '3d', '', '4p'])
+    lFig = chFlareObs.save_figure('Grotrians', fig, fext='.pgf')
+    lFig.caption = r'Grotrian (term) diagram of \Caii{} bound terms of interest. The \CaLine{} transition is highlighted in red. The wavelength of each bound-bound transition is labelled.'
+    lFig.short_caption = r'Grotrian (term) diagram of \Caii{} bound terms of interest.'
+
+\end{pycode}
+\py[FlareObs]|chFlareObs.get_figure('Grotrians')|
+% spell-checker: enable
+
 Ground-based telescopes can have much larger apertures and be more complex than their space-based counterparts for an equivalent budget, allowing for much better spatial resolution.
+The instruments attached to them can also be repaired, replaced, and upgraded over time, allowing them to have much longer lifecycles than space missions.
 In exchange for this they can only observe in limited spectral bands (due to the aforementioned atmospheric absorption effects), and suffer from the effects of atmospheric turbulence.
 To some degree the effects of atmospheric seeing can be accounted for and corrected, but the magnitude of these effects will vary on a daily basis.
-With these telescopes we therefore focus on visible optical and near-infrared lines, which are the least affected by atmospheric scattering and allow us to investigate lines forming in the chromosphere and photosphere.
+Our aim is to develop predictions and techniques allowing the more thorough exploitation of the high spatially and spectrally resolved data obtained from the current and next-generation of ground-based optical telescopes to enhance our understanding of the chromosphere during solar flares.
 
-We shall focus primarily on two of the strongest optical lines, \Ha{} at \SI{656.3}{\nano\m}, and \CaLine{}.
-The former of these is the first of the hydrogen Balmer series, and is emitted by an electron transitioning between from the $n=3$ and $n=2$ bound levels of hydrogen.
-Both of these lines form in the chromosphere (albeit at different altitudes), and carry large amounts of information pertaining to the details of their formation.
+There are but a handful of spectral lines that are accessible to these ground-based telescopes and that are sensitive to the chromosphere.
+Following \citet{DelaCruzRodriguez2017} these are primarily the \Caii{} H \& K lines, the \Caii{} infrared triplet, \Ha{}, He\,\textsc{i} D3, and He\,\textsc{i} \SI{1083}{\nano\metre}.
+Many other spectral lines with chromospheric diagnostic potential, such as Ly$\alpha$, Mg\,\textsc{ii} h \& k, He\,\textsc{ii} \SI{30.4}{\nano\metre} can only be observed from space.
+The decision regarding which of these to focus on depends both on the availability of observations (current and future) and the complexity of modelling.
+The \Ha{} line at \SI{656.3}{\nano\m} has long been exploited.
+It has a strong line core and wide wings with a varying degree of central reversal and asymmetry \citep[e.g. ][]{Svestka1966}.
+These features suggest that the line responds differently to different flares, suggesting that it has good diagnostic potential.
+Indeed, \Ha{} has been a component of many investigations into flare dynamics and evolution \citep[e.g.][]{Acton1982,Heinzel1994,Wang1995,Kuridze2015,RubioDaCosta2016}.
+Other lines in the hydrogen Balmer series can also be used, optionally in conjunction with \Ha{}, such as in the work of \citet{Capparelli2017}.
+The spectral lines of \Caii{} have long been present in the \Radyn{} code and used for chromospheric diagnostics \citep[e.g.][]{Carlsson1992a}, and are a mainstay of flaring chromospheric analysis \citep[e.g.][]{1997Mein,Cauzzi2008,Kuridze2015,RubioDaCosta2016,Kuridze2018,Vissers2021,Yadav2021}, thanks in part to the polarisability of the \CaLine{} line.
+There have been relatively few observations of the neutral helium lines at high spatial and spectral resolution in flares \citep[e.g.][]{Zeng2014, Libbrecht2019}, but they appear to have strong diagnostic potential, although it is likely necessary to exploit spectropolarimetric information to fully interrogate these lines \citep{Libbrecht2019}.
+Recently unpolarised RHD modelling efforts have started to investigate the possible dimming of these lines \citep{Kerr2021}.
 
-\TODO{Discuss spectral line shapes (from templates) and nomenclature of various features.}
+In the following we shall therefore focus primarily on two of the strongest optical lines, \Ha{}, and \CaLine{}, which have a long history of use within RHD modelling, and as will be discussed, can often be observed with the same instrument.
+\Ha{} the first of the hydrogen Balmer series, and is emitted by an electron transitioning between from the $n=3$ and $n=2$ bound levels of hydrogen.
+\CaLine{} is part of the \Caii{} infrared triplet, and is highlighted in red on the Grotrian diagram in Fig.~\ref{Fig:Grotrians}.
+The \CaLine{} line is the most polarisable of this triplet (as it has the largest Landé factor of the three): it is not blended with other lines, and lies relatively close to the peak of the solar spectrum, providing a high flux for easy integration.
+The pair of transitions on this same figure, between the 4p$^2$P and 4s$^2S$ levels, are the \Caii{} H \& K lines.
 
-\subsection{CRISP observations of these}\label{Sec:CRISP}
+The \Ha{} and \CaLine{} lines have been extensively used together for chromospheric analysis and carry complementary information.
+Simulations have found them to form at different heights within the chromosphere, for example \citet{Kuridze2015} found the \Ha{} line core forming in the 1.1--\SI{1.2}{\mega\metre} region of a \Radyn{} simulation, whereas the \CaLine{} line core was formed over a much more compact region, deeper in the atmosphere, around an altitude of \SI{0.9}{\mega\m}.
+Diagnostics involving both \Ha{} and \CaLine{} can therefore reliably constrain chromospheric models, and are sensitive to a larger region of the solar atmosphere than is possible with just one of the two.
+Both of these lines have been reliably modelled without the need for additional time-consuming PRD calculations, which is not the case for the \Caii{} H \& K lines.
+Whilst \Ha{} can be treated in CRD, \citet{Leenaarts2012a} find that three-dimensional radiative transfer modelling is needed to correctly reproduce the expected intensity structure from RMHD models.
+Flare models with detailed chromospheric treatment are not yet possible in three-dimensions, but with the large gradients in the radiation field that occur in flares it is likely that this requirement will also hold (as supported by the simulations presented in Chap.~\ref{Chap:2DRT}).
+
+
+\subsection{Swedish Solar Telescope}\label{Sec:CRISP}
 
 What is it and how is it prepped?
 
-\subsection{DKIST, \& the future.}
+\subsection{Daniel K Inouye Solar Telescope}
 
 What resolution, when?
 
@@ -274,13 +540,13 @@ plt.xlabel(r'$\log\tau_c$')
 plt.ylabel(r'S')
 plt.legend(frameon=False, loc='lower right')
 
-lFig = chRad.save_figure('InferredSourceFn', fig, fext='.pgf')
+lFig = chFlareObs.save_figure('InferredSourceFn', fig, fext='.pgf')
 lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
 lFig.short_caption = r'Failure of pseudoinverse in inferring quadratic varying source function.'
 \end{pycode}
 %spell-checker: enable
 
-\py[FlareObs]|chRad.get_figure('InferredSourceFn')|
+\py[FlareObs]|chFlareObs.get_figure('InferredSourceFn')|
 
 % Therefore, there is a need for \emph{regularisation} of the solution, penalising deviations from smooth solutions.
 % This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
@@ -327,7 +593,7 @@ The intensity response to perturbation $\delta q$ in parameter $q$ at depth poin
 \begin{equation}
     \mathcal{R}_q(k) = \frac{I(q_k + \delta q) - I(q_k)}{\delta q}.
 \end{equation}
-Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}), and has proven more robust.
+Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}) and also \citet{DelaCruzRodriguez2017}, and has proven more robust.
 The response function is then written as
 \begin{equation}
     \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
