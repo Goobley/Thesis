@@ -11,12 +11,9 @@ from cycler import cycler
 from matplotlib.colors import to_rgb
 
 rc = {
-    'pgf.preamble': [
-        r'\usepackage{siunitx}',
-        r'\newcommand*{\varv}{\upsilon}'
-    ],
-    'axes.titlesize': 12,
-    'axes.labelsize': 12,
+    'pgf.preamble': r'\usepackage{siunitx} \newcommand*{\varv}{\upsilon}',
+    'axes.titlesize': 11,
+    'axes.labelsize': 11,
     'legend.fontsize': 10,
     'xtick.labelsize': 10,
     'ytick.labelsize': 10,

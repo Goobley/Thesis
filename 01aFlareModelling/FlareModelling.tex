@@ -202,7 +202,7 @@ All of these methods can be derived analogously to the linear formal solver pres
 
 \citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern 3D RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
 As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed.
-An accurate treatment of steep gradients and discontinuities is not just valuable to the RMHD models, but important to all RT modelling, as a reduction in the spatial resolution needed to correctly evaluate radiative transfer can lead to significant reductions in computational requirements, making more complex simulations possible.
+An accurate treatment of steep gradients and discontinuities is not just valuable to the RMHD models, but important to all radiative transfer modelling, as a reduction in the spatial resolution needed to correctly evaluate radiative transfer can lead to significant reductions in computational requirements, making more complex simulations possible.
 
 
 \subsection{LTE vs NLTE}
@@ -673,7 +673,7 @@ Multiple routines present in the calculation of the background terms are thread-
 There are also 2439 lines of Cython \citep{Behnel2011} code present in the backend.
 Cython is the language used to bridge the Python interfaces to the C++ core.
 It allows us to share NumPy \citep{Harris2020} arrays by reference between Python and C++, allowing changes to the array's contents to be visible from either language with no duplication necessary.
-This data sharing is not just efficient but allows the Python frontend to be ``involved'' with the RT calculations on a deep level in line with \Lw{}'s design goals.
+This data sharing is not just efficient but allows the Python frontend to be ``involved'' with the radiative transfer calculations on a deep level in line with \Lw{}'s design goals.
 
 \subsection{Model Atoms}
 
@@ -720,7 +720,7 @@ The choices of the terms to parallelise has been motivated by our observations o
 \subsection{Validation}
 
 The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
-RH is a well-established code that serves as a cornerstone of NLTE RT in the solar physics community.
+RH is a well-established code that serves as a cornerstone of NLTE radiative transfer in the solar physics community.
 It assumes a single time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
 The MALI method with full preconditioning \citep{Rybicki1992} is used, and implementations of angle-averaged and angle-dependent PRD and cross-redistribution are present following the methods outlined in \citet{Uitenbroek2001,MillerRicci2002}.
 RH can also be used for NLTE modelling of molecular lines, but we do not make use of this here.
@@ -1177,7 +1177,7 @@ This simulation is the F9 simulation that will be discussed in Chap.~\ref{Chap:T
 The electron density in the \Radyn{} model is shown in blue, and the \Lw{} model in dashed orange.
 The agreement between the two models is extremely good, including the fine features around $z=\SI{1.2}{\mega\metre}$ shown in the \SI{11}{\second} panel.
 
-\Lw{} agrees well with the other models against which it has been tested here; it is easy to construct new validation tests for statistical equilibrium cases that can be run with many different extant RT codes, but the validation of time-dependent treatments on their own is more difficult, due to current tools often coupling these equations to hydrodynamics.
+\Lw{} agrees well with the other models against which it has been tested here; it is easy to construct new validation tests for statistical equilibrium cases that can be run with many different extant radiative transfer codes, but the validation of time-dependent treatments on their own is more difficult, due to current tools often coupling these equations to hydrodynamics.
 Other tests have been undertaken to verify the performance of \Lw{}, but those presented here should be sufficient to demonstrate its capabilities.
 
 

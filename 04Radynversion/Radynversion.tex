@@ -27,7 +27,7 @@ chRad = texfigure.Manager(
 
 As discussed in Sec.~\ref{Sec:InverseProblems}, the assumptions that render NLTE response function based approach to inversions tractable, such as hydrostatic equilibrium, cannot reasonably be applied in flares where flows often approach the sound speed.
 We therefore need an inversion technique that can operate outside of these constraints.
-In the notation of Sec.~\ref{Sec:InverseProblems}, our standard RT forward process can be framed as a function $y = f(x)$ with atmospheric inputs $x$ and line profiles $y$.
+In the notation of Sec.~\ref{Sec:InverseProblems}, our standard radiative transfer forward process can be framed as a function $y = f(x)$ with atmospheric inputs $x$ and line profiles $y$.
 Clearly this function is not bijective, but if we also capture the information lost in the forward process, we can instead define a bijective function $x = g(y, z)$ such that $g^{-1}$ represents the forward process, and $g$ the inverse process.
 Our theory of radiative transfer does not give any immediate insight into the formulation of $g$ with so few constraints, so we instead turn to the field of machine learning from RHD simulations with the intention of learning the form of the information lost in the forward process.
 
@@ -506,33 +506,33 @@ fig, ax = plt.subplots(ncols=3,nrows=2,
 figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8),
 constrained_layout=True, sharex=True, sharey=True)
 sol_cm = 'Greys_r'
-ax[0,0].imshow(im_bwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,0].imshow(im_bwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[0,0].set_title(r"$\lambda=854.2-0.08$ nm")
-ax[0,0].set_ylabel("y [\"]")
+ax[0,0].set_ylabel(r"y [$^{\prime\prime}$]")
 ax[0,0].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,0].plot(point_2_ca[0],point_2_ca[1],"ws")
-ax[0,1].imshow(im_centre_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,1].imshow(im_centre_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[0,1].set_title(r"$\lambda=854.2$ nm")
 ax[0,1].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,1].plot(point_2_ca[0],point_2_ca[1],"ws")
-ax[0,2].imshow(im_rwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[0,2].imshow(im_rwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[0,2].set_title(r"$\lambda=854.2+0.08$ nm")
 ax[0,2].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,2].plot(point_2_ca[0],point_2_ca[1],"ws")
-ax[1,0].imshow(im_bwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,0].imshow(im_bwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[1,0].set_title(r"$\lambda=656.3-0.14$ nm")
-ax[1,0].set_ylabel("y [\"]")
-ax[1,0].set_xlabel("x [\"]")
+ax[1,0].set_ylabel(r"y [$^{\prime\prime}$]")
+ax[1,0].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,0].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,0].plot(point_2_ha[0],point_2_ha[1],"ws")
-ax[1,1].imshow(im_centre_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,1].imshow(im_centre_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[1,1].set_title(r"$\lambda=656.3$ nm")
-ax[1,1].set_xlabel("x [\"]")
+ax[1,1].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,1].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,1].plot(point_2_ha[0],point_2_ha[1],"ws")
-ax[1,2].imshow(im_rwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="bottom",cmap=sol_cm)
+ax[1,2].imshow(im_rwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
 ax[1,2].set_title(r"$\lambda=656.3+0.14$ nm")
-ax[1,2].set_xlabel("x [\"]")
+ax[1,2].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
 
@@ -604,8 +604,7 @@ lFig.short_caption = r'Inversion results for off-ribbon pixel.'
 % spell-checker: enable
 
 As a proof of concept the RADYNVERSION model was applied to the two-ribbon M1.1 flare SOL 20140906T17:09 observed with the CRISP instrument in \Ha{} and \CaLine{}.
-This event occurred in NOAA AR 12157 with heliocentric coordinates (-732", -302").
-This data was preprocessed using the CRISPRED pipeline \citep{2015dlcr} and is publicly available in the F-CHROMA database.
+The preparation of this data is briefly discussed in Sec.~\ref{Sec:CRISP}.
 
 \py[Radynversion]|chRad.get_figure('CrispPlot')|
 

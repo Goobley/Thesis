@@ -26,7 +26,9 @@ chFlareObs = texfigure.Manager(
 Solar flares release a vast quantity of energy across the entire electromagnetic spectrum, observed from $\gamma$-rays to microwaves.
 Almost all of this presents significant diagnostic potential, and is observed by a plethora of advanced instruments.
 Many of these have to be situated above the Earth's atmosphere, which shields us from the biologically harmful wavelengths at which they observe.
-An in-depth review of different observatories, and the flaring signatures they observe is given in \citet{Fletcher2011}.
+An in-depth review of different spectral ranges, and the flaring signatures they observe is given in \citet{Fletcher2011}.
+
+In this chapter we will discuss the optical spectral lines that we focus on during this thesis, the basics of inversion (retrieving a solar atmosphere from spectral line observations), and finally introduce the concepts used in machine learning that will be applied in our machine learning inversion model presented in Chap.~\ref{Chap:Radynversion}.
 
 \section{Important Optical Spectral Lines}
 
@@ -304,20 +306,41 @@ Simulations have found them to form at different heights within the chromosphere
 Diagnostics involving both \Ha{} and \CaLine{} can therefore reliably constrain chromospheric models, and are sensitive to a larger region of the solar atmosphere than is possible with just one of the two.
 Both of these lines have been reliably modelled without the need for additional time-consuming PRD calculations, which is not the case for the \Caii{} H \& K lines.
 Whilst \Ha{} can be treated in CRD, \citet{Leenaarts2012a} find that three-dimensional radiative transfer modelling is needed to correctly reproduce the expected intensity structure from RMHD models.
-Flare models with detailed chromospheric treatment are not yet possible in three-dimensions, but with the large gradients in the radiation field that occur in flares it is likely that this requirement will also hold (as supported by the simulations presented in Chap.~\ref{Chap:2DRT}).
+\citet{Bjorgen2019} found that the magnitude of this effect was reduced for the brightest regions of a three-dimensional active region simulation, due to the high mass density, but remained important for regions adjacent to these bright structures.
+Flare models with detailed chromospheric treatment are not yet possible in three-dimensions, but with the large gradients in the radiation field that occur in flares it is likely that this effect will also be important in regions adjacent to flares (as supported by the simulations presented in Chap.~\ref{Chap:2DRT}).
 
 
 \subsection{Swedish Solar Telescope}\label{Sec:CRISP}
 
-What is it and how is it prepped?
+The Swedish Solar Telescope \citep[SST,][]{Scharmer2003} is a 1-metre refracting telescope located in the Observatoria del Roque de los Muchachos, La Palma, Spain.
+Behind the singlet lens, the telescope is held in a vacuum to improve image quality and a Schupmann corrector is used to compensate for chromatic aberration.
+The light is then sent from this corrector to an adaptive optics system that compensates for atmospheric seeing effects and on to the optical bench.
+This adaptive optics system allows the SST to operate at close to its diffraction limit in good seeing conditions ($\sim 0.17^{\prime\prime}$ for \Ha{} and $\sim 0.21^{\prime\prime}$ for \CaLine{}). % Rayleigh criterion
+
+There are three instruments usable with the SST: TRIPPEL, CHROMIS, and CRISP.
+TRI-Port Polarimetric Echelle-Littrow \citep[TRIPPEL, ][]{Kiselman2011} is a spectrograph that can simultaneously observe in three different wavelength regions (across 380--\SI{1100}{\nano\m}) with a spectral resoution $R\approx200\,000$.
+CHROMospheric Imaging Spectrometer \citep[CHROMIS, ][]{Lofdahl2021} and CRisp Imaging SpectroPolarimeter \citep[CRISP, ][]{Scharmer2008,Scharmer2019} are both dual Fabry-Pérot tunable filter systems that can be operated simultaneously.
+CHROMIS serves the blue end of the spectrum between 380 and \SI{500}{\nano\m}, whereas CRISP operates in the 510--\SI{860}{\nano\m} region.
+The diffraction limit is lower at the CHROMIS wavelengths, but CRISP can perform full spectropolarimetric imaging.
+
+In this thesis we make use of one set of observations taken from the SST using the CRISP instrument, so we shall briefly describe how these are processed.
+This observation was performed on 2014-09-06 and captures the M1.1 flare SOL 20140906T17:09 from National Oceanic and Atmospheric Administration (NOAA) Active Region 12157 at heliocentric coordinates ($-732^{\prime\prime},\,-302^{\prime\prime}$).
+This data is available in the F-CHROMA database\footnote{\url{https://star.pst.qub.ac.uk/wiki/public/solarflares/0450.html}} and was prepared using the CRISPRED pipeline \citep{DelaCruzRodriguez2015} which is responsible for image calibration, alignment, instrumental effects, and seeing restoration through the multi-object multi-frame blind deconvolution algorithm \citep[MOMFBD, ][]{VanNoort2005}.
+MOMFBD is a phase diversity algorithm needed to account for seeing worse, or evolving faster, than the adaptive optics system of the telescope can cope with.
+It has been suggested by \citet{Armstrong2021} that the differences between the wide and narrow-band images of flares may hinder the reconstructive abilities of the MOMFBD system, and they have developed a machine learning approach to correcting for these effects.
+This method has not been applied to the data used in this thesis.
 
 \subsection{Daniel K Inouye Solar Telescope}
 
-What resolution, when?
+The Daniel K Inouye Solar Telescope \citep[DKIST, ][]{Rimmele2020} is a new 4-metre Gregorian solar telescope that saw first solar light in December 2019.
+It is designed to support a number of instruments observing between 380 and \SI{5000}{\nano\metre} with a diffraction limit of $0.026^{\prime\prime}$ (\SI{20}{\kilo\metre}) at \SI{500}{\nano\metre}.
+The instruments initially expected to capture flaring observations are the Visible Tunable Filter (VTF) and the Visible Spectro-Polarimeter (ViSP).
+The former of these will capture narrow-band line images similar to CRISP, but at higher spatial resolution, whereas the latter will provide high-precision spectropolarimetric observations through a slit spectrograph with $R>180\,000$.
+DKIST is expected to start making routine observations in 2021 and promises observations of the chromosphere on scales that will push our modelling and analysis techniques to their limits.
 
 \section{Introduction to Inverse Problems}\label{Sec:InverseProblems}
 
-From the previous chapters we have an understanding of the so-called ``forward problem'' of RT.
+From the previous chapters we have an understanding of the so-called ``forward problem'' of radiative transfer.
 The inverse of this problem is not well-posed; there is no guarantee of uniqueness, and typically the problem is extremely underdetermined.
 The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forward process that is needed for the inverse process.
 
@@ -467,10 +490,7 @@ I(\tau=0, \nu) = S_0 + \frac{S_1}{1 + \alpha\phi(\nu)}.
 \end{equation}
 
 Thanks to the analytic nature of this solution, it is easy to attempt to fit this to observations, and effects such as constant atmospheric velocity, and magnetic field can be included in the line profile.
-This approach is rapid and works quite well for quiet photospheric lines, such as Fe I 6301 \AA{} and Fe I 6173 \AA{} as used in Hinode SOT and HMI \citep[e.g.][]{Centeno2014}.
-
-The linear description of source function reduces its applicability to chromospheric lines.
-However, variants of this approach have implemented more complex shapes for the source function as a function of optical depth, and have had greater success approximating chromospheric lines than the pure linear approximation \NeedRef{} del Toro Iniesta?.
+This approach is rapid and works quite well for quiet photospheric lines, such as Fe I 6301 \AA{} and Fe I 6173 \AA{} as used in Hinode SOT and HMI \citep[e.g.][]{Centeno2014}, but the linear description of source function reduces its applicability to chromospheric lines.
 
 \subsection{Generalisation Through Response Functions}
 
@@ -497,7 +517,7 @@ Typically observations of a line contain many more wavelength points than the nu
 Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning (is extremely sensitive to errors in the input) and thus cannot be inverted directly.
 An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can attempt to tackle both problems at once.
 
-Applying this method to a simple example with a quadratically varying source function stratified across 101 depth points using a constant line strength and line profile with 101 wavelength points we find the result shown in Fig.~\ref{Fig:InferredSourceFn}.
+Applying this method to a simple example with a quadratically varying source function stratified across 61 depth points using a constant line strength and line profile with 101 wavelength points we find the result shown in Fig.~\ref{Fig:InferredSourceFn}.
 The poor quality of the pseudoinverse solution is apparent from the large oscillations and poor agreement with the true source function, and this example showcases the simple case of a static atmosphere with constant line strength.
 If these parameters are also allowed to vary then the solution is likely to deteriorate further.
 
@@ -512,7 +532,7 @@ def linear_response_fn(tau, alpha, phi):
                   * dtau[:, None] * lineDepthIncrease
     return responseFn
 
-Ndepth = 101 # Number of depth points in the stratification
+Ndepth = 61 # Number of depth points in the stratification
 tau = 10**np.linspace(-5, 1, Ndepth) # Optical depth stratification
 alpha = 30 # Line strength relative to continuum
 x = np.linspace(-20, 20, 101) # Line spectral grid in Doppler units
@@ -538,7 +558,7 @@ plt.plot(np.log10(tau), S, label='True source function')
 plt.plot(np.log10(tau), Sinferred, label='Pseudoinverse inferred source function')
 plt.xlabel(r'$\log\tau_c$')
 plt.ylabel(r'S')
-plt.legend(frameon=False, loc='lower right')
+plt.legend(frameon=False, loc='lower right', handlelength=1.5)
 
 lFig = chFlareObs.save_figure('InferredSourceFn', fig, fext='.pgf')
 lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
@@ -568,7 +588,7 @@ It is common to use the integral form of the RTE
 and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
 As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
 
-The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE RT as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
+The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE radiative transfer as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
 These effects can instead be captured by the use of response functions.
 
 Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
@@ -607,7 +627,7 @@ The Stockholm Inversion Code (STiC) also follows this procedure, using a modifie
 Analytic response functions for the multi-level NLTE problem were first derived by \citet{Milic2017}, and are now implemented in the SNAPI code \citep{Milic2018}.
 These response functions should significantly reduce the computational cost of NLTE inversions, a necessity for inverting the large fields of view in current and next generation solar observations.
 
-An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH. \NeedRef{} {\color{Red} This paper seems to be in limbo?}
+An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH (Ruiz Cobo et at. \emph{in preparation}).
 
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
@@ -721,7 +741,7 @@ Clearly this can reduce the computational cost of an epoch, as fewer calculation
 
 A technique known as autodifferentiation has become prominent in the field of machine learning.
 It allows users to easily design custom blocks and compose these without the need to consider the implementation of the derivatives needed for training as these are computed by the framework.
-Frameworks (e.g. TensorFlow, PyTorch \NeedRef{}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
+Frameworks (e.g. TensorFlow \citep{Abadi2015}, PyTorch \citep{PyTorch}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
 This automatic nature of this approach has enabled the rate of development seen in machine learning in the last decade, as it allows researchers to spend longer thinking about design than low-level engineering.
 
 \subsection{Difficulties training DNNs}

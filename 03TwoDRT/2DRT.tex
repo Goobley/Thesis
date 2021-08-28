@@ -99,7 +99,7 @@ Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2
 
 \subsection{The BESSER method}
 
-The BESSER method differs from other quadratic Bézier spline methods by ensuring the continuity of the first derivative of the interpolant at $O$.
+The BESSER method differs from other quadratic Bézier spline methods\footnote{A fantastic and beautiful graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} by ensuring the continuity of the first derivative of the interpolant at $O$.
 Due to the large differences in optical depth between adjacent regions (e.g. $\tau_{UO}$ and $\tau_{OD}$) that are likely to occur in multi-dimensional cases with irregular grids, this method is designed so as to guarantee that if the values over $[UOD]$ are monotonic then the spline interpolant will remain monotonic.
 
 The spline interpolant over the $[UO]$ interval is described by
@@ -687,7 +687,7 @@ Due to the very fine $z$ spacing that often occurs due to the strong gradients i
 Unlike the model in the previous chapter, we do not consider advection here; the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small
 This also has the effect of allowing more flexibility in the $z$ stratification, as a grid that is stable for radiative transfer may not be so for advection.
 
-The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in RT simulations.
+The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in radiative transfer simulations.
 The incoming radiation from the flare model is specified for each ray and depth in the first column of the atmosphere.
 As the intensity is specified for all incoming (rightgoing) rays here, it cannot be calculated taking into account the local parameters, meanwhile the outgoing (leftgoing) rays \emph{do} take into account the local parameters, and then inform the local operator acting on these populations.
 Thus, if this column has its thermodynamic properties fixed to those of the initial quiet sun model, it behaves as if it is only receiving radiation from the right, whilst only being affected by the flare in a ``second-hand'' sense.
@@ -1348,7 +1348,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
     maxVal = np.max(fullCfn)
-    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
                   cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
     xlim = ax.get_xlim()
     ax.set_ylim(None, 2)
@@ -1387,7 +1387,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     chiTau = np.log10((ctx.depthData.chi[:, -1, 1, :] / fullTau).T[:, lowerIdx:higherIdx])
     maxVal = np.max(chiTau) - 9
     minVal = np.min(chiTau)
-    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges,
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, zEdges,
                   chiTau,
                   cmap='Blues', vmin=minVal, vmax=maxVal, rasterized=True)
     xlim = ax.get_xlim()
@@ -1429,7 +1429,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
     maxVal = np.max(fullCfn)
-    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, zEdges, fullCfn.T[:, lowerIdx:higherIdx],
                   cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
     xlim = ax.get_xlim()
     caRange = (854.2444, 854.6444)
@@ -1462,7 +1462,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
     chiTau = np.log10((ctx.depthData.chi[:, -1, 1, :] / fullTau).T[:, lowerIdx:higherIdx])
     maxVal = np.max(chiTau) - 9
-    ax.pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, zEdges,
+    ax.pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, zEdges,
                   chiTau,
                   cmap='Blues', vmax=maxVal, rasterized=True)
     xlim = ax.get_xlim()
@@ -2047,8 +2047,8 @@ ca = fits.open(ch2DRT.data_file('crisp_l2_20140906_152724_8542_r00529.fits'))
 sliceData = zarr.convenience.open(ch2DRT.data_file('2014FlareData2d.zip'), 'r')
 fig, ax = plt.subplots(1, 2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 cdelt = ca[0].header['CDELT1']
-ax[0].imshow(ca[0].data[12], cmap='Greys_r', origin='bottom', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
-ax[1].imshow(ca[0].data[12], cmap='Greys_r', origin='bottom', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
+ax[0].imshow(ca[0].data[12], cmap='Greys_r', origin='lower', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
+ax[1].imshow(ca[0].data[12], cmap='Greys_r', origin='lower', extent=[0, cdelt*ca[0].shape[2], 0, cdelt*ca[0].shape[1]], rasterized=True)
 # plt.plot([950, 950, 1050],
 #     [600, 800, 800])
 ax[0].plot([a * cdelt for a in [950, 950, 1050, 1050, 950]],
@@ -2057,9 +2057,9 @@ ax[1].plot([a * cdelt for a in [950, 950, 1050, 1050, 950]],
     [a * cdelt for a in [650, 660, 660, 650, 650]])
 ax[1].set_ylim(450*cdelt, 850*cdelt)
 ax[1].set_xlim(800*cdelt, 1200*cdelt)
-ax[0].set_ylabel('$y$ ["]')
-ax[0].set_xlabel('$x$ ["]')
-ax[1].set_xlabel('$x$ ["]')
+ax[0].set_ylabel(r'$y$ [$^{\prime\prime}$]')
+ax[0].set_xlabel(r'$x$ [$^{\prime\prime}$]')
+ax[1].set_xlabel(r'$x$ [$^{\prime\prime}$]')
 
 lFig = ch2DRT.save_figure('2dCaContext', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ca \textsc{{ii}} line core observation of M1.1 flare at time {}'.format(sliceData['times'][529-450][:-4])
@@ -2090,7 +2090,7 @@ def slice_plots(slices, times, wingOffset=1, wingOffsetNm=0.01, sliceY=50):
     vmin = 0.0
     vmax = meshCore.max()
 
-    fig, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5), constrained_layout=True)
+    fig, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.5))
     distsCore = np.zeros(meshCore.shape[0])
     for x in range(meshCore.shape[0]):
         for y in range(meshCore.shape[1]-1, -1, -1):
@@ -2257,7 +2257,7 @@ Whilst any real world flare situation is far more complex than the simplified tw
 This data was prepared following the standard procedure described in Sec.~\ref{Sec:CRISP}.
 A context image of the region in the core of the \CaLine{} line at the flare peak is shown in Fig.~\ref{Fig:2dCaContext}.
 We have selected a region on edge of the western ribbon for this comparison, which is highlighted in blue in both the left- and right-hand panels of this figure.
-The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being 0.057" ($\sim\SI{42}{\kilo\metre}$).
+The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being $0.057^{\prime\prime}$ ($\sim\SI{42}{\kilo\metre}$).
 This region was chosen as it represents the intersection between the flare ribbon and some of the quieter material present in the data (the east ribbon overlaps a sunspot), lies approximately perpendicular to structure visible here, and is close to the region analysed by \citet{Kuridze2015}.
 
 To investigate the effects presented in the simulation we shall analyse the variation of the radiation in the selected region as a function of $x$ location and time.
@@ -2288,6 +2288,8 @@ The simulations use a viewing angle $\mu_z\approx0.951$ (an inclination of \SI{2
 If the same viewing angle is used with the simulation then all of the ``pixels'' at the top of the atmosphere ``look'' directly into the flaring boundary condition, and the effect we wish to investigate cannot be resolved without performing simulations with substantially larger extents in $x$.
 Due to the prohibitive computational cost of this (a similar horizontal spatial resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
 In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation); whilst the pixels in the data are nominally smaller this does not include the effects of viewing the inclined solar surface so we compare these extents in pixels directly.
+
+\TODO{Below diffraction limit!!}
 
 The \CaLine{} line behaves similarly in both the F9 and F10 simulations, with the line core immediately extending significantly further than the wings (by $9-13$\,{}px) as the heating begins.
 Around $t=\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing enhancement remains approximately constant, slightly approaching the line core.

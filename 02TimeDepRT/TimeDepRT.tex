@@ -555,8 +555,8 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
     waveRangeFull = (854.3444, 854.5444)
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
-    ax[0].pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, heightEdges, fullCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
-    ax[1].pcolormesh(wlEdges[lowerIdx:higherIdx]-lambda0, heightEdges, noLybbCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+    ax[0].pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, heightEdges, fullCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
+    ax[1].pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, heightEdges, noLybbCfn.T[:, lowerIdx:higherIdx], cmap='Blues', norm=SymLogNorm(linthresh=5e-14, vmin=1e-20, vmax=maxVal), rasterized=True)
 
     ax[0].set_xlim(*waveRange)
     ax[1].set_xlim(*waveRange)
@@ -604,7 +604,7 @@ def plot_cfn(timeToPlot, liData, leData, atmost):
         label.set_color(handle.get_color())
     fig.suptitle('Time: {:.2f} s'.format(atmost.time[internalIdx]))
     cfnData = {'LI': fullCfn.T[:, lowerIdx:higherIdx], 'LE': noLybbCfn.T[:, lowerIdx:higherIdx],
-               'wavelengthEdges': wlEdges[lowerIdx:higherIdx]-lambda0, 'heightEdges': heightEdges, 'maxVal': maxVal, 'wavelengthTau1': wavelength - lambda0,
+               'wavelengthEdges': wlEdges[lowerIdx:higherIdx+1]-lambda0, 'heightEdges': heightEdges, 'maxVal': maxVal, 'wavelengthTau1': wavelength - lambda0,
                'tau1LI': tau1LI, 'tau1LE': tau1LE}
     return fig, cfnData
     # fig.savefig('ContFn1e10_8542_%d.png' % atmost.time[lwIdx], dpi=300)
@@ -705,8 +705,8 @@ def plot_loss_comparison(liData, leData, radyn):
                     0.5 * (fixedZGrid[1:] + fixedZGrid[:-1]),
                     (fixedZGrid[-1] + 0.5 * (fixedZGrid[-1] - fixedZGrid[-2]),)
                    ))
-    timeEdgesRadyn = np.concatenate(((0,), 0.5 * (radyn.time[:-1] + radyn.time[1:])))
-    timeEdges = np.concatenate(((0,), 0.5 * (liData['time'][:-1] + liData['time'][1:])))
+    timeEdgesRadyn = np.concatenate(((0,), 0.5 * (radyn.time[:-1] + radyn.time[1:]), (radyn.time[-1],)))
+    timeEdges = np.concatenate(((0,), 0.5 * (liData['time'][:-1] + liData['time'][1:]), (liData['time'][-1],)))
 
     ax0 = fig.add_subplot(gs[0])
     cb0 = fig.add_subplot(gs[1])
@@ -1300,7 +1300,7 @@ def plot_K_losses(atmost, liData, prdData):
         ax[i].set_title('{:.2f} s'.format(time))
         # ax[i].xaxis.set_minor_locator(AutoMinorLocator())
 
-    ax[0].set_xscale('symlog', linthreshx=1e-5)
+    ax[0].set_xscale('symlog', linthresh=1e-5)
     ax[0].set_ylim(0.2, 2.0)
     ax[0].set_xlim(-1e-1, 1e-1)
 
@@ -1376,12 +1376,12 @@ The Mg\,\textsc{ii} populations will be influenced to a lesser extent by photoio
 
 On the other hand, we found that the deviations of the calcium populations due to full time-dependent kinetic equilibrium over statistical equilibrium were typically small in the simulations investigated.
 This is interesting, as it theoretically allows for \Caii{} to be processed separately, but as the radiative losses from this species need to be known for the hydrodynamics of an RHD simulation, this species likely still needs to be treated in lockstep with the rest of the simulation.
-Additionally, there is typically a loss in speed by computing the statistical equilibrium solution at each timestep in the simulation (even starting close to the solution from the previous timestep's solution) over the time-dependent solution when using traditional RT methods.
+Additionally, there is typically a loss in speed by computing the statistical equilibrium solution at each timestep in the simulation (even starting close to the solution from the previous timestep's solution) over the time-dependent solution when using traditional radiative transfer methods.
 This could change with the application of machine learning, as it will be far easier to construct detailed models that provide the unique \TODO{Is the provably unique? Or do some of our iterative woes stem from here?} statistical equilibrium solution for a given atmosphere than determining the correct time-dependent solution.
 As the hydrogen populations would continue to require a full time-dependent treatment there is not likely to be an immediate gain from such a model in the context of RHD simulations.
 However, the nuanced analysis of the formation of H$\alpha$ in the quiet Sun by \citet{Leenaarts2012a} suggests that it may be sufficient to purely capture the effects of hydrogen non-equilibrium ionisation (i.e. the fraction of hydrogen that is fully ionised and its effects on the electron density) through the equation of state and then perform NLTE synthesis in statistical equilibrium with this given electron density.
 This would also need to be validated for flare models, which could be done following the approach laid out in this chapter.
-It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE RT approaches.
+It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE radiative transfer approaches.
 Parallels can be drawn between the application of machine learning to this problem and the use of simplified local rates following the method of Sollum \NeedRef{} as can be seen in HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011, Leenaarts2007}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
