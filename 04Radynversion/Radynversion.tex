@@ -31,6 +31,15 @@ In the notation of Sec.~\ref{Sec:InverseProblems}, our standard radiative transf
 Clearly this function is not bijective, but if we also capture the information lost in the forward process, we can instead define a bijective function $x = g(y, z)$ such that $g^{-1}$ represents the forward process, and $g$ the inverse process.
 Our theory of radiative transfer does not give any immediate insight into the formulation of $g$ with so few constraints, so we instead turn to the field of machine learning from RHD simulations with the intention of learning the form of the information lost in the forward process.
 
+The RADYNVERSION model was the first machine learning model for solar inversions to address the problem of degeneracies in the inversion, but not the first to approach inversions of solar observations.
+Simple fully connected networks have long been used to obtain plausible atmospheric parameters based on Milne-Eddington inversions \citep[e.g.][]{Carroll2001, SocasNavarro2005}.
+\citet{AsensioRamos2019} and \citet{Milic2020} both presented models focused on the photosphere, that learn to mimic the results of traditional inversions with convolutional neural networks, the former using spatial correlations and inferring the depth of the Wilson depression, the latter using a much simpler model and taking a pixel-by-pixel approach.
+These models are not theoretically capable of handling degeneracies, but in practice produce plausible results, much faster than is possible with any traditional gradient-based inversion code.
+\citet{Gafeira2021} caution the direct use of these CNN models directly, and instead applied the model of \citet{Milic2020} to initialise traditional inversions, allowing them to converge substantially faster, and in some cases, produce more accurate fits.
+More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method using of normalising flows, a family of methods related to the one we present below.
+They present the results of this method and show that it is capable of providing plausible inversions and posterior distributions using observations of \CaLine{} and Fe\,\textsc{i} \SI{630.15}{\nano\m}.
+The field of machine learning based, and assisted, inversions is undergoing rapid development and appears to have a very exciting future.
+
 \section{The RADYNVERSION Model}\label{Sec:RadynversionModel}
 
 Our approach to inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.

@@ -2030,9 +2030,9 @@ The location of the peak differences between the treatments in the positive and 
 The maximum difference is found to be an enhancement of around 14\% in both line cores at $x\approx\SI{0.6}{\mega\metre}$ for the ratio of lower resolution simulation to the higher resolution.
 This is not an insignificant variation, but it does not appear to vary dramatically during the simulation, and the variation is smooth, with no significant effects on the line shape.
 
-The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim$2x longer than the 41 point simulation).
+The computational cost of using the higher resolution model is unfortunately not a simple linear ratio of the number of points (i.e. the 81 point simulation does not take simply $\sim 2\times$ longer than the 41 point simulation).
 Indeed, the cost of each iteration scales close to linearly with the number of points in the atmosphere (for a given angular and wavelength quadrature), but the number of iterations needed also increases with finer grid sizes, as the information carried by the approximate $\Lambda$ operator takes longer to cross the grid.
-For this reason the 81 point simulation takes $\sim$2.4x longer than the 41 point simulation.
+For this reason the 81 point simulation takes $\sim 2.4\times$ longer than the 41 point simulation.
 We therefore opted to use the 41 point spatial grid in all models presented in this chapter, primarily for computational reasons, but are confident that the solution obtained is reasonable.
 % This computational scaling is more significant with the addition of points in $z$, which are already very dense in some regions.
 
@@ -2128,7 +2128,8 @@ def slice_plots(slices, times, wingOffset=1, wingOffsetNm=0.01, sliceY=50):
     ax[2].plot(timePlots, distsWing)
     ax[0].set_ylabel('Exent [px]')
     for a in ax:
-        dateFormat = mdates.DateFormatter('%H:%M')
+        # NOTE(cmo): Braces fix an update to matplotlib that typesets these in \displaystyle by default
+        dateFormat = mdates.DateFormatter('%H{:}%M')
         a.xaxis.set_major_formatter(dateFormat)
         a.xaxis.set_major_locator(MaxNLocator(nbins=6))
     ax[0].set_title('Blue Wing ($-{:.2f}$ nm)'.format(wingOffsetNm))
@@ -2148,7 +2149,7 @@ def plot_enhancement_dists(dists, times, wingOffsetNm=0.01):
     plt.plot_date(timePlots, distsBlue - distsCore, '-', label='Blue Wing ($-{:.2f}$ nm)'.format(wingOffsetNm), c='C0')
     # plt.plot_date(timePlots, distsCore, '-', label='Line Core')
     plt.plot(timePlots, distsWing - distsCore, '-', label='Red Wing ($+{:.2f}$ nm)'.format(wingOffsetNm), c='C3')
-    dateFormat = mdates.DateFormatter('%H:%M')
+    dateFormat = mdates.DateFormatter('%H{:}%M')
     plt.gca().xaxis.set_major_formatter(dateFormat)
     plt.gcf().autofmt_xdate()
     plt.ylabel('Enhancement Offset [px]')
@@ -2210,7 +2211,7 @@ def plot_enhancement_dists_sim(fig, d, wl, wlOffset, position,
     ax.yaxis.set_major_locator(MaxNLocator(5))
     ax.grid(True)
 
-    fig.tight_layout()
+    # fig.tight_layout()
 
 fig, distsCa = slice_plots(sliceData['Ca'], sliceData['times'], wingOffset=2, wingOffsetNm=0.02)
 lFig = ch2DRT.save_figure('2dCrispCaSliceEnhance', fig, fext='.pgf', dpi=500)

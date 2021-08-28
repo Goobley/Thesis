@@ -741,7 +741,7 @@ Clearly this can reduce the computational cost of an epoch, as fewer calculation
 
 A technique known as autodifferentiation has become prominent in the field of machine learning.
 It allows users to easily design custom blocks and compose these without the need to consider the implementation of the derivatives needed for training as these are computed by the framework.
-Frameworks (e.g. TensorFlow \citep{Abadi2015}, PyTorch \citep{PyTorch}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
+Frameworks (e.g. TensorFlow \citep{Abadi2016}, PyTorch \citep{PyTorch}) may record the path of data through a network and then using this information (as every function present therein is differentiable) construct all necessary gradient information for training, which can then be computed on GPU.
 This automatic nature of this approach has enabled the rate of development seen in machine learning in the last decade, as it allows researchers to spend longer thinking about design than low-level engineering.
 
 \subsection{Difficulties training DNNs}
