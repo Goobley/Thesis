@@ -75,7 +75,7 @@ HYDRAD originally focused more on the investigation of non-equilibrium optically
 It also differs in its use of a two-fluid model, treating electrons and ions as separate, but coupled, fluids.
 In current applications this does not appear to provide significantly different results when applied to flare modelling.
 
-RADYN is derived from the MULTI radiative transfer (RT) code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
+RADYN is derived from the MULTI radiative transfer code \citep{Scharmer1985, Carlsson1986, Carlsson1992}, and applies the linearisation approach described therein to the entire RHD system, ensuring the self-consistency of all terms. The equations of RHD are solved in an implicit linearised form by Newton-Raphson iteration on the dynamic grid of \citet{Dorfi1987}.
 RADYN was originally constructed to investigate the effects of waves propagating through the chromosphere, but was extended by \citet{Abbett1999} to perform some of the earliest simulations of the dynamic flares with detailed radiation treatment in a self-consistent fashion. The code has since been developed further to include improved energy transport treatments, primarily focusing on electron beam energy deposition \citep{Allred2005, Allred2015}.
 
 
@@ -597,7 +597,7 @@ Starting from the time-dependent population update equation \eqref{Eq:TimeDepSys
 and apply this secondary Newton-Raphson iteration process to $G$, using the same constraint equations as before.
 
 It is important to stress that only one Newton-Raphson iteration is needed following each standard preconditioned population update, as the original MALI system was already preconditioned and linear in the populations.
-The iterative process proceeds by following each MALI population update with a secondary Newton-Raphson iteration evaluated using the updated $\Gamma$, and then returning to the evaluation of $\Gamma$ or $\rho_{ij}$ in the presence of transitions treated with PRD.
+The iterative process proceeds by following each MALI population update with a secondary Newton-Raphson iteration evaluated using the updated $\Gamma$, and then returning to the evaluation of $\Gamma$, or $\rho_{ij}$ in the presence of transitions treated with PRD.
 
 \subsection{Determining Numerical Convergence}
 

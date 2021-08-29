@@ -1,24 +1,86 @@
 \chapter{Introduction}
+% spell-checker: disable
+%TC:group pycode 0 0
+\begin{pycode}[Intro]
+name = 'Intro'
+chIntro = texfigure.Manager(
+    pytex,
+    './00Introduction',
+    number=0,
+    python_dir='./00Introduction/python',
+    fig_dir=   './00Introduction/Figs',
+    data_dir=  './Data/00Introduction'
+)
+\end{pycode}
+% spell-checker: enable
 
-\begin{itemize}
-    \item The Sun
-    \item The Layers of the Sun
-    \item The Chromosphere
-    \item Flares
-\end{itemize}
+% \begin{itemize}
+%     \item The Sun
+%     \item The Layers of the Sun
+%     \item The Chromosphere
+%     \item Flares
+% \end{itemize}
 
-% ``I'm not lost, because I haven't any idea where to go that I might get lost on the way to. I'd like to get lost, because then I'd know where I was going, you see.''
-% -- Catherynne M. Valente, The Girl Who Circumnavigated Fairyland in a Ship of Her Own Making
+% spell-checker: disable
+\begin{pycode}[Intro]
+import lightweaver as lw
+from lightweaver.fal import Falc82
+fig = plt.figure(figsize=texfigure.figsize(pytex))
+ax = fig.gca()
+atmos = Falc82()
 
+ax.semilogy(atmos.height / 1e6, atmos.temperature, c='C0')
+ax2 = ax.twinx()
+ax2.semilogy(atmos.height / 1e6, atmos.nHTot, c='C1')
+ax.set_xlabel('Height [Mm]')
+ax.set_ylabel('Temperature [K]', c='C0')
+ax2.set_ylabel(r'$n_H$ [m$^{-3}$]', c='C1')
+lFig = chIntro.save_figure('FalC', fig, fext='.pgf')
+lFig.caption = r'Temperature and total hydrogen number density ($n_H$) structure of the FAL C atmosphere model of \citep{Fontenla1993}.'
+lFig.short_caption = r'Temperature and total hydrogen number density ($n_H$) structure of the FAL C atmosphere model.'
+\end{pycode}
+% spell-checker: enable
 
-% ``All you can do, Rosemary – all any of us can do – is work to be something positive instead. That is a choice that every sapient must make every day of their life. The universe is what we make of it. It’s up to you to decide what part you will play.''
-% -- Becky Chambers, The Long Way to a Small, Angry Planet
+\section{The Layers of the Sun}
 
-% I send you this letter on a falling star. Reentry will score and test it but will not melt it away. I write in fire across the sky, a plummet to match your rise. -- This is how... pp 128-129
+The observable solar atmosphere is composed of three main layers of plasma: photosphere, chromosphere, and corona.
+These are all permeated by a complex, structured, time-varying, magnetic field.
+The photosphere is the innermost observable ``surface'' of the Sun, and is the origin of the light we see from the Sun \citep{Zirin1992}.
+The photosphere appears granulated, a pattern of light and dark structure evolving slowly, like the surface of a pot of boiling water, due to the convection cells that form within the photosphere and the solar interior below it.
+These transport plasma that has cooled down deeper into the atmosphere and renew the hotter surface layer.
+This layer serves as the visible surface of the Sun, and is optically opaque, primarily due to an abundance of negative hydrogen that forms due to the density of this region.
+The photosphere emits as an almost ideal black body with a temperature of approximately \SI{5800}{\kelvin}, and continues radially outward for $\sim\SI{500}{\kilo\metre}$ until we enter the chromosphere \citep{Carroll2007}.
+
+\py[Intro]|chIntro.get_figure('FalC')|
+
+In the chromosphere, the density of the solar plasma drops off rapidly, and the temperature of the plasma first falls to approximately \SI{4400}{\kelvin}, before rising again.
+This temperature evolution clearly shows that the Sun's structure is not controlled by radiation alone (which would lead to a monotonic decrease), and there must be additional heating mechanisms at work \citep{Gurman1992}.
+In Fig.~\ref{Fig:FalC} we show the temperature and total hydrogen density structures of the FAL C semiempirical atmosphere.
+This model was constructed to attempt to reproduce observed spectral lines which form throughout the solar atmosphere.
+Here a height of \SI{0}{\mega\m} corresponds to the altitude where the photosphere becomes opaque to light at a wavelength of \SI{500}{\nano\m}.
+The temperature minimum region is seen around an altitude of \SI{0.5}{\mega\metre}.
+Due to its low density, very little broadband light can be observed from the chromosphere.
+Instead, we image this region with narrowband observations of spectral features, primarily absorption and emission lines.
+
+At the top of the chromosphere, and the top of the FAL C model, there is a dramatic increase in temperature (up to $\sim 10^6\,\si{\kelvin}$) and decrease in density.
+The average ionisation of the plasma increases significantly and many ultraviolet spectral lines are observed to form in this region.
+This exceedingly narrow layer, barely a few hundred kilometres thick is known as the transition region, as controls the atmosphere's transition from the its denser inner layers to the hot and tenuous corona.
+
+The fully-ionised corona extends outwards to a distance several solar radii, and maintains a high temperature, in which emission lines can be observed.
+Visible loops.
+Coronal heating problem.
+
+Chromosphere \& TR must mediate the energy going into the Corona
+
+\section{Solar Flares}
+
+Carrington
+CSHKP model, cartoon?
+Brief observational aspects
+
+\section{Conventions}
 
 \TODO{Define machines used and python versions etc.}
 
 \TODO{Convention Positive velocity -> Upflow, all plots shown with vacuum wavelengths unless stated otherwise}
 
-
-\MplPinkWord{}

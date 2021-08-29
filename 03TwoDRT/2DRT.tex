@@ -99,7 +99,7 @@ Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2
 
 \subsection{The BESSER method}
 
-The BESSER method differs from other quadratic Bézier spline methods\footnote{A fantastic and beautiful graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} by ensuring the continuity of the first derivative of the interpolant at $O$.
+The BESSER method differs from other quadratic Bézier spline methods\footnote{A beautiful graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} by ensuring the continuity of the first derivative of the interpolant at $O$.
 Due to the large differences in optical depth between adjacent regions (e.g. $\tau_{UO}$ and $\tau_{OD}$) that are likely to occur in multi-dimensional cases with irregular grids, this method is designed so as to guarantee that if the values over $[UOD]$ are monotonic then the spline interpolant will remain monotonic.
 
 The spline interpolant over the $[UO]$ interval is described by
