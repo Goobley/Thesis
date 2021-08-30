@@ -41,14 +41,32 @@ lFig.short_caption = r'Temperature and total hydrogen number density ($n_H$) str
 \end{pycode}
 % spell-checker: enable
 
+The Sun is obviously responsible for life on Earth --- there would be no solar system without it!
+More seriously, the Earth lies within a narrow orbital zone in which the solar irradiance is sufficient to maintain the temperatures needed for life, without cooking or freezing us (the total solar irradiance comes out to $\sim\SI{1300}{\watt\per\square\m}$ at the top of the atmosphere).
+Our Sun is but one of many similar stars with similar solar systems, and possibly, life.
+The conditions required for life are far more complex than a simple balancing act of ``power in, power out'', as the \emph{form} of the energy received will have important role in the viability of a planet.
+Indeed, there is a complex and delicate set of photochemical reactions that both maintain the planetary temperature \emph{and} protect its inhabitants from the more dangerous components of the incoming radiation.
+
+During a solar (or stellar) flare certain dangerous components of a star's radiative output can be dramatically enhanced.
+For example, \citet{Segura2010} investigated the radiation received by an Earth-like exoplanet with an oxygen-rich atmosphere orbiting the M Dwarf AD Leonis during a flaring event observed on 1985-04-12.
+An increase in DNA-damaging ultraviolet (UV) radiation of approximately 1\,dex was seen across this spectral range at the top of the atmosphere.
+Their simulations showed that the increase in the more damaging UVB and UVC bands reaching the planet's surface was greatly reduced thanks to its atmosphere, and the peak UV dose rate for DNA damage was only 14\,\% higher than that on Earth.
+
+A slightly different planetary chemistry could yield different results, but so could a different flare.
+As our closest star, the Sun most directly affects us, and a lot of the knowledge gained from our companion can help us understand more distant solar systems.
+The effects of solar flares produced from our own star have clearly visible effects, from the beautiful aurorae that occasionally adorn the night sky, to effects on telecommunications and satellites.
+
+The dramatic, rapid variations of the solar atmosphere that are observed during flares are almost as mesmerising as the aurora and developing an understanding of these is a key component of living long-term as a species with this companion, answering questions of plasma physics and exoplanetary viability, as well as just pure scientific curiosity.
+
 \section{The Layers of the Sun}
 
 The observable solar atmosphere is composed of three main layers of plasma: photosphere, chromosphere, and corona.
 These are all permeated by a complex, structured, time-varying, magnetic field.
-The photosphere is the innermost observable ``surface'' of the Sun, and is the origin of the light we see from the Sun \citep{Zirin1992}.
+The photosphere is the innermost observable ``surface'' of the Sun, and is the origin of the daylight we see with \citep{Zirin1992}.
 The photosphere appears granulated, a pattern of light and dark structure evolving slowly, like the surface of a pot of boiling water, due to the convection cells that form within the photosphere and the solar interior below it.
 These transport plasma that has cooled down deeper into the atmosphere and renew the hotter surface layer.
-This layer serves as the visible surface of the Sun, and is optically opaque, primarily due to an abundance of negative hydrogen that forms due to the density of this region.
+Larger dark features known as sunspots are often visible on the photosphere, these occur in regions of stronger magnetic field which inhibits the local convection and allows the plasma locked in this region to cool.
+The photosphere serves as the visible surface of the Sun, and is optically opaque, primarily due to an abundance of negative hydrogen that forms due to the density of this region.
 The photosphere emits as an almost ideal black body with a temperature of approximately \SI{5800}{\kelvin}, and continues radially outward for $\sim\SI{500}{\kilo\metre}$ until we enter the chromosphere \citep{Carroll2007}.
 
 \py[Intro]|chIntro.get_figure('FalC')|
@@ -56,8 +74,7 @@ The photosphere emits as an almost ideal black body with a temperature of approx
 In the chromosphere, the density of the solar plasma drops off rapidly, and the temperature of the plasma first falls to approximately \SI{4400}{\kelvin}, before rising again.
 This temperature evolution clearly shows that the Sun's structure is not controlled by radiation alone (which would lead to a monotonic decrease), and there must be additional heating mechanisms at work \citep{Gurman1992}.
 In Fig.~\ref{Fig:FalC} we show the temperature and total hydrogen density structures of the FAL C semiempirical atmosphere.
-This model was constructed to attempt to reproduce observed spectral lines which form throughout the solar atmosphere.
-Here a height of \SI{0}{\mega\m} corresponds to the altitude where the photosphere becomes opaque to light at a wavelength of \SI{500}{\nano\m}.
+This model was constructed to attempt to reproduce observed spectral lines which form throughout the solar atmosphere and a height of \SI{0}{\mega\m} corresponds to the altitude where the photosphere becomes opaque to light at a wavelength of \SI{500}{\nano\m}.
 The temperature minimum region is seen around an altitude of \SI{0.5}{\mega\metre}.
 Due to its low density, very little broadband light can be observed from the chromosphere.
 Instead, we image this region with narrowband observations of spectral features, primarily absorption and emission lines.
@@ -66,21 +83,83 @@ At the top of the chromosphere, and the top of the FAL C model, there is a drama
 The average ionisation of the plasma increases significantly and many ultraviolet spectral lines are observed to form in this region.
 This exceedingly narrow layer, barely a few hundred kilometres thick is known as the transition region, as controls the atmosphere's transition from the its denser inner layers to the hot and tenuous corona.
 
-The fully-ionised corona extends outwards to a distance several solar radii, and maintains a high temperature, in which emission lines can be observed.
-Visible loops.
-Coronal heating problem.
+The fully-ionised corona extends outwards to a distance several solar radii, and maintains a high temperature, from which extreme ultraviolet (EUV) and X-ray emission can be observed.
+The corona presents a complex structure, containing loops of different scales and morphologies, due both open and closed magnetic field lines.
+An obvious, and long-standing problem in solar physics, is the so-called coronal heating problem \citep[reviewed by ][]{Klimchuk2006}: by what mechanism, or \emph{mechanisms}, does the corona reach and maintain its multi-million \si{\kelvin} temperature?
+The current consensus \citep[][ and references therein]{DeMoortel2015} is that this heating must occur through a variety of processes which is likely to include magnetic reconnection (a restructuring of the magnetic field to a lower potential, liberating the stored energy) and the dissipation of magnetohydrodynamic waves.
 
-Chromosphere \& TR must mediate the energy going into the Corona
+The solar atmosphere, at least from the upper photosphere, must be treated as a single unit, and as such, problems such as that of the corona's temperature cannot be considered separately.
+Some of the corona's energy will be conducted downwards into the chromosphere, a process aided by the magnetic field, and by the same, the magnetic field that permeates the corona originates from deeper in the solar atmosphere and has to pass through the chromosphere.
 
 \section{Solar Flares}
 
-Carrington
-CSHKP model, cartoon?
-Brief observational aspects
+Solar flares are energetic eruptions that occur in the solar atmosphere.
+The first documented scientific observation of a solar flare was that of \citet{Carrington1859}, that occurred spontaneously during a routine observation of a sunspot cluster.
+This event was so energetic the ensuing solar storm and magnetic disturbances wrought havoc on the telegraph network, and aurora were seen as far south as Colombia \citep{MorenoCardenas2016}.
+The Carrington Event, as it is known, was a particularly spectacular event, and whilst no event of equivalent magnitude has been recorded since, during the peak of the 11 year solar cycle it is not uncommon to observe multiple smaller flares over the course of a day.
+
+Flares occur in active regions, which are areas where a twisted magnetic field in the kG range emerges from the photosphere \citep[For a review of active region evolution see][]{VanDriel-Gesztelyi2015}.
+The magnetic field in these regions often leads to the generation of sunspots, although the presence of sunspots is not necessary for a flare.
+Here, we will briefly describe the evolution of a flare and some of the observational characteristics.
+For a full review of the latter the reader is directed to the works of \citet{Benz2008} and \citet{Fletcher2011}.
+This description follows the \emph{standard model} of flares, often known as the CSHKP model after the authors of the papers involved in its development: \citet{Carmichael1964,Sturrock1966,Hirayama1974,Kopp1976}.
+This model considers a single magnetic field loop, and whilst flares are typically observed in regions with multiple intersecting and neighbouring loops, it correctly reproduces many observed characteristics.
+
+The evolution of a flare can be roughly split into two sections: impulsive phase, and gradual decay.
+As the potential energy stored in the magnetic field of the active region increases due to twisting, it can be visualised by the energetic plasma trapped within it.
+In the minutes preceding a flare small-scale brightenings are observed in the soft X-ray (SXR) and EUV bands.
+Then the flare proper, and the impulsive phase, begin with a magnetic reconnection event that releases a large amount of magnetic energy previously trapped in the corona.
+In some situations, an amount of material previously held by the closed magnetic field lines is ejected along field lines that are now open to the heliosphere.
+This process is known as coronal mass ejection.
+At the looptop, near to the reconnection site, small SXR sources are observed due to the acceleration of electrons.
+These electrons also spiral along the magnetic field lines producing radiation in the synchrotron family.
+
+A large portion of the energy released travels down the loop and ends up at the chromosphere producing extreme heating, rapid ionisation, and hydrodynamic stresses on this plasma.
+There is an observed large spike the X-ray flux, notably hard X-ray (HXR, photon energies above \SI{10}{\kilo\electronvolt}) bremsstrahlung from high-energy non-thermal electrons accelerated by the flare colliding with the denser chromosphere.
+This has traditionally been described by the collisional thick target model \citep{Brown1971,Hudson1972}, which presumes that these non-thermal electrons are accelerated in the corona.
+Due to the heating that ensues from this process the chromosphere undergoes evaporation, where the heated dense material starts to rise along the magnetic loop.
+These motions can be observed in the Doppler shift of spectral lines, and regions of heating can be seen in the enhancement of chromospheric spectral lines, such as the \Ha{} line.
+In a real-world system with neighbouring loops the reconnection process may travel along the loops, triggering these heating processes in turn and leading to ribbons along their footpoints visible in these lines.
+SXR observations have revealed compact hot sources with short durations ($\sim$1 minute) in flare footpoints \citep{Hudson1994}.
+Analysis of these regions in both SXR and EUV have revealed densities close to those expected at the top of the chromosphere but with temperatures in the millions of \si{\kelvin} \citep{Mrozek2004,Graham2013,Simoes2015}.
+
+Another proposed mechanism for transporting the energy from the coronal reconnection site to the chromosphere is Alfvén heating \citep{Emslie1982, Fletcher2007}, which suggests that energy is transported by Alfvén waves\footnote{These  are transverse waves that propagate along the magnetic field \citep[e.g. ][]{TandbergHanssen1988}.} to the denser layers at the base of a flaring loop where electrons are locally accelerated.
+One argument for this is the so-called ``number problem'' which expresses the difficulty in resupplying the acceleration site in the low density coronal plasma with sufficient electrons to reflect the number observed at their chromospheric impact (this number can be bounded from HXR observations).
+The denser regions closer to the electrons' impact location do not suffer from this same scarcity of electrons, and thus represent a possible resolution to this problem.
+
+After the energy involved in particle acceleration has been expended the flare enters what is known as the gradual decay phase.
+Due to the lack of particle acceleration the HXR flux drops rapidly, but the plasma continues to evolve hydrodynamically whilst cooling radiatively to slowly relax into a quieter configuration.
+
+Whilst the total radiated energy may seem like a natural metric by which to classify flares, this is an extremely difficult figure to estimate \citep[e.g.][]{Milligan2014}.
+The magnitude of a flare is instead estimated by the total solar flux between 0.1 and \SI{0.8}{\nano\metre} as measured by the Geostationary Operational Environmental Satellite (GOES) network.
+These are then classified based on the peak flux, with the smallest class, A, having a peak flux in the range $10^{-8}$--$10^{-7}\,\si{\watt\per\square\m}$.
+The following classes, in order of increasing flux are B, C, M, and X, with bins increasing by 1\,dex per class, and X having no upper bound.
+There is often a numerical suffix appended to these classes which represents its flux as a multiple of the bin's lower bound.
+The frequency of flaring events is found to be inversely proportional to their magnitude, with X-class flares being quite rare (only a handful of events per year), while less energetic events occur far more commonly.
+In September 2017, at the end of solar cycle 24, the Sun produced a series of flares from two active regions, including four X-class events, in the space of less than a week.
+Whilst these events are rare, their distribution is far from uniform.
+
+In this thesis we focus on the numerical modelling of solar flares, paying close attention to the formation and interpretation of chromospheric spectral lines.
+These spectral lines are accessible to ground-based instrumentation and have already yielded great insights into the evolution of the chromosphere during flares.
+As the chromosphere mediates a large portion of the energy liberated during a flare, understanding its response is key to the our understanding of the complete flaring system.
+It is important to verify the soundness of assumptions made in current modelling, and investigate effects that will become important as the next generation of high-resolution solar telescopes enter service.
+
+\TODO{In Chap 2, 3 we present ... I'll do this after splitting chapters.}
 
 \section{Conventions}
 
-\TODO{Define machines used and python versions etc.}
+Throughout this thesis we use SI units unless otherwise noted, with wavelengths in \si{\nano\m}.
+In all discussions the ``height'' or altitude of a point is considered to increase radially from the solar surface, leading to a definition of velocity where a positive value indicates an observed blueshift.
 
-\TODO{Convention Positive velocity -> Upflow, all plots shown with vacuum wavelengths unless stated otherwise}
+When referring to different computers, we refer to:
+\begin{enumerate}
+    \item \emph{hercules}: 36 cores/72 threads \TODO{CPU type} across 2 sockets, 256 GB of DDR4 RAM, CentOS 7 Linux.
+    \item \emph{hephaistos}: 6 cores/12 threads Intel i7 8700, 16 GB DDR4 RAM, CentOS 7 Linux.
+    \item \emph{tomahna}: 8 cores/16 threads AMD Ryzen 3700X, 32 GB DDR4 RAM, Windows 10 with Ubuntu Windows Subsystem for Linux.
+\end{enumerate}
+
+This thesis is produced using PythonTeX \citep{Poore2015}, and all figures are produced by Python code stored inline.
+The complete source of this document, and the data necessary to reproduce it will be distributed and archived following typical practices.
+For all validations of the \Lw{} framework presented herein the data is produced using simulations run during the compilation of the document, and for the other chapters the complete post-processed simulation output or observational product is ingested, with the exception of Chap.~\ref{Chap:2DRT} where the small region isolated in the observational data was extracted in a separate step to reduce the necessary volume of information.
+The source of this thesis therefore documents how this data was processed to produce the figures presented and can easily be modified to analyse the available data in other ways.
 
