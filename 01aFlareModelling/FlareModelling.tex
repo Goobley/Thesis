@@ -622,7 +622,7 @@ When applied to $J$, the relative change is typically computed across frequency 
 \citet{Auer1994a} and \citet{FabianiBendicho1997} provide a framework for estimating both the error from the fully converged solution, and the truncation error representing the error due to the discretisation onto the numerical grid, but in practice this is rarely employed outside of multi-grid strategies \citep[e.g.][]{FabianiBendicho1997,Leger2007}.
 Instead, we apply the more common technique of iterating until the maximum value of $R_c$ for the populations drops below a certain threshold (typically $\sim 10^{-3}$)\footnote{It is wise to also track $R_c$ for $J$, and although this is less commonly used as a convergence criterion, we often choose to do so as a safety factor. The $R_c$ of one of $n$ or $J$ being significantly larger than the other likely indicates that the spatial, frequency, or angular quadrature is ill-suited to the problem at hand.}.
 This approach has been applied with success to many modelling problems within the MULTI, RADYN, and RH \citet{Uitenbroek2001} codes (amongst others), but we note, following \citet{Auer1994a} and \citet{FabianiBendicho1997}, that a small value of $R_c$ does not guarantee convergence, whilst methods such as the multi-grid one they present can do so.
-Unfortunately, these methods are significantly more complex than the MALI method presented here and appear to have difficulty in more realistic multi-dimensional models (Štěpán, \emph{private communication}).
+Unfortunately, these methods are significantly more complex than the MALI method presented here and appear to have difficulty in more realistic multi-dimensional models (J. Štěpán, \emph{private communication}).
 
 \section{The \Lw{} Framework}
 

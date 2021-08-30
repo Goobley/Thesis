@@ -6,16 +6,26 @@
   % You may want to include more packages, particularly for heavy mathematics
   % Please let me know if you find any errors or wish to suggest improvements
 
-\documentclass[11pt,titlepage,oneside,a4paper]{book}
+% \documentclass[11pt,titlepage,oneside,a4paper]{book}
+\documentclass[titlepage,oneside,a4paper,headinclude,
+               headheight=21pt,footheight=21pt,parskip=half]{scrbook}
+\addtokomafont{disposition}{\rmfamily}
+\usepackage[headsepline]{scrlayer-scrpage}
+\clearpairofpagestyles
+\automark[chapter]{chapter}
+\automark{section}
+\ohead{\rightmark}
+\ofoot*{\upshape \thepage}
 
 \usepackage{setspace}
-\setstretch{1.5}
+% Set this in the body.
+% \setstretch{1.5}
 % \onehalfspacing
 
 \usepackage[pdftex]{graphicx}
 \usepackage[pdftex]{xcolor}
 \graphicspath{{./Figures/}}
-\usepackage{float}
+% \usepackage{float}
 \definecolor{lightGrey}{rgb}{0.9,0.9,0.9}
 \definecolor{Red}{rgb}{1.0,0.0,0.0}
 % https://personal.sron.nl/~pault/
@@ -70,8 +80,11 @@
 \newcommand*{\MplCyanWord}{{\color{MplCyan}cyan}}
 \newcommand*{\MplCyanWordCap}{{\color{MplCyan}Cyan}}
 
-\usepackage[margin=1em, font=small, labelfont=bf]{caption}
-\usepackage{subcaption}
+% \usepackage[margin=1em, font=small, labelfont=bf]{caption}
+\setcapmargin*{2em}
+\addtokomafont{caption}{\small}
+\addtokomafont{captionlabel}{\bfseries}
+% \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{positioning,shapes,fit,arrows,intersections,external,decorations}
 \tikzexternalize[prefix=TikzGen/]
@@ -153,16 +166,17 @@
 % microtype for the best microtypographical changes (few end-of-line hypenations :D)
 \usepackage{microtype}
 
-\usepackage[top=1.8cm,bottom=1.8cm,left=4.0cm,
-            right=1.5cm,headheight=15pt,includeheadfoot]{geometry}
-\usepackage{fancyhdr}
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[R]{\nouppercase{\rightmark}}
-\fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0.2pt}
-\newlength{\quarterPage}
-\setlength{\quarterPage}{7.42cm}
+% NOTE(cmo): For university specified _print_ margins and headers
+% \usepackage[top=1.8cm,bottom=1.8cm,left=4.0cm,
+%             right=1.5cm,headheight=15pt,includeheadfoot]{geometry}
+% \usepackage{fancyhdr}
+% \pagestyle{fancy}
+% \fancyhf{}
+% \fancyhead[R]{\nouppercase{\rightmark}}
+% \fancyfoot[R]{\thepage}
+% \renewcommand{\headrulewidth}{0.2pt}
+% \newlength{\quarterPage}
+% \setlength{\quarterPage}{7.42cm}
 \usepackage[toc,page]{appendix}
 \usepackage[UKenglish]{babel}
 \usepackage{natbib}
@@ -172,13 +186,20 @@
 % Add extra non-fragile packages here
 \usepackage{siunitx}
 \sisetup{detect-all}
-% Don't indent paragraphs, separate vertically
-\usepackage{parskip}
+% Don't indent paragraphs, separate vertically, KOMA can do this.
+% \usepackage{parskip}
 % The actual magic
 \usepackage{pythontex}
 % NOTE(cmo): Swap to deptythontex if you need to use the `depythontex' utility
 % to see what code has been generated!
 % \usepackage[depythontex]{pythontex}
+
+% NOTE(cmo): Set typearea parameters right at the end
+% \setstretch{1.5}
+\onehalfspacing
+\KOMAoptions{DIV=12}
+% \usepackage{showframe}
+
 \usepackage{import}
 \setpythontexcontext{figurewidth=\the\columnwidth}
 \newcommand{\includepgf}[1]{\IfFileExists{#1}{\input{#1}}{}}
@@ -224,7 +245,7 @@ Astronomy and Astrophysics Group\\
 School of Physics and Astronomy\\
 University of Glasgow\\
 \vspace{1cm}
-\includegraphics[width=0.6\columnwidth]{GlaLogo.pdf}
+\includegraphics[width=0.5\columnwidth]{GlaLogo.pdf}
 \\
 \vspace{1cm}
 % Insert month and year of date deposited with library for final version
@@ -245,10 +266,21 @@ September 2021
   \\
   {\small--- Amal El-Mohtar \& Max Gladstone}
 \end{flushright}
+% NOTE(cmo): 1.5 spacing in abstract
+% \onehalfspacing
+% \setstretch{1.5}
+% \KOMAoptions{DIV=last}
 \include{Misc/Abstract}
+% NOTE(cmo): 1.0 spacing for table of contents etc
+% \singlespacing
+% \KOMAoptions{DIV=last}
 \tableofcontents
-\listoftables
+% \listoftables
 \listoffigures
+% NOTE(cmo): 1.5 spacing in text
+% \onehalfspacing
+% \setstretch{1.5}
+% \KOMAoptions{DIV=last}
 \include{Misc/Acknowledgements}
 \include{Misc/Copyright}
 
