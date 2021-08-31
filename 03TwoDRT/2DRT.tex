@@ -1075,7 +1075,7 @@ In the former there is an enhancement only during the flare heating period, wher
 
 The \Ha{} line profile in the F9 simulation (Fig.~\ref{Fig:2DHaF9}) synthesised at $x=\SI{500}{\kilo\metre}$ shows that over the course of the simulation the line core intensity increases, but does not rise above the continuum value, and two secondary features form in the red and blue wings during the flare heating.
 These decay rapidly after heating ends, dropping to below the initial quiet value at our blue wing sampling.
-The \CaLine{} computed in this same simulation (Fig.~\ref{Fig:2DCaF9}) emits strongly as a doubly-peaked line with a slight asymmetry in favour the red wing and remains so for the majority of the simulation, decaying slowly over time, with the line core decaying more rapidly than the secondary peaks, leading to an increasingly deep central reversal.
+The \CaLine{} computed in this same simulation (Fig.~\ref{Fig:2DCaF9}) emits strongly as a doubly-peaked line with a slight asymmetry in favour the red wing and remains so for the majority of the simulation, decaying slowly over time, with the line core decaying more rapidly than the secondary peaks (the peaks of the line profile in this centrally-reversed state), leading to an increasingly deep central reversal.
 
 The effects are similar, but much larger in the F10 simulation.
 The \Ha{} line (Fig.~\ref{Fig:2DHaF10}) is greatly enhanced presenting a doubly-peaked shape with a deep central reversal during heating.
@@ -1322,7 +1322,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
 
             for name in ['H', 'Ca']:
                 pops = data[name]
-                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 1]
+                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 1] # NOTE(cmo): Load 50 km from boundary pops, i.e. xIdx=1
             eqPops.update_lte_atoms_Hmin_pops(atmos)
 
             # Add the extra information expected by our Atoms with Fang non-thermal beam collisional rates
@@ -1505,18 +1505,18 @@ atmost = read_atmost(ch2DRT.data_file('atmost_F9.dat'))
 atmost.to_SI()
 dataPops = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-ctxF9 = plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation at $t=\SI{10}{\second}$. The $\tau=1$ line and initial line profile are plotted in red and dashed black respectively in the first column. The pink line profile shows the flaring boundary condition. The other solid and dashed line profiles in the first panel are synthesised at 200, and \SI{400}{\kilo\metre} from the flaring boundary respectively, with orange being positive $x$ and green being negative $x$."
 lFig.short_caption = r'Contribution function, $\chi_\nu/\tau_\nu$ and relative population changes at $t=\SI{10}{\second}$ in the F9 simulation.'
 lFig.placement = 'htbp'
 
-atmost = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
-atmost.to_SI()
+atmostF10 = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
+atmostF10.to_SI()
 dataPopsF10 = zarr.convenience.open(ch2DRT.data_file('F10_flat_450_41_nr_1stColCopy_besser_qsbc_pops_thesis.zip'))
 fig = plt.figure(constrained_layout=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
-ctxF10 = plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmost, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
+plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmostF10, 10, hIdxU=2, hIdxL=1, caIdxU=4, caIdxL=2)
 
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to atomic populations equivalent to Fig.~\ref{Fig:2dLevelsT10} for the F10 simulation at $t=\SI{10}{\second}$."
@@ -1538,11 +1538,11 @@ where $n_{i,t}$ is the number density of atomic level $i$ at time $t$.
 The indexing of the levels shown in the plots is the indexing used by \Lw{}'s model atoms, which is zero indexed.
 These properties are all shown at $t=\SI{10}{\second}$.
 The contribution function and local opacity effect are computed by treating the atmosphere at $x=\SI{50}{\kilo\metre}$ as plane-parallel and computing the contribution function in the traditional way.
-This approach was taken due to the difficulty difficulty formulating the contribution function in the two-dimensional slab; the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plot, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
+This approach was taken due to the difficulty formulating the contribution function in the two-dimensional slab: the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plot, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
 We therefore use this simplified model as it should still inform us of the primary line forming and absorbing regions, especially as the thermodynamic structure of the two-dimensional slab is constant (other than the first column, copied from the flaring boundary).
 The $\chi_\nu / \tau_\nu$ plot is computed equivalently to the contribution function.
 The line profiles overplotted on the contribution function are the initial statistical equilibrium solution (dashed black), current emission from the flaring boundary (pink), and those observed from 200 (solid line) and \SI{400}{\kilo\metre} (dashed line) on either side of the flaring kernel (orange for the positive $x$ region and green for the negative $x$ region).
-Whilst it is possible to compute the response function to perturbations in atmospheric parameters, this is not particularly insightful due to the assumption that the temperature and velocity fields remain fixed, and the coupling of the electron density to charge conservation again.
+Whilst it is possible to compute the response function to perturbations in atmospheric parameters, this is not particularly insightful due to the assumption that the temperature and velocity fields remain fixed, and the coupling of the electron density through charge conservation again.
 
 There is an enhancement in the upper and lower levels of the \Ha{} transition in the upper chromosphere appearing deeper in the atmosphere (down to an altitude of \SI{1}{\mega\metre}) closer to the flaring boundary condition.
 The contribution function shows that the secondary peaks of the \Ha{} line profile form deeper in the atmosphere than the line core and approximately overlap the bottom of this enhanced region.
@@ -1578,6 +1578,55 @@ This reduction in local opacity appears to be well-validated by the extremely sh
 %spell-checker: disable
 \begin{pycode}[2DRT]
 from copy import copy, deepcopy
+def get_boundary_ctx(data, dataRad, atmost, time):
+    tIdx = np.searchsorted(data['time'][...], time)
+    Nx = data['xAxis'].shape[0]
+    Nz = data['zAxis'].shape[1]
+    Ntime = data['zAxis'].shape[0]
+
+    xAxis = data['xAxis'][...]
+    z0 = data['zAxis'][0]
+    zN = np.copy(data['zAxis'][tIdx])
+
+    nHTot = atmost.d1 / (lw.DefaultAtomicAbundance.massPerH * lw.Amu)
+    aIdx = np.searchsorted(atmost.time, time)
+    atmos = lw.Atmosphere.make_1d(scale=lw.ScaleType.Geometric, depthScale=zN,
+                                  temperature=weno4(zN, atmost.z1[aIdx], atmost.tg1[aIdx]),
+                                  vlos=weno4(zN, atmost.z1[aIdx], atmost.vz1[aIdx]),
+                                  vturb=weno4(zN, atmost.z1[aIdx], atmost.vturb),
+                                  ne=weno4(zN, atmost.z1[aIdx], atmost.ne1[aIdx]),
+                                  nHTot=weno4(zN, atmost.z1[aIdx], nHTot[aIdx]))
+    atmos.quadrature(5)
+    FchromaAtoms = [H_6(), CaII(), He_9_atom(), C_atom(), O_atom(), Si_atom(), Fe_atom(),
+                MgII_atom(), N_atom(), Na_atom(), S_atom()]
+
+    with open(os.devnull, 'w') as devnull:
+        with redirect_stdout(devnull):
+            # Set up our atoms and Lightweaver context
+            aSet = lw.RadiativeSet(FchromaAtoms)
+            aSet.set_active('H', 'Ca')
+            spect = aSet.compute_wavelength_grid()
+            eqPops = aSet.compute_eq_pops(atmos)
+            ctx = lw.Context(atmos, spect, eqPops, initSol=lw.InitialSolution.Lte, conserveCharge=False,
+                            Nthreads=12)
+            ctx.depthData.fill = True
+
+            for name in ['H', 'Ca']:
+                pops = data[name]
+                eqPops.atomicPops[name].pops[:] = pops[...][tIdx].reshape(-1, Nz, Nx)[:, :, 0] # NOTE(cmo): Load proper boudnary populations
+            eqPops.update_lte_atoms_Hmin_pops(atmos)
+
+            # Add the extra information expected by our Atoms with Fang non-thermal beam collisional rates
+            atmos.bHeat = np.ones_like(atmos.z) * 1e-20
+            atmos.hPops = eqPops['H']
+            ctx.update_deps()
+
+            for i in range(20):
+                dJ = ctx.formal_sol_gamma_matrices()
+                if dJ < 1e-3:
+                    break
+    return ctx
+
 def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, matchAspectRatios=True):
 
     ctx = ctxBoundary
@@ -1656,7 +1705,7 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
 
     ax = axs[0]
     angles = 'xy' if matchAspectRatios else None
-    mappable = ax.quiver(xs, zs, us, vs, cs, scale=6e-7, cmap='Reds', angles=angles)
+    mappable = ax.quiver(xs, zs, us, vs, cs, scale=1.0e-6, cmap='Reds', angles=angles)
     ax.set_ylim(0.9, 1.7)
     ax.set_xlim(None, 2.0)
     ax.set_xticks(np.arange(len(lineNames)) * xScaling)
@@ -1665,6 +1714,8 @@ def plot_ne_radiation_anisotropy_10s(dataPops, ctxBoundary, wlIdxs, lineNames, m
     ax.set_title('Radiation Anisotropy')
     fig.colorbar(mappable, ax=ax)
     return fig
+
+ctxF10 = get_boundary_ctx(dataPopsF10, dataRadF10, atmostF10, 10)
 
 ca = CaII()
 h = H_6()
@@ -1687,20 +1738,21 @@ This indicates that there is little change in the calcium populations in this re
 In Fig.~\ref{Fig:F10AnisotropyNe} the anisotropy of the radiation field leaving the flaring boundary and entering the slab over the range $z=0.9-\SI{1.7}{\mega\metre}$ for the timestep currently considered is shown, along with the electron density in this region of the slab.
 The anisotropy is shown for the line cores of four different spectral lines (Ly$\alpha$, \Caii{} K, \Ha{}, \CaLine{}) along the vectors of angular quadrature used in the two-dimensional simulation.
 These have been plotted so that their $x$ and $z$ components match the aspect ratio of the electron density plot in the right-hand panel.
-Their sampling of the unit sphere is far more uniform than it appears here due to this significant stretching effect along $z$ and each vector's projected norm in the $x-z$ plane has been normalised.
+Their sampling of the unit sphere is far more uniform than it appears here due to this significant stretching effect along $z$ and each vector's projection in the $x-z$ plane has been normalised.
 This mapping allows their directions to be directly considered in terms of the adjacent panel.
 The length and colour of each vector is then scaled by the associated intensity.
 In the formation region of each line the line core radiation field is relatively isotropic, but the downgoing rays are greatly reduced above this region (as there is little emission or scattering).
 
 In the right-hand panel there an approximately triangular region of enhancement in the electron density (which is initially approximately uniform in $x$ taking the values at the $x=\SI{2}{\mega\metre}$ boundary), starting at the flaring boundary around $z=\SI{1.1}{\mega\metre}$, and increasing in distance from the flare with altitude up to $x=\SI{0.75}{\mega\metre}$ at $z=\SI{1.7}{\mega\metre}$.
 The leading edge of this enhancement in electron density agrees well with the white band present in the \Caii{} population plots and the increase in electron density will locally increase the collisionality of the plasma.
-This region also appears to overlap well with the incoming Ly$\alpha$ radiation, which will penetrate further at higher altitudes due to the higher temperature and the combination of radiation arriving close to horizontally and from below; this (and other EUV radiation forming at similar temperatures) will likely be the cause of significant photoionisation.
+This region also appears to overlap well with the incoming Ly$\alpha$ radiation, which will penetrate further at higher altitudes due to the higher temperature and the combination of radiation arriving close to horizontally and from below.
+This, and other EUV radiation forming at similar temperatures, will likely be the cause of significant photoionisation.
 The downward sloped population reduction seen in the \Caii{} population plots corresponds to the line core formation region ($\sim\SI{1.1}{\mega\metre}$) which also aligns with the highest altitude at which \CaLine{} radiation field is relatively isotropic.
 Above this, the radiation field is primarily upgoing and injects energy into the slab in a non-uniform fashion.
 
-\Ha{} appears relatively isotropic up to $z=\SI{1.5}{\mega\metre}$, becoming primarily upgoing above this.
+\Ha{} appears relatively isotropic up to $z=\SI{1.45}{\mega\metre}$, with a slight upward anisotropy likely due to plasma motions of up to \SI{15}{\kilo\metre\per\second}, and becoming primarily upgoing above this.
 From the contribution function in Fig.~\ref{Fig:2dLevelsF10T10} the \Ha{} line core in the slab continues to form up to $z\approx\SI{1.75}{\mega\metre}$, and the anisotropic injection of energy is likely partially responsible for the diagonal structure seen in the population change plot of \Ha{}'s upper level.
-It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$ but remains relatively isotropic until $z\approx\SI{1.3}{\mega\metre}$, and does not appear directly connected to the ionisation region depicted in the right-hand panel.
+It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$, which coincides approximately with the bottom of the ionisation region depicted in the right-hand panel.
 
 There is a significant enhancement of electron density within the triangular region shown in the right-hand panel of Fig.~\ref{Fig:F10AnisotropyNe}, which appears to be due primarily to photoionisation (as the temperature within the slab cannot change).
 This increase in electron density affects line formation within the slab, both in terms of the line profiles, but also collisional rates and LTE populations.

@@ -28,17 +28,17 @@ In the following discussion we will focus primarily on \Radyn{}, the most widely
 
 \section{A Brief Dissection of \Radyn{} and a Possible Future of RHD Modelling}\label{Sec:RadynDissection}
 
-\emph{This section is informed by my discussions with Mats Carlsson, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
+\emph{This section is informed by my discussions with Prof. Mats Carlsson of the University of Oslo, experiences using \Radyn{}, and in-depth analysis of its source code. It represents my own conclusions from the synthesis of these.}
 
 \Radyn{}'s design closely follows its radiative transfer lineage. Its direct predecessor is the MULTI radiative transfer code \citep{Carlsson1992} and many commonalities remain.
 NLTE radiative transfer is solved on a per transition basis using an ALI method and linearisation of the resultant kinetic equilibrium equations.
-This method is designed to solve the problem of non-overlapping lines but including an underlying background continuum.
+This method solves for the case of non-overlapping lines but includes an underlying background continuum.
 This linearisation approach was proven by \citet{SocasNavarro1997} to be effectively equivalent to that of preconditioning for non-overlapping transitions \citep[i.e. MALI, ][]{Rybicki1991} for pure radiative transfer problems in the statistical equilibrium case.
 Their analysis assumed the use of a local diagonal $\Lambda^*$ operator; \Radyn{}, however, chooses to employ a pentadiagonal $\Lambda^*$ operator to make optimal use of matrix bandwidth necessary elsewhere in the program and obtain improved convergence as a result.
 It is unlikely that this change in operator significantly affects the conclusions of \citet{SocasNavarro1997}, but the two methods will no longer arrive at exactly equivalent numerical formulations.
 \Radyn{} also uses an efficient Feautrier formalism for its formal solver, which solves for both the up- and down-going rays simultaneously but cannot handle both overlapping lines and Doppler shifts.
 There are no lines with significant overlap considered in the standard model atoms used in \Radyn{}, and continuum emissivities and opacities rarely change sufficiently over the wavelength range of a line to need to be considered in a wavelength varying sense.
-This is likely fair trade-off for \Radyn{} given the computational benefits it can bring.
+This is likely a fair trade-off for \Radyn{} given the computational benefits it can bring.
 
 The advantage of the linearisation approach applied in \Radyn{} is the ability to directly couple other equations to the RTE and implicitly solve all of these simultaneously and self-consistently.
 Taking for example the kinetic equilibrium equation \eqref{Eq:KinEq}, \Radyn{}'s method formulates this expression such that the corrections from both the advection and population transition terms are considered simultaneously.
@@ -46,20 +46,20 @@ This is achieved through the use of a Newton-Raphson method, where the Jacobian 
 This same process simultaneously solves for the population updates, heat conduction, hydrodynamics of the system, and the new locations of the dynamic grid following the method of \citet{Dorfi1987}.
 
 A significant benefit of this implicit approach is a relaxation of the timestep constraints present in explicit approaches.
-This is particularly important when considering the very fine grid spacing often required by the dynamic grid, which, combined with the large bulk velocities occurring in flares can lead to extremely oppressive timestep constraints.
+This is particularly important when considering the very fine grid spacing often required by the dynamic grid which, combined with the large bulk velocities occurring in flares, can lead to extremely oppressive timestep constraints.
 
 Despite its elegance, there are several major downsides to this implicit approach.
 Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically derived and correctly computed.
 This presents a very large barrier to entry for future developments on the platform, and is likely part of the reason why both Fokker-Planck modules integrated in \Radyn{} have operated externally to this core coupled system.
 Additionally, implicit codes, whilst having less severe timestep constraints, are typically much more costly per timestep than explicit codes.
 This is somewhat offset by the majority of the cost of each step residing within the formal solver, which remains similar in both cases.
-The dynamic grid can also become problematic due its lack of interpretability, and propensity to drop to spacings finer than the local cyclotron radius in more energetic simulations.
-On these scales the assumptions that allow us to treat the plasma as an ideal fluid begin to break down, and due to the fixed number of grid points used, spatial accuracy is reduced elsewhere in the simulation.
+The dynamic grid can also become problematic due a lack of interpretability and ability to manipulate how the points are spread, which is linked to a tendency to drop to extremely fine spacings in shock regions, severely limiting the possible timestep (sub-micron spacings have been observed in non-convergent simulations).
+Due to the fixed number of grid points used throughout the model, this reduces spatial accuracy elsewhere in the simulation.
 
-\Radyn{} is a fantastic tool that has enabled insight into many different flare associated phenomena, and these comments merely intend to highlight avenues for future development within the field of RHD.
-As the different applications of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \NeedRef{}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
+\Radyn{} is a fantastic tool that has enabled insight into many different flare-associated phenomena, and these comments merely intend to highlight avenues for future development within the field of RHD.
+As the different applications of \Radyn{} continue to evolve in complexity, with projects such as multi-strand arcade and minority species modelling \citep[e.g.][]{Kerr2019,Polito2019,Kerr2020}, the code at the core of \Radyn{} will need to be modified by different researchers, and work facilitating this and highlighting additional factors to be considered in RHD modelling is core to the future development of this field.
 
-As discussed previously in respect to \Lw{} and radiative transfer, the flexibility of a framework designed for solving a class of problem can yield significant advances in productivity.
+As discussed previously with respect to \Lw{} and radiative transfer, a flexible framework designed for solving a class of problem can yield significant advances in productivity.
 The task of designing, constructing, and testing a framework for a problem as complex as the complete quasi-one-dimensional RHD simulation of flares is too significant to be undertaken here.
 Nevertheless, it may prove a powerful future development once the necessary specifications are defined.
 In the following we focus on reprocessing aspects of the radiative transfer of previously computed \Radyn{} simulations and investigating important directions for future developments in RHD modelling of flares.
@@ -70,9 +70,10 @@ For flares, \Radyn{}'s primary focus is on the major spectral lines and continua
 These typically represent the bulk of the radiative energy lost from the chromosphere.
 Singly ionised magnesium has also been shown to be an important contributor to these energy losses, however the h and k lines require a treatment including PRD to avoid significantly overestimating their losses.
 The \Caii{} H and K lines are also somewhat affected by PRD, in addition to the hydrogen Lyman lines.
-For the Lyman lines we will discuss several strategies for approximating this treatment, and for \Caii{} H and K, it has been suggested that considering these in CRD approximately accounts for the lack of Mg\,\textsc{ii} h and k if all of these transitions were treated with PRD \citep{Kerr2019a}.
+For the Lyman lines we will discuss strategies for approximating this treatment.
+For \Caii{} H and K, it has been suggested that considering the radiative losses of these lines in CRD approximately accounts for the lack of detailed Mg\,\textsc{ii} h and k treatment if all of these transitions were treated with PRD \citep{Kerr2019a}.
 
-Whilst the lines of these four species are some of the strongest in solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can also be used to diagnose the atmosphere.
+Whilst the lines of these four species are some of the strongest in the solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can also be used to diagnose the atmosphere.
 For example, Si\,\textsc{iv} optical thickness has been investigated in a minority species context by \citet{Kerr2019c}.
 An element treated as a ``minority species'' is assumed to not interact significantly with the energy balance of the simulation (i.e. the thermodynamic response of the model does not change significantly if this species is subject to a complete radiative treatment).
 This should be true for most species with trace populations.
