@@ -41,22 +41,29 @@ lFig.short_caption = r'Temperature and total hydrogen number density ($n_H$) str
 \end{pycode}
 % spell-checker: enable
 
-The Sun is obviously responsible for life on Earth --- there would be no solar system without it!
-More seriously, the Earth lies within a narrow orbital zone in which the solar irradiance is sufficient to maintain the temperatures needed for life, without cooking or freezing us (the total solar irradiance comes out to $\sim\SI{1300}{\watt\per\square\m}$ at the top of the atmosphere).
-Our Sun is but one of many similar stars with similar solar systems, and possibly, life.
-The conditions required for life are far more complex than a simple balancing act of ``power in, power out'', as the \emph{form} of the energy received will have important role in the viability of a planet.
+\section*{To be Taught, if We are Fortunate}
+
+The Sun is obviously responsible for the existence of life on Earth --- after all, there would be no solar system without it!
+The Earth lies within a narrow orbital zone in which the solar irradiance is precisely sufficient to maintain the very specific temperatures required for life as we know it, without cooking or freezing us.
+Our Sun is but one of \emph{many} similar stars with similar solar systems, and perhaps, similar life.
+Whilst the planetary temperature is a necessary condition, it is far from sufficient, and the requirements of life are far more complex than a simple balancing act of ``power in, power out''.
+Instead, the \emph{form} of the energy received, and how the atmosphere reacts to it, has a crucial role in the viability of a planet.
 Indeed, there is a complex and delicate set of photochemical reactions that both maintain the planetary temperature \emph{and} protect its inhabitants from the more dangerous components of the incoming radiation.
 
 During a solar (or stellar) flare certain dangerous components of a star's radiative output can be dramatically enhanced.
-For example, \citet{Segura2010} investigated the radiation received by an Earth-like exoplanet with an oxygen-rich atmosphere orbiting the M Dwarf AD Leonis during a flaring event observed on 1985-04-12.
-An increase in DNA-damaging ultraviolet (UV) radiation of approximately 1\,dex was seen across this spectral range at the top of the atmosphere.
-Their simulations showed that the increase in the more damaging UVB and UVC bands reaching the planet's surface was greatly reduced thanks to its atmosphere, and the peak UV dose rate for DNA damage was only 14\,\% higher than that on Earth.
+For example, the effects of a flare observed from AD Leonis, an M Dwarf star, on an orbiting Earth-like planet were investigated by \citet{Segura2010}.
+The DNA-damaging ultraviolet (UV) radiation increased at the top of the atmosphere by approximately an order of magnitude, which could lead to disastrous consequences on the health and genetic stability of biological lifeforms caught in the path of this oncoming radiation.
+This would be equivalent to the UV index going from ``low'' to ``extreme'' and back again over the course of an hour!
+The modelling of this event showed that the increase in the more damaging UVB and UVC bands reaching the planet's surface was greatly diminished thanks to the planet's oxygen-rich atmosphere, yielding a peak UV dose rate for DNA damage only slightly higher than that on Earth.
 
-A slightly different planetary chemistry could yield different results, but so could a different flare.
-As our closest star, the Sun most directly affects us, and a lot of the knowledge gained from our companion can help us understand more distant solar systems.
-The effects of solar flares produced from our own star have clearly visible effects, from the beautiful aurorae that occasionally adorn the night sky, to effects on telecommunications and satellites.
+A slightly different atmospheric chemistry could yield different results, but so to could a different flare.
+Fortunately for us, our solar UV intake varies far less during flares \citep[e.g.][]{Woods2006}, and the Earth provides an essential envelope that protects, but not with impunity, from the worst this star can throw at us.
+As our closest star, the Sun most directly affects us, and knowledge gained from this companion can help us understand the environment through which our planet falls, and also the conditions in distant solar systems to which we may one day venture.
 
-The dramatic, rapid variations of the solar atmosphere that are observed during flares are almost as mesmerising as the aurora and developing an understanding of these is a key component of living long-term as a species with this companion, answering questions of plasma physics and exoplanetary viability, as well as just pure scientific curiosity.
+Flares produced by our own star have effects clearly visible to life on Earth, from the beautiful aurorae that occasionally adorn the night sky, to disruptive impacts on telecommunications and satellites.
+Due to the proximity and significance of the Sun, it is the only star, that human science is aware of, to be continuously monitored by a fleet of advanced instrumentation, with a corresponding global community of researchers dedicated to unravelling its mysteries.
+The intensely dramatic and rapid variations of the solar atmosphere that are observed during energetic flaring events are almost as mesmerising as the aurorae they can produce, and developing an understanding of these is a key component of living long-term as a species with this companion star, whilst its proximity enables investigation on a scale that can only be dreamed of for the distant cosmos.
+These fascinating questions can and should be answered to slake the natural human thirst for scientific comprehension, but are also key stepping stones to answering some of the questions appearing from the fields of plasma and particle physics, in addition to those of exoplanetary viability.
 
 \section{The Layers of the Sun}
 
@@ -158,8 +165,19 @@ When referring to different computers, we refer to:
     \item \emph{tomahna}: 8 cores/16 threads AMD Ryzen 3700X, 32 GB DDR4 RAM, Windows 10 with Ubuntu Windows Subsystem for Linux.
 \end{enumerate}
 
+\begin{pycode}[Intro]
+import numpy as np
+import scipy
+import matplotlib as mpl
+import astropy
+import lightweaver as lw
+import sys
+pythonVersion = '{:d}.{:d}.{:d}'.format(*sys.version_info[:-2])
+\end{pycode}
+
 This thesis is produced using PythonTeX \citep{Poore2015}, and all figures are produced by Python code stored inline.
 The complete source of this document, and the data necessary to reproduce it will be distributed and archived following typical practices.
+Whilst a complete list of packages will be made available with this distribution, the current version has been compiled with Python \py[Intro]|pythonVersion|, NumPy \py[Intro]|np.__version__| \citep{Harris2020}, SciPy \py[Intro]|scipy.__version__| \citep{Virtanen2020}, Matplotlib \py[Intro]|mpl.__version__| \citep{Hunter2007}, Astropy \py[Intro]|astropy.__version__| \citep{Robitaille2013,Price-Whelan2018}, and Lightweaver \py[Intro]|lw.__version__| \citep{Osborne2021}.
 For all validations of the \Lw{} framework presented herein the data is produced using simulations run during the compilation of the document, and for the other chapters the complete post-processed simulation output or observational product is ingested, with the exception of Chap.~\ref{Chap:2DRT} where the small region isolated in the observational data was extracted in a separate step to reduce the necessary volume of information.
 The source of this thesis therefore documents how this data was processed to produce the figures presented and can easily be modified to analyse the available data in other ways.
 
