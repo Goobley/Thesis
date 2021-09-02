@@ -536,7 +536,11 @@ In the case of plasma flows we adopt the approximate hybrid treatment of \citet{
 Its value is then interpolated to find the value of $\rho_{ij}$ at the Doppler shifted value in the observer's frame.
 The additional computational cost of this hybrid method over the angle-averaged method is very low, and in most cases the results are comparable to the far more costly complete angle-dependent treatment \citep{Leenaarts2012a, Kerr2019}.
 
-\subsection{Charge Conservation}
+We adopt the iterative method of \citet{Uitenbroek2001} to evaluate $\rho_{ij}$ by interleaving formal solutions at wavelengths of PRD lines (and wavelengths that are Doppler shifted into the region of a PRD line in the case of hybrid PRD) between updates of $\rho_{ij}$ from the current value of the radiation field.
+The atomic populations are held constant during this process, and a handful of iterations of computing $\rho_{ij}$ and updating the radiation field are performed between each MALI iteration.
+
+
+\subsection{Charge Conservation}\label{Sec:ChargeCons}
 
 We have thus far assumed that the electron density is known \emph{a priori} as part of the atmospheric model.
 Unfortunately, it is also insufficient to assume that the electron density follows the LTE ionisation state of the plasma, as many species (in particular hydrogen) with important NLTE spectral lines will be far from their LTE ionisation state \citep{Heinzel1995,Paletou1995,Bjorgen2019}.
@@ -710,11 +714,12 @@ A proof of concept implementation utilising MPI for a grid of models was underta
 
 A secondary form of parallelisation is also incorporated into \Lw{}.
 This form of parallelisation consists of splitting time-consuming work from a single simulation over multiple threads in the same machine.
-This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any scattering integrals needed for PRD, which are parallelised over wavelength, and typically represent the vast majority of the program's runtime for non-trivial simulations.
+This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any scattering integrals needed for PRD, which are parallelised over wavelength
+These terms typically represent the vast majority of the program's runtime for non-trivial simulations.
 The calculation of line absorption profiles, when using atomic models with the default Voigt profile implementation, along with the optional \texttt{FastBackground} implementation of background opacities, emissivities, and scatterings, are also parallelised.
 The choices of the terms to parallelise has been motivated by our observations of the most time-consuming processes when using \Lw{} to undertake the numerical experiments presented in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT}.
 
-\subsection{Validation}
+\subsection{Validation}\label{Sec:LwValidation}
 
 The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
 RH is a well-established code that serves as a cornerstone of NLTE radiative transfer in the solar physics community.

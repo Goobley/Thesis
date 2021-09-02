@@ -469,6 +469,8 @@ For the remainder of this chapter, we denote individual samples of the atmospher
 
 \subsection{Milne-Eddington Inversions}
 
+\TODO{Key inversion sources}
+
 Milne-Eddington inversions have proven to be a simple, but very powerful tool that is often applied in solar physics.
 The loss of information can be somewhat limited by placing constraints on the solution. One of the simplest constraints that can be placed on the problem is that of a source function that changes linearly with continuum optical depth, whilst all other parameters are held constant throughout the atmosphere.
 This is a low-order approximation of the problem, and is convenient as we can express compute the outgoing intensity analytically.
@@ -492,7 +494,7 @@ I(\tau=0, \nu) = S_0 + \frac{S_1}{1 + \alpha\phi(\nu)}.
 Thanks to the analytic nature of this solution, it is easy to attempt to fit this to observations, and effects such as constant atmospheric velocity, and magnetic field can be included in the line profile.
 This approach is rapid and works quite well for quiet photospheric lines, such as Fe I 6301 \AA{} and Fe I 6173 \AA{} as used in Hinode SOT and HMI \citep[e.g.][]{Centeno2014}, but the linear description of source function reduces its applicability to chromospheric lines.
 
-\subsection{Generalisation Through Response Functions}
+\subsection{Generalisation Through Response Functions}\label{Sec:IntroRfs}
 
 
 It can be very limiting to impose a chosen source function, especially in regions where the temperature does not vary monotonically.
@@ -591,32 +593,42 @@ As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition
 The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE radiative transfer as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
 These effects can instead be captured by the use of response functions.
 
-Response functions were primarily introduced for use in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
+Response functions have been primarily used in the field of inversions, but also represent strong tools for understanding the theory of spectral line formation in atmospheric models, due to the close coupling of these two problems.
 A response function tells us how the outgoing intensity changes \emph{in response} to a change in an atmospheric parameter.
-These were first named and discussed by \citet{1992RuizCobo} for the situation of full Stokes synthesis (using the formulation of \citet{SanchezAlmeida1992}).
+These were first named by \citet{Beckers1975}, but a similar concept was previously presented by \citet{Mein1971} in the form of weighting functions for the RTE.
+They were generalised to full Stokes radiative transfer by \citet{LandiDeglInnocenti1977} and applied by \citet{1992RuizCobo} for the situation of full Stokes synthesis and inversion (using the formulation of \citet{SanchezAlmeida1992}).
 A similar approach (built on framing the intensity perturbations as a Fredholm integral equation and using the finite difference method to evaluate necessary terms) for the scalar RTE was employed in the inversions of \citet{Metcalf1990a}, but their focus was on the direct application to inversions rather than the interpretation of the response functions produced.
+
 In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
+The frequency- and depth-dependent response function $\mathcal{R}_{\nu, q} (z)$ to a parameter $q$ can then be defined
+\begin{equation}
+    \Delta I(\nu) = \int\mathcal{R}_{\nu, q}(z) \Delta q(z)\,dz,
+\end{equation}
+where $\Delta I(\nu)$ is the change in outgoing radiation due to a change in of $\Delta q(z)$ in parameter $q$.
+
 
 To learn from response functions, we first need to know to which parameters we wish to know the intensity response.
 This will depend on the parametrisation of the model atmosphere used, but it is common to see response functions to temperature, electron density, velocity, and in the case of spectropolarimetry, magnetic field.
+An example of using response functions for chromospheric diagnostics, and their advantages over contribution functions was presented by \citet{Uitenbroek2006}.
+It was shown that there can be substantial differences between the contribution and response functions for lines that form in NLTE conditions, and highlight that for \Ha{} the photospheric conditions will affect the line-core formation height, and hence the formation source function due to radiative coupling.
 
 In LTE, where the source function is set by the local atmospheric parameters, the response functions can be computed with relative ease.
-The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions (based on the formulations by \citet{SanchezAlmeida1992}) to perturbations in different atmospheric parameters at the same time as the formal solution.
+The SIR inversion code \citep{1992RuizCobo} analytically computes the (full Stokes) response functions to perturbations in different atmospheric parameters at the same time as the formal solution.
 These response functions are used in conjunction with a Levenberg-Marquadt damped least squares regression procedure to modify the starting atmosphere (defined on equidistant nodes in $\log \tau$ and assumed to follow cubic splines between nodes) until the synthesised radiation matches the observation as closely as possible.
 
 For lines that are formed well outside LTE the process of determining the response functions to atmospheric perturbations can be significantly more arduous.
 The most common approach has been to apply a finite difference method to the outgoing radiation from the statistical equilibrium solution to an atmosphere by successively perturbing each parameter at each node in the atmosphere.
 Whilst computationally expensive, this ``brute force'' approach to response functions makes them simple to calculate.
-Following this approach, the parameter we wish to know the response to is perturbed at one depth point in the atmosphere, and the populations are updated using the new radiation field and atmosphere.
+Following this approach, the parameter we wish to know the response to is perturbed at one depth point in our discretised atmosphere, and the populations are updated using the new radiation field and atmosphere.
 This procedure is repeated for the parameter at each depth in the atmosphere.
 The intensity response to perturbation $\delta q$ in parameter $q$ at depth point $k$ can then be computed by finite differences as
 \begin{equation}
-    \mathcal{R}_q(k) = \frac{I(q_k + \delta q) - I(q_k)}{\delta q}.
+    \mathcal{R}_{\nu, q}(k) = \frac{I(\nu, q_k + \delta q) - I(\nu, q_k)}{\delta q}.
 \end{equation}
-Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}) and also \citet{DelaCruzRodriguez2017}, and has proven more robust.
+Despite the effective doubling in computational cost, a centred finite difference method was recommended by I. Mili\'{c} (\emph{private communication}) and \citet{DelaCruzRodriguez2017}, and this has proven more robust.
 The response function is then written as
 \begin{equation}
-    \mathcal{R}_q(k) = \frac{I(q_k + \delta q / 2) - I(q_k + \delta q / 2)}{\delta q}.
+    \mathcal{R}_{\nu, q}(k) = \frac{I(\nu, q_k + \delta q / 2) - I(\nu, q_k + \delta q / 2)}{\delta q}.
 \end{equation}
 This process must be undertaken for each depth (or node in the model) and atmospheric parameter independently, leading to its significant computational cost.
 In a statistical equilibrium case, the standard procedure of formal solution and population update is repeated until convergence is reached.
@@ -627,7 +639,7 @@ The Stockholm Inversion Code (STiC) also follows this procedure, using a modifie
 Analytic response functions for the multi-level NLTE problem were first derived by \citet{Milic2017}, and are now implemented in the SNAPI code \citep{Milic2018}.
 These response functions should significantly reduce the computational cost of NLTE inversions, a necessity for inverting the large fields of view in current and next generation solar observations.
 
-An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH (Ruiz Cobo et at. \emph{in preparation}).
+An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH (B. Ruiz Cobo et at. \emph{in preparation}).
 
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.
@@ -635,7 +647,12 @@ It is common to allow line-of-sight velocity as a parameter, which technically v
 Clearly these constraints render this technique very difficult to apply to flares, although NICOLE has been applied to flaring atmospheres by \citet{Kuridze2018}.
 The integral approach of \citep{Metcalf1990a} was also applied to flares and differs from the others discussed here, by constructing a matrix of kernels which is solved for temperature and electron density perturbations using a regularised method.
 The kernels presented cannot capture the complete response to perturbations in parameters affecting NLTE spectral lines without an approach that can find the new source function (which can be modified non-locally).
-A evaluation of this technique using the analytic formulations presented by \citet{Milic2017}, could yield an interesting approach, but would likely be found lacking due to the narrow range of validity of the kernel functions, requiring a starting atmosphere that matches the observed spectrum quite well, due to the first order nature of this method.
+These kernels therefore have a narrow range of validity, and require a starting guess close to the true solution.
+
+Response function driven inversions are not the only form of inversions to have been applied, but they are the most widely used.
+For example, \citet{AsensioRamos2007} presented a Bayesian approach utilising a Markov Chain Monte Carlo method with Milne-Eddington atmospheres.
+This method is too computationally costly to reasonably apply to the full depth-stratified NLTE problem with today's technology, but it would allow the investigation of the posterior distributions of the atmospheric parameters, and be less sensitive to local minima.
+With the recent rise in popularity of machine learning, tractable approaches to inversion that allow characterisation of the atmospheric posteriors are a key area of interest \citep[e.g.][]{Osborne2019, DiazBaso2021}, and we will discuss these further, along with other machine learnt approaches in Chap.~\ref{Chap:Radynversion}.
 
 
 \subsection{Forward Modelling}
