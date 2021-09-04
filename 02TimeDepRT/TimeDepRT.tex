@@ -1,4 +1,4 @@
-\chapter{Time-Dependent Radiative Transfer}\label{Chap:TimeDepRt}
+\chapter{Radiative Transfer with Time-Dependent Populations}\label{Chap:TimeDepRt}
 %TC:group pycode 0 0
 \begin{pycode}[TimeDepRT]
 name = 'TimeDepRT'
@@ -71,7 +71,7 @@ These typically represent the bulk of the radiative energy lost from the chromos
 Singly ionised magnesium has also been shown to be an important contributor to these energy losses, however the h and k lines require a treatment including PRD to avoid significantly overestimating their losses.
 The \Caii{} H and K lines are also somewhat affected by PRD, in addition to the hydrogen Lyman lines.
 For the Lyman lines we will discuss strategies for approximating this treatment.
-For \Caii{} H and K, it has been suggested that considering the radiative losses of these lines in CRD approximately accounts for the lack of detailed Mg\,\textsc{ii} h and k treatment if all of these transitions were treated with PRD \citep{Kerr2019a}.
+For \Caii{} H and K, it has been suggested that considering the radiative losses of these lines in CRD approximately accounts for the lack of detailed Mg\,\textsc{ii} h and k treatment if all of these transitions were treated with PRD \citep{Carlsson2002, Kerr2019a}.
 
 Whilst the lines of these four species are some of the strongest in the solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can also be used to diagnose the atmosphere.
 An element treated as a ``minority species'' is assumed to not interact significantly with the energy balance of the simulation (i.e. the thermodynamic response of the model does not change significantly if this species is subject to a complete radiative treatment).
@@ -1534,7 +1534,7 @@ As the hydrogen populations would continue to require a full time-dependent trea
 However, the nuanced analysis of the formation of H$\alpha$ in the quiet Sun by \citet{Leenaarts2012a} suggests that it may be sufficient to purely capture the effects of hydrogen non-equilibrium ionisation (i.e. the fraction of hydrogen that is fully ionised and its effects on the electron density) through the equation of state and then perform NLTE synthesis in statistical equilibrium with this given electron density.
 This would also need to be validated for flare models, which could be done following the approach laid out in this chapter.
 It would then become significantly easier to apply machine learning models to these separable components; this could provide massive computational gains in RHD modelling, whilst detailed spectral synthesis would remain possible through traditional NLTE radiative transfer approaches.
-Parallels can be drawn between the application of machine learning to this problem and the use of simplified local rates following the method of Sollum \NeedRef{} as can be seen in HYDRAD \citep{Reep2019}, and is used in BIFROST \citep{Gudiksen2011, Leenaarts2007}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
+Parallels can be drawn between the application of machine learning to this problem and the use of simplified local rates following the method of \citet{Sollum1999} as used in HYDRAD \citep{Reep2019}, and BIFROST \citep{Gudiksen2011, Leenaarts2007}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
 Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
