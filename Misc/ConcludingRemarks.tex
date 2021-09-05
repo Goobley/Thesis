@@ -1,1 +1,38 @@
 \chapter{Concluding Remarks}
+
+In this thesis we have investigated the formation and inversion of chromospheric optical spectral lines, in particular \Ha{} and \CaLine{}.
+These lines form outside of local thermodynamic equilibrium and can only be synthesised through a detailed treatment of the atmospheric radiation field.
+To facilitate the modelling of these spectral lines, we have developed the \Lw{} framework: a modular radiative transfer Python package capable of handling both plane-parallel and two-dimensional geometries.
+The purpose of a framework such as this is to empower researchers with the ability to easily create custom tools for the radiative transfer problems they wish to simulate.
+The conceptual design of \Lw{}, along with a series of validation examples, were presented in Chap.~\ref{Chap:Lw}, building on the radiative transfer theory presented in Chap.~\ref{Chap:FlareModelling}.
+The extension of \Lw{} to support two-dimensional atmospheres was presented in Chap~\ref{Chap:2DRT}.
+The development of \Lw{} has enabled much of the research undertaken in later chapters, thanks to its flexibility, and we hope that other researchers will be able to make use of it\footnote{\Lw{} \citep{Osborne2021} is developed openly under the MIT license on GitHub (\url{https://github.com/Goobley/Lightweaver}), with archival on Zenodo \citep{LightweaverZenodo}}.
+
+We have presented the application of \Lw{} to the synthesis of spectral lines with time-dependent populations in both plane-parallel flaring simulations and the irradiation of a slab of quiet Sun atmosphere by an adjacent flare model.
+In Chap.~\ref{Chap:TimeDepRt} we used \Lw{} to investigate some of the assumptions present in the most commonly used flare models produced using the \Sota{} radiation hydrodynamic code \Radyn{}.
+We performed in-depth investigations of the effects of the hydrogen Lyman lines on the \Caii{} populations (and thus emergent line profiles), discussed whether a full time-dependent treatment of the \Caii{} populations is needed, and presented some of the difficulties encountered when trying to treat these atomic populations in these flaring models in a time-dependent manner whilst also considering the effects of partial frequency redistribution.
+The concept of a time-dependent response function was also introduced as a new tool for analysing RHD models.
+
+The atmospheric evolution produced by two different \Radyn{} simulations was used as the input for a \Lw{} based tool.
+The synthetic spectra produced serve both as a validation of the time-dependent radiative transfer techniques.
+Differences were found between the \Caii{} lines synthesised with \Radyn{} and \Lw{}, these were found to be due to photoionisation by the Lyman lines.
+\Radyn{}'s default treatment includes emissivity and opacity from the Lyman continuum when computing the radiative rates of the \Caii{} continua, but neglects the radiation due to the Lyman lines.
+The Lyman series contains some of the strongest spectral lines in the flaring solar spectrum, with extreme enhancements observed over their quiet Sun values.
+The additional flux produced by these lines is sufficient to provoke substantial changes in the synthesised \Caii{} line profiles, in particular, those of the \CaLine{} line.
+The effects of the Lyman lines on the shape and intensity of the \Caii{} line profiles also changes the net radiative losses from the atmosphere, by 10--15\,\% in the upper chromosphere of the simulations investigated.
+This difference could plausibly change the atmospheric evolution of the simulation, leading to greater differences in the \Caii{} line profiles from models taking into account these effects, but also possibly changing the observed line profiles from other species such as hydrogen.
+
+We also investigated the necessity of performing a fully time-dependent treatment of the \Caii{} level populations, using the same combination of \Lw{} and precomputed \Radyn{} simulations.
+It was found that throughout the vast majority of the simulation there was little difference between line profiles computed with statistical equilibrium populations, and those computed with a time-dependent treatment.
+The most significant differences occurred at the start of the simulation, as the atmosphere first reacts to the beam heating it, but these remain relatively small.
+As the statistical equilibrium solution for a given atmosphere is much closer to unique\footnote{\TODO{Are you actually saying this?}} than the fully time-dependent one (in the case where the population settling time is long compared to the time period investigated), this opens the door to approximate methods that can be applied to more rapidly estimate these populations.
+
+We implemented a method for including the effects of partial frequency redistribution into the \Lw{}-based tool for reprocessing \Radyn{} simulations.
+This was found to a difficult problem, often suffering from non-convergence, but we were able to full reprocess the lower energy simulation of the two used in the investigation of \Caii{} photoionisation.
+The Doppler-like line profile approximations implemented in \Radyn{} for the Ly$\alpha$ and Ly$\beta$ proved to be relatively accurate at most points in the simulation.
+Much larger differences were found for the calcium resonance lines, and once again the radiative losses due to these lines.
+It therefore seems essential to develop approximate treatments for the Ca H \& K spectral lines.
+
+The concept of time-dependent response functions was also introduced in this chapter...
+
+We also presented RADYNVERSION, a machine learning based approach to infer the atmospheric parameters responsible for producing the spectral lines observed in solar flare observations, based on \Radyn{}.

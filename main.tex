@@ -254,26 +254,16 @@ University of Glasgow\\
 % Insert month and year of date deposited with library for final version
 September 2021
 \end{titlepage}
+% Order: https://www.gla.ac.uk/media/Media_549236_smxx.pdf Appendix (from MVLS, also not self-consistent on ordering)
 \frontmatter  % Turn off chapter numbering, use roman page numbers
-\thispagestyle{plain}
-\vspace*{0.4\textheight}
-\begin{center}
-\noindent\begin{minipage}{0.8\textwidth}
-\emph{I send you this letter on a falling star. Reentry will score and test it but will not melt it away. I write in fire across the sky, a plummet to match your rise.}
-\end{minipage}
-% \rule{0.8\textwidth}
-\end{center}
-\noindent\hspace*{0.1\textwidth}\rule{0.8\textwidth}{1pt}\hspace*{0.1\textwidth}
-\begin{flushright}
-  {This Is How You Lose the Time War\hspace*{0.1\textwidth}}
-  \\
-  {\small--- Amal El-Mohtar \& Max Gladstone}
-\end{flushright}
 % NOTE(cmo): 1.5 spacing in abstract
 % \onehalfspacing
 % \setstretch{1.5}
 % \KOMAoptions{DIV=last}
+\include{Misc/Copyright}
+\include{Misc/Epigraph}
 \include{Misc/Abstract}
+\include{Misc/Acknowledgements}
 % NOTE(cmo): 1.0 spacing for table of contents etc
 % \singlespacing
 % \KOMAoptions{DIV=last}
@@ -284,8 +274,6 @@ September 2021
 % \onehalfspacing
 % \setstretch{1.5}
 % \KOMAoptions{DIV=last}
-\include{Misc/Acknowledgements}
-\include{Misc/Copyright}
 
 \mainmatter % Turn on chapter numbering, reset page numbers, use arabic
 \include{00Introduction/Introduction}
@@ -298,13 +286,15 @@ September 2021
 \include{Misc/ConcludingRemarks}
 \appendix
 
+\backmatter  % Turn off chapter numbering
+
 % {\setstretch{1.0}\small
 % {\small
+\chapter{Bibliography}
 \bibliographystyle{aasjournal}
 \setlength\bibsep{0.2\baselineskip}
 \bibliography{{Refs}}
 % }
 
-\backmatter  % Turn off chapter numbering
 
 \end{document}
