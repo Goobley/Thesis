@@ -121,13 +121,13 @@ For each subsequent timestep these properties are interpolated from the new \Rad
 
 To reduce the number of grid points needed for a static stratification one could instead use a fixed column mass stratification.
 The transition region moves very little in terms of column mass during the simulation, however it then becomes necessary to interpolate the populations from one column mass stratification to the next; a process which can introduce significant error if not undertaken with care.
-This error can be reduced by renormalising each specie's total number density throughout the atmosphere from the mass density and abundances, and this helps to avoid errors growing around regions of high gradient, such as the transition region.
+This error can be reduced by renormalising each species' total number density throughout the atmosphere from the mass density and abundances, and this helps to avoid errors growing around regions of high gradient, such as the transition region.
 
 All of these approaches were trialled with different \Radyn{} simulations, and it was clear that while the general evolution of the radiative output was similar, differences remained in the synthesised line profiles, especially those of \Caii{}.
 To solve the minority species problem properly in a manner fully compatible with \Radyn{} it is necessary to include the advection terms, and so an advection treatment was added.
 In the following we will describe two different approaches to handling the advective terms, drawing on our previous discussions of hydrodynamics, and thus solving the complete system of kinetic equilibrium equations.
 
-\subsection{Advection}
+\subsection{Advection}\label{Sec:MsLwAdvection}
 
 In Sec.~\ref{Sec:RadynDissection} we discussed the coupled manner in which \Radyn{} solves the RHD equations.
 For flexibility we wish to decouple the advection terms from the radiative effects.
@@ -277,7 +277,7 @@ In the LI case, the simulations are performed with charge conservation as descri
 No difference in the radiative output was found between our charge conservation implementation, and that found by using the \Radyn{} values at each step, showing that this method is self-consistent.
 The results of this were shown during \Lw{} validation in Fig.~\ref{Fig:LwValidationTimeDepNe} of Sec.~\ref{Sec:LwValidation}.
 
-\subsection{The \Radyn{} simulations}
+\subsection{The \Radyn{} simulations}\label{Sec:CaiiRadynSims}
 
 For this investigation two \Radyn{} simulations were used.
 Their parameters were chosen to serve as typical simulations, and were based on those used by \citet{Kerr2019, Kerr2019a}.
@@ -1538,8 +1538,8 @@ Parallels can be drawn between the application of machine learning to this probl
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
 Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
-We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed (that can simultaneously solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios).
-It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this specie to be incorporated into RHD simulations in the near future.
+We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed and implemented (that can simultaneously efficiently solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios), although it would be good to test these in more strongly heated atmospheres.
+It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this species to be incorporated into RHD simulations in the near future.
 
 The effects of treating the \Caii{} resonance lines in PRD were significantly larger than those seen with the hydrogen Lyman lines.
 This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD).

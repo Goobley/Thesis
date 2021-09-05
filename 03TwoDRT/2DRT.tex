@@ -32,13 +32,13 @@ In this chapter we shall first describe the extension of the \Lw{} framework to 
 
 \section{The Formal Solver in Two-Dimensions}\label{Sec:2DFS}
 
-Similarly to the plane-parallel formal solver used in \Lw{}, described previously, we use the short-characteristics method to compute the radiation field throughout the atmosphere.
-This approach was first employed in two-dimensions by \citet{Auer1994} using a limited parabolic scheme to avoid overshoot.
-We assume the following basis: the $z$-axis is oriented as in the plane-parallel case, oriented vertically from photosphere to corona, the $x$-axis is perpendicular and co-planar to the $z$-axis (in the plane of the page for the following diagrams), and by the right-hand rule the $y$-axis is oriented into the plane of the page.
+Similarly to the plane-parallel formal solver used in \Lw{}, described in Sec.~\ref{Sec:ShortChar}, we use the short-characteristics method to compute the radiation field throughout the atmosphere.
+This approach was first employed in two-dimensions as a pure parabolic treatment by \citet{Kunasz1988} and was developed further by \citet{Auer1994} to produce the aforementioned limited parabolic scheme that avoids possible over- and undershoots.
+We assume the following Cartesian basis: the $z$-axis is oriented as in the plane-parallel case, oriented vertically from photosphere to corona, the $x$-axis is perpendicular and co-planar to the $z$-axis (in the plane of the page for the following diagrams), and by the right-hand rule the $y$-axis is oriented into the plane of the page.
 In the two-dimensional case it is assumed that the atmospheric parameters are homogenous along the $y$-axis, but vary along the $x$- and $z$-axes.
 We assume that the atmosphere has a fixed stratification in $x$ and $z$, and that the atmospheric parameters are known at each intersection of these grids.
 
-The mean intensity at each point will be computed similarly to the plane-parallel case; by integration of the local intensity over a weighted angular quadrature.
+The mean intensity at each point will be computed similarly to the plane-parallel case: by integration of the local intensity over a weighted angular quadrature.
 The Gauss-Legendre nodes used in the plane-parallel case are poorly suited to anisotropy that occurs in the two- and three-dimensional cases, and so we therefore employ the optimised angular quadratures of \citet{Stepan2020} in \Lw{}.
 
 \begin{figure}
@@ -82,7 +82,7 @@ In the case of this ray the formal solver must sweep first along $x$ and then al
 The difficulties which can arise from this will be discussed in Sec.~\ref{Sec:2dEvalOrder}.
 The points $U$ and $D$ refer to them being ``upwind'' and ``downwind'' of the point $O$ for which we are currently computing the intensity.
 This can be visualised by looking at the intersections of ray with the grid.
-To compute the intensity in the direction of this ray at point $O$ using the short characteristics formulation we have, as in one-dimension,
+To compute the intensity in the direction of this ray at point $O$ using the short-characteristics formulation we have, as in one-dimension,
 \begin{equation}\label{Eq:MiniScDefinition}
    I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)}\, dt,
 \end{equation}
@@ -90,16 +90,16 @@ where these terms have their usual meanings, $I_O$ is the intensity in this dire
 Thus, to compute the intensity at $O$, the intensity at $U$ must first be known.
 As $U$ does not generally lie on a point of our discrete two-dimensional grid, the value of $I_U$ (and other quantities) are not computed directly by the formal solver, and must instead be interpolated from the values of grid points along the line $\alpha\beta$.
 
-Following the short characteristic method, a functional form must be assigned to the variation of $S$ over the the line segment $[UO]$.
+Following the short-characteristic method, a functional form must be assigned to the variation of $S$ over the the line segment $[UO]$.
 In the simplest case, this can again be a linear functional form, but due to the additional dimension for inhomogeneities in the two-dimensional case, unless the grid is very fine or the atmosphere very slowly varying, this may be a poor choice.
 A higher order parametrisation of $S$ is likely to require the values of the source function at both $U$ and $D$, and possibly other points along the ray.
-Similarly to the cubic Bézier spline method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
+Similarly to the cubic Bézier spline\footnote{A superb graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
 The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the computational demands of the method.
 Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2013}, which will be briefly summarised here for the scalar case of the RTE.
 
 \subsection{The BESSER method}
 
-The BESSER method differs from other quadratic Bézier spline methods\footnote{A beautiful graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} by ensuring the continuity of the first derivative of the interpolant at $O$.
+The BESSER method \citep{Stepan2013} differs from other monotonic Bézier spline methods by ensuring the continuity of the first derivative of the interpolant at $O$.
 Due to the large differences in optical depth between adjacent regions (e.g. $\tau_{UO}$ and $\tau_{OD}$) that are likely to occur in multi-dimensional cases with irregular grids, this method is designed so as to guarantee that if the values over $[UOD]$ are monotonic then the spline interpolant will remain monotonic.
 
 The spline interpolant over the $[UO]$ interval is described by
@@ -163,7 +163,7 @@ Thus the local contribution to the radiation field is given by
 \end{equation}
 and remains related to $\Psi^*$ by the local opacity.
 
-The equivalent integration and $\Lambda$ operator coefficients for a linear short characteristics approach can be computed similarly and are analogous to those computed in the one-dimensional case.
+The equivalent integration and $\Lambda$ operator coefficients for a linear short-characteristics approach can be computed similarly and are analogous to those computed in the one-dimensional case.
 
 \subsection{Evaluation Order and Boundary Conditions}\label{Sec:2dEvalOrder}
 
@@ -618,6 +618,7 @@ Here, we present a basic validation case, a horizontally homogenous FALC atmosph
 The boundary conditions in $x$ are periodic, thermalised at the photosphere, and no radiation is incoming at the top of the atmosphere.
 The standard configuration of \Lw{} in two-dimensions is used, i.e. BESSER formal solver and linear interpolation.
 The 11th order angular quadrature with 6 rays per octant \citep{Stepan2020} is used when solving for the level populations.
+
 In Fig.~\ref{Fig:2DValidation} we show the comparison of a \CaLine{} computed using this two-dimensional method against the same model atom and atmosphere in a plane-parallel configuration.
 Both of these are iterated until the maximum relative change in the \Caii{} populations is less than $10^{-4}$.
 The outgoing radiation shown in the upper panel of this figure was synthesised using rays in the $x-z$ plane with $\mu_z = 0.9$.
@@ -631,25 +632,27 @@ Further iterations beyond a maximum relative population change of $10^{-3}$ do n
 Thus, the situation shown in Fig.~\ref{Fig:2DValidation} is sufficiently converged to compare the final solutions of the two methods.
 
 We find that the two-dimensional formal solver performs well, both in terms of accuracy and computational performance. For the example presented here the plane-parallel solution takes \py[2DValidation]|(r'\SI{{{:.3f}}}{{\second}}'.format(time1d))| and the two-dimensional solution takes \py[2DValidation]|(r'\SI{{{:.3f}}}{{\second}}'.format(time2d))| after \py[2DValidation]|Niter1d| and \py[2DValidation]|Niter2d| iterations respectively (this timing includes configuring the additional contexts and the formal solutions used for the convergence analysis shown in Fig.~\ref{Fig:2DErrChange}).
-Both of these simulations were run with 16 threads on \TODO{machine name}.
+Both of these simulations were run with 16 threads on \emph{tomahna}.
 
 Similar validation tests have been run for fixed boundary conditions and Doppler shifted atmospheres, all of which yielded extremely satisfactory results.
 These are shown in Fig.~\ref{Fig:2DValidationVlosFixedX} and utilise the same configuration other than the parameters discussed below.
 The left-hand column shows the effects of a vertical velocity field on a simulation with periodic boundary conditions.
 This velocity field is uniform in $x$ and defined by the additive inverse of a single period sine wave spanning the entire FALC atmosphere, with the first and last three points set to \SI{0}{\kilo\metre\per\second}.
-The amplitude of this wave is set to \SI{30}{\kilo\metre\per\second}.
+The amplitude of this wave is set to \SI{20}{\kilo\metre\per\second}.
+As such, it represents a simpler version of the plane-parallel test presented in Fig.~\ref{Fig:LwValidationSillyVel}.
 The lower row of this column shows that there is once again good agreement between the plane-parallel and two-dimensional models, with differences peaking around 5\% in the line core, but the line shape being accurately reproduced.
 This difference could likely be reduced by the use of the previously discussed subgridding technique, but as the simulations that are presented later in this chapter do not use velocity fields within the 2D slab, this work was not undertaken.
 
 In the right-hand column a model with fixed $x$ boundary conditions is presented.
 This model also applies an equivalent velocity field, albeit with a smaller \SI{5}{\kilo\metre\per\second} amplitude.
 The boundary conditions are computed from the associated one-dimensional simulation; the radiation along each ray of the two-dimensional quadrature needed for the boundary condition at each depth used in the two-dimensional simulation is synthesised from the plane-parallel simulation for both boundary conditions along the $x$ axis.
-The radiation presented here is synthesised along a ray with $\mu_z=0.99999$ (\SI{0.25}{\degree}) so that the ray through central $x$ cell at the top of the model does not intersect directly with either of these boundary conditions (as this would simply be sampling the plane-parallel simulation) whilst still testing the two-dimensional nature of the formal solver.
+The radiation presented here is synthesised along a ray with $\mu_z=0.99999$ (\SI{0.25}{\degree}) so that the ray through central $x$ cell at the top of the model does not intersect directly with either of these boundary conditions (as this would simply be sampling the plane-parallel simulation), whilst still testing the two-dimensional nature of the formal solver.
 The agreement here is once again very good, with the error peaking once again around 1.5\%.
 
 The coupling between the two-dimensional and plane-parallel models utilised here is facilitated by the design of the \Lw{} framework, and will be leveraged extensively in the following sections.
-A plane-parallel boundary condition can be updated and synthesise its output dynamically in response to the rays requested from the two-dimensional model, without the need to precompute these values and go through a multi-step saving and loading process that is prone to error when simulation parameters change; especially for cases where the incoming radiation field from a fixed boundary condition is allowed to be anisotropic, requiring agreement between the rays in both models.
-The boundary condition radiation for the almost vertical rays used in the right-hand column is computed automatically due to the design of the class that describes it, and the coupling allowed by the framework, which allows easy manipulation and coupling of multiple radiative transfer contexts within the same program.
+A \Lw{} model describing a plane-parallel boundary condition can be updated and synthesise its output dynamically in response to the rays requested from the two-dimensional model, without the need to precompute these values and go through a multi-step saving and loading process that is prone to error when simulation parameters change
+This can be especially difficult in cases where the incoming radiation field from a fixed boundary condition is allowed to be anisotropic, requiring agreement between the rays in both models.
+The boundary condition radiation for the almost vertical rays used in the right-hand column is computed automatically due to the design of the class that describes the boundary condition, and the coupling allowed by the framework, which allows easy manipulation and coupling of multiple radiative transfer contexts within the same program.
 
 \section{2D Simulation Configuration}
 
@@ -665,7 +668,7 @@ They are typically modelled in a plane-parallel context and we analyse the radia
 In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} horizontally and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges on and interacts with neighbouring plasma.
-These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band observations \citep{Isobe2007}.
+These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band observations \citep{Isobe2007}. \TODO{Add more?}
 The proposed explanation for these was radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
 In the following we shall focus primarily on NLTE radiative effects affecting plasma neighbouring a flare, but leave the inclusion of temperature variations due to absorption of radiation to a future study.
 
@@ -673,7 +676,10 @@ It is reasonable to suggest that the plasma neighbouring the flare is substantia
 Thus, we will investigate the effects of illumination from a neighbouring plane-parallel flare model on a two-dimensional slab of plasma representing the quiet atmosphere, with a time-dependent radiative treatment of both of these.
 This model can then serve as a ``first-order'' approximate investigation of the effects of flare radiation on the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
 
-Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}; the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
+Modelling undertaken by \citet{Leenaarts2012a} suggests that a three-dimensional treatment of \Ha{} yields very different synthetic line profiles than a 1.5D column-by-column treatment.
+\TODO{From here}.
+
+Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}: the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
 On one side of this slab we place the RADYN simulation, and compute the intensity along each ray of the angular quadrature used for the 2D slab, at each depth in the simulation.
 The other $x$ boundary is treated equivalently, but using the fixed initial quiet sun atmosphere from the RADYN simulation and the 2D slab.
 
@@ -681,7 +687,7 @@ Similarly to the process described in the previous chapter a time-dependent simu
 The separate components of this model share a $z$ stratification based on a combination of RADYN's grids used for both the initial quiet sun atmosphere and the current timestep.
 This method ensures that 450 points are spaced across the entire altitude range of the atmosphere and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
 The populations are interpolated between the $z$ grids from one timestep to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
-The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed previously.
+The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed in Sec.~\ref{Sec:ChargeCons}.
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
 In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
 As these points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart.

@@ -199,13 +199,13 @@ This can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau
     \frac{1 - \exp(-\Delta) - \Delta\exp(-\Delta)}{\Delta} S_{\tau_1}.
 \end{equation}
 This expression can be applied recursively from one end of the atmospheric model (assuming that the incoming radiation field is known), to the other, to provide the emergent intensity.
-It is the procedure we refer to as computing a formal solution, and this will typically need to be computed for multiple directions (angles to the surface normal in the plane-parallel case) to compute the the angle-averaged radiation field at each frequency and location in as model atmosphere.
+It is this procedure we refer to as computing a formal solution, and this will typically need to be computed for multiple directions (angles to the surface normal in the plane-parallel case) to compute the the angle-averaged radiation field at each frequency and location in as model atmosphere using a weighted quadrature, such as the Gauss-Legendre quadrature.
 
 In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, the intensity is overestimated, and underestimated for negative curvature. These effects can become quite significant in more sparsely sampled atmospheres.
 
 The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust formulation is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three consecutive points (i.e. a three point stencil), but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
 
-Other interpolating functions can be used. For example, the cubic Bézier spline interpolant of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
+Other interpolating functions can be used. For example, the cubic Bézier spline technique of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
 For the plane-parallel case, all of these methods can be derived analogously to the linear formal solver presented above.
 In Sec.~\ref{Sec:2DFS} we describe the implementation of the BESSER method in a two-dimensional atmosphere.
 
@@ -428,12 +428,12 @@ This is also shared with the statistical equilibrium equations \eqref{Eq:StatEq}
 We follow the approach of \citet{Rybicki1992} and \citet{Uitenbroek2001}, which is known as Multi-level Accelerated Lambda Iteration (MALI) with full-preconditioning.
 The full-preconditioning approach handles arbitrary overlaps of lines and continua for multiple multilevel atoms.
 Earlier MALI methods \citep{Rybicki1991} are capable of handling lines overlying a constant background continuum, but not interacting with each other.
-These methods describe a form of radiative transfer that is still based on a transition by transition description of the problem.
+These methods describe a form of radiative transfer that is still based on a transition by transition approach to determining the radiative rates (which does not preclude self-consistency).
 \citet{SocasNavarro1997} proved that this approach can be numerically equivalent to the linearised ALI method of \citet{Scharmer1985} implemented in the MULTI code \citep{Carlsson1986,Carlsson1992} provided the same assumptions are made in the design of the local operator.
 Note that we distinguish between the linearised ALI method and the older method of complete linearisation \citep[e.g. ][]{Auer1969, Auer1973, Auer1976}.
 The latter of these is significantly more computationally demanding and less numerically stable than the ALI based methods we are considering here \citep[a comparison of MULTI and LINEAR-B is shown in][]{Carlsson1986}.
 
-As MALI with full-preconditioning directly supports all forms of overlapping transitions and the interactions between them whilst retaining the convergence properties of the ALI method, we focus solely on this method in the following description of radiative transfer and inclusion in the \Lw{} framework.
+As MALI with full-preconditioning directly supports all forms of overlapping transitions, and the interactions between them, whilst retaining the convergence properties of the ALI method, we focus solely on this method in the following description of radiative transfer.
 Whilst there are also more rapidly converging methods (which can be viewed as extensions and variants of the ALI approach) such as the Gauss-Seidel and successive-over-relaxation methods of \citet{TrujilloBueno1995} (with the extension to multilevel systems presented by \citet{Paletou2007}), the forth-and-back implicit Lambda iteration of \citet{AtanackovicVukmanovic1997} (extended to multilevel systems by \citet{Kuzmanovska2017}), and even the multi-grid method of \citet{FabianiBendicho1997}, we opt for this well-tested method that is proven stable and reliable in a wide variety of situations.
 This is particularly key when considering modelling of flares, which present much larger variations in parameters and steeper gradients than the quiet Sun models or academic semi-empirical models often considered.
 The other, more rapidly convergent, methods present possible avenues of improvement for \Lw{} in the future.
