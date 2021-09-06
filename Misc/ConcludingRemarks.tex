@@ -1,7 +1,7 @@
 \chapter{Concluding Remarks}
 
 In this thesis we have investigated the formation and inversion of chromospheric optical spectral lines, in particular \Ha{} and \CaLine{}.
-These lines form outside of local thermodynamic equilibrium and can only be synthesised through a detailed treatment of the atmospheric radiation field.
+These lines form outside of local thermodynamic equilibrium (LTE) and can only be synthesised through a detailed treatment of the atmospheric radiation field.
 To facilitate the modelling of these spectral lines, we have developed the \Lw{} framework: a modular radiative transfer Python package capable of handling both plane-parallel and two-dimensional geometries.
 The purpose of a framework such as this is to empower researchers with the ability to easily create custom tools for the radiative transfer problems they wish to simulate.
 The conceptual design of \Lw{}, along with a series of validation examples, were presented in Chap.~\ref{Chap:Lw}, building on the radiative transfer theory presented in Chap.~\ref{Chap:FlareModelling}.
@@ -25,7 +25,7 @@ This difference could plausibly change the atmospheric evolution of the simulati
 We also investigated the necessity of performing a fully time-dependent treatment of the \Caii{} level populations, using the same combination of \Lw{} and precomputed \Radyn{} simulations.
 It was found that throughout the vast majority of the simulation there was little difference between line profiles computed with statistical equilibrium populations, and those computed with a time-dependent treatment.
 The most significant differences occurred at the start of the simulation, as the atmosphere first reacts to the beam heating it, but these remain relatively small.
-As the statistical equilibrium solution for a given atmosphere is much closer to unique\footnote{\TODO{Are you actually saying this?}} than the fully time-dependent one (in the case where the population settling time is long compared to the time period investigated), this opens the door to approximate methods that can be applied to more rapidly estimate these populations.
+As the statistical equilibrium solution for a given atmosphere is unique (provably so for the case where the electron density is known, and likely to be a more compact solution space than the time-dependent case when the electron density is not known \emph{a priori}), this opens the door to approximate methods that can be applied to more rapidly estimate these populations.
 
 We implemented a method for including the effects of partial frequency redistribution into the \Lw{}-based tool for reprocessing \Radyn{} simulations.
 This was found to a difficult problem, often suffering from non-convergence, but we were able to full reprocess the lower energy simulation of the two used in the investigation of \Caii{} photoionisation.
@@ -33,6 +33,87 @@ The Doppler-like line profile approximations implemented in \Radyn{} for the Ly$
 Much larger differences were found for the calcium resonance lines, and once again the radiative losses due to these lines.
 It therefore seems essential to develop approximate treatments for the Ca H \& K spectral lines.
 
-The concept of time-dependent response functions was also introduced in this chapter...
+The concept of time-dependent response functions was also introduced in this chapter, these generalise the statistical equilibrium response functions for atomic populations that cannot be treated in a time-independent fashion.
+These represent a powerful tool for disambiguating the atmospheric response to \emph{different} thermodynamic parameters, whilst also considered the natural settling time of the populations towards the statistical equilibrium solution and effects on electron density through charge conservation.
 
-We also presented RADYNVERSION, a machine learning based approach to infer the atmospheric parameters responsible for producing the spectral lines observed in solar flare observations, based on \Radyn{}.
+In Chap.~\ref{Chap:2DRT}, we investigated the radiative response and outgoing line profiles from a two-dimensional slab of quiet Sun illuminated by an adjacent flaring atmosphere constructed from two different \Radyn{} simulations.
+Despite the thermodynamic properties of the slab being held fixed to the initial quiet Sun atmosphere (other than the electron density, which was allowed to vary to ensure charge conservation), significant enhancements of the \Ha{} and \CaLine{} lines were found \SI{1}{\mega\m} and further from the flaring boundary.
+This has several implications.
+Firstly, any kind of traditional column-by-column inversion technique employed on regions adjacent to flaring ribbons is likely to be led astray, and suggest an incorrect atmospheric structure.
+This is due to the atomic level populations being determined by a non-local \emph{transverse} radiation field, rather than the plasma parameters in the column.
+Secondly, the enhancements produced in our simulations are far from uniform as a function of wavelength, being much more dramatic in the line core than in the wings, with no effect being seen in the continuum.
+The lack of continuum enhancement is primarily due to the temperature and mass density structure in the slab being fixed, and the high optical depth in the deep atmosphere where the continuum forms.
+The continua of these spectral lines form in close the LTE conditions, and are therefore dependent on the local thermodynamic parameters.
+Finally, the enhancements observed in our models are on a scale already easily resolvable with modern ground-based solar telescopes, such as the SST, and are likely to become more important with the generational leap provided by DKIST.
+When analysing the regions adjacent to flaring ribbons in these spectral lines, it will be necessary to take into account the effects of horizontal illumination such as this.
+
+We also presented RADYNVERSION in Chap.~\ref{Chap:Radynversion}, a machine learning based approach to infer the atmospheric parameters responsible for producing the spectral lines observed in solar flare observations, based on \Radyn{}.
+This model uses a novel invertible neural network to simultaneously learn both the forward (synthesis) and inverse problems of radiative transfer based on atmospheric snapshots produced with \Radyn{}.
+Thanks to the training set, the model learns to synthesise the \Ha{} and \CaLine{} spectral lines from a geometric stratification of temperature, electron density, and velocity, and is the first inversion technique not constrained by the assumptions of statistical equilibrium and hydrostatic equilibrium, rendering it much more applicable to flares than conventional approaches.
+The nature of this network allows us to capture the possible degeneracies present in the inversion of these spectral lines, in a way that is not possible in either simpler machine learning inversion processes or traditional regression based inversions.
+A proof of concept analysis of two pixels observed with the SST/CRISP instrument was shown to be in accord with previous analysis performed by forward modelling using \Radyn{}.
+Our model is also extremely performant once trained, taking $\sim\SI{10}{\micro\s}$ per draw from the posterior distribution on modest consumer computing hardware, as the training process ``front-loads'' a lot of the work that is undertaken repeatedly in a traditional inversion model.
+Enhancing the performance of inversion techniques, through approaches such as RADYNVERSION, is essential to a detailed exploitation of the vast quantity of data produced by current observatories that will only be dwarfed by those arriving in the coming solar cycle.
+
+\section*{Future Directions}
+
+The \Lw{} framework is robust and has been proven production-ready by the applications presented in this thesis.
+Nevertheless, there are many enhancements that could be implemented.
+These include:
+\begin{itemize}
+	\item The option of more rapid iteration schemes such as forth-and-back implicit lambda iteration \citep{AtanackovicVukmanovic1997,Kuzmanovska2017}, or the hybrid scheme described in \citet{Avrett2008} for possibly improving the handling strong lines that exhibit partial frequency redistribution effects.
+	\item Full Stokes synthesis is currently supported in plane-parallel models, but only an unpolarised formal solver has been implemented for the two-dimensional case.
+	\item \Lw{} could be extended to treat three-dimensional radiative transfer. The frontend of the framework is already designed to support this, but no formal solver has been implemented.
+	\item To support the use of \Lw{} in two- and three-dimensional modelling, a domain-decomposition technique to split these large simulations across clusters of machines is likely beneficial. An MPI-based implementation has already been demonstrated for the 1.5D column-by-column situation, but full domain-decomposition will require modifications to the core of \Lw{} itself.
+	\item The equation of state used in the front-end is written in pure Python, and is very slow, often taking longer than the full non-LTE calculations for a simple plane-parallel atmosphere on a parallel machine. This should be replaced with a more performant, and possibly more advanced, implementation.
+	\item \Lw{} could serve as the base of an inversion package, and the technique used for computing the response function would determine the scale of the modifications required. For a STiC \citep{2019dlcr} style approach, no modifications would be needed, as the machinery for computing finite-difference response functions is already present. If a SNAPI \citep{Milic2018}, or DeSIRe (B. Ruiz Cobo et al. \emph{in preparation}) style approach were instead taken, the implementation of a technique for computing the necessary analytic response functions would be needed.
+	\item Graphical processing units (GPUs) are becoming ever more ubiquitous and powerful, and can easily be adapted to radiative transfer calculations. A well-optimised GPU implementation of the routines needed for non-LTE radiative transfer can likely provide an order of magnitude increase in performance at similar hardware cost.
+\end{itemize}
+This list is far from exhaustive, but it should be clear that while \Lw{} is a powerful and flexible package, there are many interesting features that could be implemented.
+
+Another interesting application of \Lw{} would be to incorporate it into a radiation hydrodynamic modelling package.
+Its advanced radiative transfer could the be coupled into self-consistent field-aligned radiation hydrodynamic modelling.
+Of the currently available codes, HYDRAD is the most suited to this treatment, in the author's opinion.
+It is available on GitHub\footnote{\url{https://github.com/rice-solar-physics/HYDRAD}} under the MIT license, and consists of a relatively small body of C++ that could be bound to Python in a similar way to \Lw{}, with Python controlling the flow of data between the two.
+This would allow investigation of the magnitude of the \Caii{} photoionisation effects discussed in Chap.~\ref{Chap:TimeDepRt}, whilst self-consistently considering the modified energy balance.
+Of course, this effect can also be incorporated into \Radyn{} or FLARIX by including the radiation field of the Lyman lines in the calculation of the \Caii{} continua.
+This would likely be done under the assumption that the \Caii{} continua are not a primary source of opacity at these wavelengths, in which case the treatment of the Lyman lines and \Caii{} continua would be coupled. This assumption seems reasonable, as we have seen no significant difference between our hydrogen profiles synthesised with \Lw{} and produced by the baseline \Radyn{} simulations.
+
+We found that statistical equilibrium was a good approximation for the calcium level populations at most points in our flaring models,
+An investigation of whether statistical equilibrium can also be employed for hydrogen in flare models is also needed.
+It is clear that non-equilibrium ionisation state of hydrogen needs to be known, but whether its level population distribution can be treated in statistical equilibrium taking this ionisation into account remains to be seen.
+If the primary species needed to compute chromospheric radiative losses in flare models could be treated in some form of statistical equilibrium this would allow neural networks to be much more easily applied to this problem.
+Similarly to RADYNVERSION, this has the potential to greatly accelerate this style of simulation, even if a slight accuracy trade-off occurs.
+
+The two-dimensional slab model presented is intended to serve as a ``first-order'' approximation of the situation, and there are clearly many effects that were not included here.
+A simple extension of this model would include a method by which the temperature of the plasma in the slab could change based on the radiation absorbed.
+Such a model should also likely consider the effects of heat-conduction, even if the magnetohydrodynamics of such a situation are not considered.
+In our opinion, allowing the plasma to be heated by the radiation from the neighbouring flare is likely to increase the magnitude of the effects seen in Chap.~\ref{Chap:2DRT}, and is possible that this heating could produce continuum enhancements similar to those seen by \citet{Isobe2007}.
+
+Another development of the two-dimensional flare model would be to investigate the limitations of the  plane-parallel radiative transfer model assumed by the field-aligned radiation hydrodynamic codes.
+The plane-parallel treatment of the radiative transfer equation considers that the stacked slabs of homogeneous atmosphere are infinitely large, whereas flux tubes appear to be quite narrow, especially close to the chromosphere.
+It is plausible that the radiative losses and spectral lines produced by these models will differ significantly when embedded in a plasma with non-uniform opacity, and the compact heated regions are not modelled as having infinite transverse extent.
+This could be modelled in a similar way to the work undertaken in Chap.~\ref{Chap:2DRT}, but instead embedding the \Radyn{} simulation in the centre of the slab, rather than using it as a boundary condition.
+To model this, assumptions would need to be made regarding the diameter of the flux tube, although a series of models could be performed with different diameters.
+The size and intensity profile of any core-halo effects produced by these models could be used with observations to attempt to constrain the size of flare kernels at different depths in the atmosphere, using different spectral lines.
+Of course, this enhancement could also be combined with the prior, allowing the temperature in the plasma surrounding the flare model to change, yielding a more advanced treatment of the physics with an emphasis on the radiation, rather than the dynamics of the situation.
+
+The techniques employed in the RADYNVERSION model are not unique to the spectral lines we presented.
+Indeed, a similar model can support any non-LTE formation problem, given the correct training set.
+Trained with the spectral lines we have presented here, RADYNVERSION is able to infer the atmospheric properties throughout the flaring chromosphere.
+These lines are will lose sensitivity at higher temperatures, especially going into the transition region.
+As such, other lines such as Mg\,\textsc{ii} h \& k should be incorporated into this model, although this will create calibration and alignment difficulties if added to the current \Ha{} and \CaLine{} model as there is no instrument which can observe all of these.
+\Caii{} H \& K can be observed from the same telescope as \Ha{} and \CaLine{} (e.g. SST with CRISP and CHROMIS) so may represent an interesting addition to the RADYNVERSION model, but such a model would need to be trained to see how much information was added by this additional data.
+All of \Caii{} H \& K and Mg\,\textsc{ii} h \& k need to be modelled taking into account the effects of partial frequency redistribution, so the \Radyn{} output could not be used to directly train such a model.
+Additionally, the \Caii{} photoionisation effects discussed in Chap.~\ref{Chap:TimeDepRt} had significant effects on the outgoing line profiles and should be taken into account in an updated RADYNVERSION model.
+This would require generating a new grid of models using an updated version of \Radyn{} or reprocessing pre-existing models using \Lw{}, although this is dependent on the necessary output having been generated and preserved.
+
+The quality of inference obtained from machine learning models like RADYNVERSION is entirely dependent on quality of the training data: a larger and more varied training set, as well as models that are trained for multiple different viewing angles will be key to the development of RADYNVERSION into a dependable inversion tool.
+
+\section*{Closing Remarks}
+
+The complexity of spectral line formation in the chromosphere means that there is always ``more to do'' to glean greater understanding of the atmospheric parameters that are responsible for producing them.
+In this thesis we have primarily focused on modelling the formation of \Ha{} and \CaLine{}.
+Regular high-resolution observations of these spectral lines with the SST, as well as imminent arrival of the DKIST, drives us the consider the formation and analysis of these lines on more compact spatial scales where the non-uniformity of the solar atmosphere becomes increasingly important.
+This thesis is intended to be a step along this path, focusing more on the radiative treatment of these events, rather than the dynamic.
+All of the treatments presented here can be extended to support more complex configurations with additional physics, but we have shown that the effects of the hydrogen Lyman lines on \Caii{} cannot be neglected, that the radiation produced by moderate flare simulations is capable of provoking significant changes in the atomic level populations and radiative output of an adjacent slab of quiet Sun, and that the combination of modelling and machine learning can provide techniques to render the inversion of spectral lines outside of the assumptions of statistical equilibrium and hydrostatic equilibrium tractable.

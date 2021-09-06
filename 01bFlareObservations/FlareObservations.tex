@@ -310,7 +310,7 @@ Whilst \Ha{} can be treated in CRD, \citet{Leenaarts2012a} find that three-dimen
 Flare models with detailed chromospheric treatment are not yet possible in three-dimensions, but with the large gradients in the radiation field that occur in flares it is likely that this effect will also be important in regions adjacent to flares (as supported by the simulations presented in Chap.~\ref{Chap:2DRT}).
 
 
-\subsection{Swedish Solar Telescope}\label{Sec:CRISP}
+\subsection{The Swedish Solar Telescope}\label{Sec:CRISP}
 
 The Swedish Solar Telescope \citep[SST,][]{Scharmer2003} is a 1-metre refracting telescope located in the Observatoria del Roque de los Muchachos, La Palma, Spain.
 Behind the singlet lens, the telescope is held in a vacuum to improve image quality and a Schupmann corrector is used to compensate for chromatic aberration.
@@ -330,7 +330,7 @@ MOMFBD is a phase diversity algorithm needed to account for seeing worse, or evo
 It has been suggested by \citet{Armstrong2021} that the differences between the wide- and narrowband images of flares may hinder the reconstructive abilities of the MOMFBD system, and they have developed a machine learning approach to correcting for these effects.
 This method has not been applied to the data used in this thesis.
 
-\subsection{Daniel K Inouye Solar Telescope}
+\subsection{The Daniel K Inouye Solar Telescope}
 
 The Daniel K Inouye Solar Telescope \citep[DKIST, ][]{Rimmele2020} is a new 4-metre Gregorian solar telescope that saw first solar light in December 2019.
 It is designed to support a number of instruments observing between 380 and \SI{5000}{\nano\metre} with a diffraction limit of $0.026^{\prime\prime}$ (\SI{20}{\kilo\metre}) at \SI{500}{\nano\metre}.
@@ -639,7 +639,7 @@ The Stockholm Inversion Code (STiC) also follows this procedure, using a modifie
 Analytic response functions for the multi-level NLTE problem were first derived by \citet{Milic2017}, and are now implemented in the SNAPI code \citep{Milic2018}.
 These response functions should significantly reduce the computational cost of NLTE inversions, a necessity for inverting the large fields of view in current and next generation solar observations.
 
-An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH (B. Ruiz Cobo et at. \emph{in preparation}).
+An alternative approach to reducing the computational overhead of NLTE inversions can be seen in the DeSIRe code, which combines SIR and RH, guiding itself to an approximate solution using the fast analytic LTE response functions of SIR and fine-tuning the solution with finite-difference response functions computed with RH (B. Ruiz Cobo et al. \emph{in preparation}).
 
 All of the codes discussed here use the Levenberg-Marquadt regression method with different varieties of regularisation to enforce smooth solutions.
 Additionally, only the statistical equilibrium solution is considered, and then only in hydrostatic equilibrium as this reduces the number of parameters to be inferred.

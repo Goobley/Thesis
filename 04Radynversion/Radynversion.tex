@@ -175,7 +175,7 @@ The RADYNVERSION model presented here considers each set of atmospheric paramete
 As we have discussed, it is usually necessary to consider time-dependent populations in flares, and clearly we do not do so here.
 The atomic populations are not considered directly with this model, thus we are interested in determining whether there is sufficient information present in this reduced description of the atmosphere (under the inherent assumption in the training set that all snapshots originate from the same starting atmosphere) to reproduce the emergent line profiles and whether an ANN can then learn to decode this information.
 
-\subsection{Training Data}
+\section{Training Data}
 
 To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{} \TODO{online database link}.
 These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
@@ -190,7 +190,7 @@ The atmospheric parameters and line profiles are mapped onto their fixed grids a
 Our height stratification is chosen to primarily sample the chromosphere, and places 45 linearly spaced points below \SI{3.5}{\mega\metre}, with a constant spacing of \SI{79.2}{\kilo\metre}.
 The remaining 5 points are then exponentially spread through the corona from \SIrange{3.5}{10}{\mega\metre}.
 
-\subsection{Training Method}
+\section{Training Method}
 
 Our training method is based on the one presented in \citet{2018Ardizzone} and the network is constructed using their framework. \NeedRef{}
 The INN is trained in both directions to ensure the conditioning of both the forward and inverse problems.
@@ -240,7 +240,7 @@ The final model was selected based on its L2 performance for the forward and bac
 In this case the best performing model was the one saved after 11,400 epochs of training.
 
 
-\subsection{Maximum Mean Discrepancy}\label{Sec:Mmd}
+\section{Maximum Mean Discrepancy}\label{Sec:Mmd}
 
 \emph{The content of this section draws primarily from \citet{Sriperumbudur2009}, \citet{2012Gretton}, \citet{Muandet2017}, and Gretton's lecture content, currently available online}\footnote{\url{http://www.gatsby.ucl.ac.uk/~gretton/teaching.html}}.
 % e.g. http://www.gatsby.ucl.ac.uk/~gretton/coursefiles/lecture1_whatIsRKHS.pdf
@@ -318,7 +318,7 @@ Modifying the MMD loss in this way ensures that it is most sensitive to the scal
 
 Minimising the forward MMD loss then ensures the independence of data stored in the latent space and that the latent space takes a normal unit distribution form, whilst minimising the backwards MMD ensures that the distribution of atmospheres generated with different draws of the latent space is a plausible distribution when compared against the training set.
 
-\subsection{Validation}
+\section{Validation}
 
 % spell-checker: disable
 \begin{pycode}[Radynversion]
@@ -353,7 +353,7 @@ zMm = schemas['z'] / 1e8
 wls = schemas['wls']
 
 fig, ax = plt.subplots(2, 2, #constrained_layout=True,
-                       figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8))
+                       figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.75))
 ax = ax.ravel()
 ax = [ax[0], ax[0].twinx(), *ax[1:]]
 ax[0].plot(zMm, forwards['xTrue'][0, 0])
@@ -371,9 +371,9 @@ caCoords = find_range_in_schema(schemas['outSchema'], 'Ca8542')
 haCentre = 0.5 * (wls[0][0] + wls[0][-1])
 caCentre = 0.5 * (wls[1][0] + wls[1][-1])
 ax[3].plot((wls[0] - haCentre) / 10, forwards['yTrue'][0, 0], c='C2')
-ax[3].plot((wls[0] - haCentre) / 10, forwards['yzPred'][0, halphaCoords], '-.', c='C4')
+ax[3].plot((wls[0] - haCentre) / 10, forwards['yzPred'][0, halphaCoords], '--', c='C4')
 ax[4].plot((wls[1] - caCentre) / 10, forwards['yTrue'][0, 1], c='C2', label='Ground Truth')
-ax[4].plot((wls[1] - caCentre) / 10, forwards['yzPred'][0, caCoords], '-.', c='C4', label='Predicted')
+ax[4].plot((wls[1] - caCentre) / 10, forwards['yzPred'][0, caCoords], '--', c='C4', label='Predicted')
 ax[3].xaxis.set_major_locator(plt.MaxNLocator(6))
 ax[4].xaxis.set_major_locator(plt.MaxNLocator(6))
 fig.legend(loc='lower left', frameon=False, bbox_to_anchor=(0.42, 0.45))
@@ -388,6 +388,7 @@ fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationForwards', fig, fext='.pgf')
 latexFig.caption = 'Validation of the RADYNVERSION forwards process on unseen data. The upper row shows the atmospheric input, and the lower row the expected output along with the predicition from the network.'
 latexFig.short_caption = r'Validation of RADYNVERSION forwards model.'
+latexFig.placement = r'ptb'
 \end{pycode}
 
 \begin{pycode}[Radynversion]
@@ -450,6 +451,7 @@ fig.tight_layout()
 latexFig = chRad.save_figure('RadynversionValidationReverse', fig, fext='.pgf', dpi=500)
 latexFig.caption = r'Validation of the RADYNVERSION reverse process from the ground truth line profiles shown in Fig.~\ref{Fig:RadynversionValidationForwards}. The two-dimensional histograms show the probability density of the solution in each altitude node, and the black dashed lines the expected solution.'
 latexFig.short_caption = r'Validation of the RADYNVERSION reverse model.'
+latexFig.placement = 'ptb'
 \end{pycode}
 
 \py[Radynversion]|chRad.get_figure('RadynversionValidationForwards')|
@@ -472,9 +474,9 @@ The overplotted black dashed lines show the ground truth solution for each of th
 The histogram remains very narrow in the lower atmosphere, but starts to expand above \SI{3}{\mega\metre}, where the solution is poorly constrained by the chromospheric lines in use here.
 This effect is most visible on the velocity plot, but despite the increase in uncertainty, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.
 
-\subsection{Proof of Concept Results}
+\section{Proof of Concept Results}
 
-\emph{The proof of concept application of the RADYNVVERSION model was primarily undertaken by my co-authors. I will briefly summarise the primary results in this section, but the methodology is more fully described in the associated paper.}
+\emph{The proof of concept application of the RADYNVERSION model was primarily undertaken by my co-authors. I will briefly summarise the primary results in this section, but the methodology is more fully described in the associated paper.}
 
 % spell-checker: disable
 \begin{pycode}[Radynversion]
@@ -512,35 +514,35 @@ point_1_ha = np.array([49.05, 42.19]) # Close.
 point_1_ca = point_1_ha
 
 fig, ax = plt.subplots(ncols=3,nrows=2,
-figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.8),
+figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7),
 constrained_layout=True, sharex=True, sharey=True)
 sol_cm = 'Greys_r'
 ax[0,0].imshow(im_bwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[0,0].set_title(r"$\lambda=854.2-0.08$ nm")
+ax[0,0].set_title(r"$\Delta\lambda=-0.08$\,nm")
 ax[0,0].set_ylabel(r"y [$^{\prime\prime}$]")
 ax[0,0].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,0].plot(point_2_ca[0],point_2_ca[1],"ws")
 ax[0,1].imshow(im_centre_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[0,1].set_title(r"$\lambda=854.2$ nm")
+ax[0,1].set_title(r"$\lambda_0=854.2$\,nm")
 ax[0,1].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,1].plot(point_2_ca[0],point_2_ca[1],"ws")
 ax[0,2].imshow(im_rwing_ca,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[0,2].set_title(r"$\lambda=854.2+0.08$ nm")
+ax[0,2].set_title(r"$\Delta\lambda=0.08$\,nm")
 ax[0,2].plot(point_1_ca[0],point_1_ca[1],"wo")
 ax[0,2].plot(point_2_ca[0],point_2_ca[1],"ws")
 ax[1,0].imshow(im_bwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[1,0].set_title(r"$\lambda=656.3-0.14$ nm")
+ax[1,0].set_title(r"$\Delta\lambda=-0.14$\,nm")
 ax[1,0].set_ylabel(r"y [$^{\prime\prime}$]")
 ax[1,0].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,0].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,0].plot(point_2_ha[0],point_2_ha[1],"ws")
 ax[1,1].imshow(im_centre_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[1,1].set_title(r"$\lambda=656.3$ nm")
+ax[1,1].set_title(r"$\lambda_0=656.3$\,nm")
 ax[1,1].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,1].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,1].plot(point_2_ha[0],point_2_ha[1],"ws")
 ax[1,2].imshow(im_rwing_ha,extent=[0,px_width*im_centre_ca.shape[1],0,px_width*im_centre_ca.shape[0]],origin="lower",cmap=sol_cm)
-ax[1,2].set_title(r"$\lambda=656.3+0.14$ nm")
+ax[1,2].set_title(r"$\Delta\lambda=0.14$\,nm")
 ax[1,2].set_xlabel(r"x [$^{\prime\prime}$]")
 ax[1,2].plot(point_1_ha[0],point_1_ha[1],"wo")
 ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
@@ -548,6 +550,7 @@ ax[1,2].plot(point_2_ha[0],point_2_ha[1],"ws")
 lFig = chRad.save_figure('CrispPlot', fig, fext='.pgf', dpi=600)
 lFig.caption = r'Observations of the the M1.1 flare from AR 12157 on 2014-09-06 just after flare onset. The upper row shows images in the \CaLine{} band, and the lower row shows equivalent images from the \Ha{} band. These two inverted pixels are marked by the square (off-ribbon) and circle (on-ribbon). Wavelengths in this figure use their values in air.'
 lFig.short_caption = r'CRISP context image of 2014-09-06 M1.1 flare just after flare peak.'
+lFig.placement = 'ptb'
 \end{pycode}
 
 \begin{pycode}[Radynversion]
@@ -571,13 +574,15 @@ new_ca_1, new_ha_1 = normalise(new_ca_1,new_ha_1)
 new_ca_2, new_ha_2 = normalise(new_ca_2,new_ha_2)
 
 fig, ax = plt.subplots(2,2,
-figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7),
+figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.65),
 constrained_layout=True)
 ax[0,0].plot(new_ca_1[0]/10 - ca_centre_wvl/10,new_ca_1[1])
 ax[0,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the circular point")
 ax[0,0].set_ylabel("Normalised Intensity")
+ax[0,0].set_xticklabels([])
 ax[0,1].plot(new_ha_1[0]/10 - ha_centre_wvl/10,new_ha_1[1])
 ax[0,1].set_title(r"H$\alpha$ for the circular point")
+ax[0,1].set_xticklabels([])
 ax[1,0].plot(new_ca_2[0]/10 - ca_centre_wvl/10,new_ca_2[1])
 ax[1,0].set_title(r"Ca\,\textsc{ii} \SI{854.2}{\nano\metre} for the square point")
 ax[1,0].set_ylabel("Normalised Intensity")
@@ -585,12 +590,15 @@ ax[1,0].set_xlabel(r"$\Delta\lambda$ [nm]")
 ax[1,1].plot(new_ha_2[0]/10 - ha_centre_wvl/10,new_ha_2[1])
 ax[1,1].set_title(r"H$\alpha$ for the square point")
 ax[1,1].set_xlabel(r"$\Delta\lambda$ [nm]")
+fig.subplots_adjust(left=0.1, right=0.999, wspace=0.4)
+fig.align_ylabels(ax[:, 0])
 for axi in ax.flat:
     axi.xaxis.set_major_locator(plt.MaxNLocator(5))
     axi.yaxis.set_major_locator(plt.MaxNLocator(5))
 lFig = chRad.save_figure('LineProfilesToInvert', fig, fext='.pgf')
 lFig.caption = r'The spectral line profiles of \CaLine{} and \Ha{} for the two pixels marked in Fig.~\ref{Fig:CrispPlot}.'
 lFig.short_caption = r'Line profiles to invert, on- and off-ribbon.'
+lFig.placement = 'ptb'
 \end{pycode}
 
 % NOTE(cmo): To further adjust these in future go back to hephaistos and use the single_pixel_inversions notebook in ~/RadynversionRef.
@@ -604,11 +612,13 @@ fig = utils.inversion_plots(res['flare'], utils.z, new_ca_1, new_ha_1, rasterize
 lFig = chRad.save_figure('InversionResultsFlare', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Inversion results for the on-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 lFig.short_caption = r'Inversion results for the on-ribbon pixel.'
+lFig.placement = 'ptb'
 
 fig = utils.inversion_plots(res['quiet'], utils.z, new_ca_1, new_ha_1, rasterizeHists=True, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4), powerNormIdx=0.2)
 lFig = chRad.save_figure('InversionResultsQuiet', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Inversion results for the off-ribbon pixel. The histograms represent the probability density for the solution in each altitude node, and the median solution is shown with the dashed black lines.'
 lFig.short_caption = r'Inversion results for off-ribbon pixel.'
+lFig.placement = 'ptb'
 \end{pycode}
 % spell-checker: enable
 
@@ -627,7 +637,7 @@ These lines from these pixels have then been inverted using RADYNVERSION, with 2
 The results of these inversions are shown in Figs~\ref{Fig:InversionResultsFlare}~and~
 \ref{Fig:InversionResultsQuiet} for the circular and square points respectively.
 These figures present equivalent information to the lower panels of Fig.~\ref{Fig:RadynversionValidationReverse}, although the dashed black lines now show the median of the histogram at each atmospheric point as there is no ground truth solution available.
-Performing these inversions with 20,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU.
+Performing these inversions with 20,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU installed in \emph{hephaistos}.
 
 \py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
 \py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
@@ -645,7 +655,7 @@ If the network has learned that bulk plasma flows can shift the position of the 
 Recent studies have shown that significantly higher microturbulent velocities are needed to explain the non-thermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
 The other atmospheric parameters vary more smoothly and do not reach values as large as those found for the on-ribbon pixel, which is consistent with the much quieter atmosphere expected at this location.
 
-\subsection{Discussion}
+\section{Discussion}
 
 The RADYNVERSION invertible neural network presented in this chapter represents a novel method for investigating the atmospheric properties of observed events and lifts many of the restrictions that previously made inversions of flaring line profiles infeasible.
 This is achieved by the union of machine learning and a large body of RHD simulations.

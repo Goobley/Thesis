@@ -1,5 +1,5 @@
 % NOTE(cmo): Once upon a time from below \/ but almost entirely customised with
-% nothing remaining of original structure.
+% very little remaining of original structure.
   % This template was written by John Davies <john.davies@glasgow.ac.uk> 2017-02-06
   % It matches the university specification at the time of writing
   %   for the widths of the page margins and one-and-a-half line spacing
@@ -8,13 +8,16 @@
 
 % \documentclass[11pt,titlepage,oneside,a4paper]{book}
 \documentclass[titlepage,oneside,a4paper,headinclude,
-               headheight=21pt,footheight=21pt,parskip=half]{scrbook}
+               headheight=16.5pt,footheight=16.5pt,
+              %  autoenlargeheadfoot=true,
+               parskip=half,
+               bibliography=totoc,listof=totoc]{scrbook}
 \addtokomafont{disposition}{\rmfamily}
-\usepackage[headsepline]{scrlayer-scrpage}
+\usepackage{scrlayer-scrpage}
 \clearpairofpagestyles
-\automark[chapter]{chapter}
-\automark{section}
-\ohead{\rightmark}
+\automark{chapter}
+\automark*{section}
+\cohead{\rightmark}
 \ofoot*{\upshape \thepage}
 
 \usepackage{setspace}
@@ -187,7 +190,7 @@
 
 % Add extra non-fragile packages here
 \usepackage{siunitx}
-\sisetup{detect-all}
+\sisetup{mode=text}
 % Don't indent paragraphs, separate vertically, KOMA can do this.
 % \usepackage{parskip}
 % The actual magic
@@ -200,7 +203,11 @@
 % \setstretch{1.5}
 \onehalfspacing
 % \KOMAoptions{DIV=12, BCOR=11mm}
-\KOMAoptions{DIV=12, BCOR=16mm}
+% \KOMAoptions{DIV=12, BCOR=16mm}
+\newlength{\typeareaoffset}
+\setlength{\typeareaoffset}{15pt}
+\addtolength{\hoffset}{\typeareaoffset}
+\KOMAoptions{DIV=12, BCOR=10mm}
 % \usepackage{showframe}
 
 \usepackage{import}
@@ -239,6 +246,7 @@ Synthesis and Inversion\\
 \vspace{2cm}
 \normalfont\large{\bfseries{
 Christopher M. J. Osborne\\
+BSc (Hons)\\
 }}
 \vspace{1.5cm}
 Submitted in fulfilment of the requirements for the\\
@@ -263,7 +271,6 @@ September 2021
 \include{Misc/Copyright}
 \include{Misc/Epigraph}
 \include{Misc/Abstract}
-\include{Misc/Acknowledgements}
 % NOTE(cmo): 1.0 spacing for table of contents etc
 % \singlespacing
 % \KOMAoptions{DIV=last}
@@ -274,6 +281,7 @@ September 2021
 % \onehalfspacing
 % \setstretch{1.5}
 % \KOMAoptions{DIV=last}
+\include{Misc/Acknowledgements}
 
 \mainmatter % Turn on chapter numbering, reset page numbers, use arabic
 \include{00Introduction/Introduction}
@@ -290,7 +298,6 @@ September 2021
 
 % {\setstretch{1.0}\small
 % {\small
-\chapter{Bibliography}
 \bibliographystyle{aasjournal}
 \setlength\bibsep{0.2\baselineskip}
 \bibliography{{Refs}}
