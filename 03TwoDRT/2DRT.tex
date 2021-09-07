@@ -2049,7 +2049,7 @@ def plot_2d_intensity_ratio(fig, dataRad, dataRad81, waveRangeA, waveRangeB):
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{10}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{10}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{10}{\second}$ in the F9 simulation.'
 
 statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
@@ -2058,7 +2058,7 @@ statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpda
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{5}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{5}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{5}{\second}$ in the F9 simulation.'
 
 
@@ -2068,7 +2068,7 @@ statEq2d15_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpda
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854.3444, 854.5444))
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
-lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \CaLine{} (left) and \Ha{} (right) at $t=\SI{15}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
+lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{15}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{15}{\second}$ in the F9 simulation.'
 
 \end{pycode}
@@ -2080,7 +2080,7 @@ lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal po
 
 Whilst it would be nice to evaluate the radiation with arbitrary horizontal precision, the limitations of computer performance do not allow this.
 Clearly, we want to investigate the problem at a resolution similar or better than that provided by our observations.
-If the problem produces smoothly varying solutions then it is not necessarily necessary to run the simulation at the same resolution as the observations; however we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
+If the problem produces smoothly varying solutions then it is not necessarily required to run the simulation at the same resolution as the observations; however we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
 This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observation against which our results will be compared.
 
 To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire model) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the F9 simulation and compare the outgoing radiation.
