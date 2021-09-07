@@ -132,8 +132,7 @@ In the following we will describe two different approaches to handling the advec
 In Sec.~\ref{Sec:RadynDissection} we discussed the coupled manner in which \Radyn{} solves the RHD equations.
 For flexibility we wish to decouple the advection terms from the radiative effects.
 Our initial approach was to use an explicit method on the dense, fixed grid discussed above.
-This method is available in the \texttt{Advection} branch of the associated repository \NeedRef{}.
-It draws from the simple explicit finite-volume approaches discussed earlier in this chapter, and thus uses a fifth-order WENO-NM scheme for reconstruction and the simple local Lax-Friedrichs flux for estimating the flow of the atomic populations through the simulation.
+This method draws the simple explicit finite-volume approaches discussed in Chap.~\ref{Chap:FlareModelling}, and thus uses a fifth-order WENO-NM scheme for reconstruction and the simple local Lax-Friedrichs flux for estimating the flow of the atomic populations through the simulation.
 This numerical scheme performs extremely well in textbook advection and hydrodynamic tests, however it was found to be ill-suited to the long internal timesteps that \Radyn{}'s implicit method chooses.
 These timesteps are longer than those permitted by the CFL condition, requiring the explicit method to perform multiple substeps for each of \Radyn{}'s timesteps.
 This alone can introduce cumulative error, and is further compounded by the use of the dense static grid.
@@ -168,6 +167,10 @@ This approach remains harder to debug and modify due to its implicit nature, alt
 
 The agreement in the synthesised lines was improved by the implementation of advection in our simulations, but substantial differences still remained.
 In the following, we investigate the effects of different radiative treatments, and discuss possible implications on RHD modelling.
+
+This final code used in these investigations is available on GitHub\footnote{\url{https://github.com/Goobley/MsLightweaver}} with archival on Zenodo \citep{MsLwThesisRelease}.
+The code for the previous advection method on the dense fixed grid is available on the \texttt{Advection} branch of the same repository.
+This is an early development branch of the code, as this method was not retained.
 
 
 \section{Case Study: \Caii{} Photoionisation by the Hydrogen Lyman Lines}\label{Sec:CaiiPhotoionisation}
@@ -281,7 +284,7 @@ The results of this were shown during \Lw{} validation in Fig.~\ref{Fig:LwValida
 
 For this investigation two \Radyn{} simulations were used.
 Their parameters were chosen to serve as typical simulations, and were based on those used by \citet{Kerr2019, Kerr2019a}.
-The same starting atmosphere derived from VAL3C \citep{Vernazza1981} as used in the F-CHROMA grid of simulations was used.
+The same starting atmosphere derived from VAL3C \citep{Vernazza1981} as used in the F-CHROMA grid of simulations\footnote{\url{https://star.pst.qub.ac.uk/wiki/public/solarmodels/start.html}} was used.
 As previously discussed, the ``Emslie'' beam formalism was chosen over the Fokker-Planck for ease of reconstructing any non-thermal rates that might be needed.
 The spectral index used for the power-law distribution of electron energies was $\delta=5$, with a low-energy cut-off of \SI{20}{\kilo\electronvolt}.
 The two simulations differed only in energy deposition, which was a constant flux for \SI{10}{\second} of $1\times{}10^{6}$ or $1\times{}10^{7}\,\si{\joule\per\square\metre\per\second}$ \footnote{In the cgs units that are commonly adopted for \Radyn{} simulations these represent $1\times{}10^9$ and $1\times{}10^{10}\,\si{\erg\per\square\centi\metre\per\second}$.}

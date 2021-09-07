@@ -40,6 +40,8 @@ More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method us
 They present the results of this method and show that it is capable of providing plausible inversions and posterior distributions using observations of \CaLine{} and Fe\,\textsc{i} \SI{630.15}{\nano\m}.
 The field of machine learning based, and assisted, inversions is undergoing rapid development and appears to have a very exciting future.
 
+The RADYNVERSION model and associated training methods are available under the permissive MIT license on GitHub\footnote{\url{https://github.com/Goobley/Radynversion}} with archival on Zenodo \citep{RadynversionZenodo}.
+
 \section{The RADYNVERSION Model}\label{Sec:RadynversionModel}
 
 Our approach to inversions of solar flares is based upon the application of machine learning to the problem as it is framed in Fig.~\ref{Fig:BijectiveMapping}.
@@ -177,7 +179,7 @@ The atomic populations are not considered directly with this model, thus we are 
 
 \section{Training Data}
 
-To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \NeedRef{} \TODO{online database link}.
+To train this model we use 81 \Radyn{} simulations computed by the F-CHROMA project \footnote{\url{https://star.pst.qub.ac.uk/wiki/public/solarmodels/start.html}}.
 These models all start from a variant of the VAL3C quiet sun atmosphere \citep{Vernazza1981}, slightly modified to remain stable in \Radyn{}.
 All models are heated by a symmetric triangular electron beam pulse, modelled using the Fokker-Planck module (with an initial power law distribution of electron energies), of \SI{20}{\s} duration, with a peak at \SI{10}{\s}.
 The total beam deposition varies between \SI{3e10}{\erg\per\square\cm} and \SI{1e12}{\erg\per\square\cm}, the low-energy cut-off is one of \{10, 15, 20, 25\}~\si{\kilo\electronvolt}, and the spectral index of the electron energy distribution is one of \{3, 4, 5, 6, 7, 8\}.
@@ -192,7 +194,7 @@ The remaining 5 points are then exponentially spread through the corona from \SI
 
 \section{Training Method}
 
-Our training method is based on the one presented in \citet{2018Ardizzone} and the network is constructed using their framework. \NeedRef{}
+Our training method is based on the one presented in \citet{2018Ardizzone} and the network is constructed using their framework, FrEIA\footnote{\url{https://github.com/VLL-HD/FrEIA}}.
 The INN is trained in both directions to ensure the conditioning of both the forward and inverse problems.
 The model is trained using minibatching with the same minibatch of the training set being used in both directions.
 Both training directions are constrained by two loss functions and a linear combination of these serves as our final loss to minimise.
