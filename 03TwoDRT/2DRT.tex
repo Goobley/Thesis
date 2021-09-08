@@ -671,7 +671,7 @@ They are typically modelled in a plane-parallel context and we analyse the radia
 In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} horizontally and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges on and interacts with neighbouring plasma.
-These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band observations \citep{Isobe2007}. \TODO{Add more?}
+These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band and Fe\,\textsc{i} \SI{630.1}{\nano\m} observations \citep{Isobe2007}. \TODO{Add more?}
 The proposed explanation for these was radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
 In the following we shall focus primarily on NLTE radiative effects affecting plasma neighbouring a flare, but leave the inclusion of temperature variations due to absorption of radiation to a future study.
 
@@ -2378,13 +2378,17 @@ The basic agreement between the simulation and observation suggests that this si
 
 \section{Discussions}
 
-The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} show that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing significant enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
+The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} demonstrate that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing significant enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
 Traditional inversion techniques performed on this region are likely to lead to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the slab's local thermodynamic properties, but is instead significantly influenced by the incident radiation.
+
+It is necessary to perform a time-dependent treatment of the hydrogen populations in this problem, taking into account the effects of non-equilibrium ionisation, and this species' slow return to statistical equilibrium, despite the lack of time-varying thermodynamic modifications of the quiet Sun slab.
+With the electron density provided by non-equilibrium hydrogen ionisation calcium treated in statistical equilibrium was able to accurately reproduce the time-dependent \CaLine{} line profile (similarly to our results from Chap.~\ref{Chap:TimeDepRt}).
+We note that this is result is valid only for one timestep of this model, as it was the only one that converged, suggesting the importance of the full time-dependent treatment.
 
 The enhancement effects are not uniform as a function of wavelength, with the line core enhancement typically extending up to several hundred \si{\kilo\metre} further than the enhancements in the line wings.
 This may have implications for the calculation of filling factors, due to the wavelength dependence of this ``smearing'', but more detailed simulation and analysis are needed to attempt to prescribe any functional form for this.
 
 Nevertheless, these enhancements are on scales that are observable with current generation instruments such as SST/CRISP, and are likely to become more important with the improved resolution of upcoming telescopes such as DKIST.
-Additionally, the models presented here use a fixed temperature structure throughout the slab, both for simplicity and to isolate the importance of incident radiation.
+We have presented an initial analysis of these effects in SST/CRISP data and found enhancements of a similar order of magnitude sharing a number of observational characteristics, but significant differences remain, likely due to the limitations of our simple model.
 It is likely that the temperatures in such a slab will vary due to the absorption of radiation, thermal conduction and other modes of heating occurring adjacent to the flare.
-Thus, the results here likely underestimate the magnitude of these line enhancement effects.
+Thus, the results presented here likely underestimate the magnitude of these line enhancement effects.

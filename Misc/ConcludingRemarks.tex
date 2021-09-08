@@ -21,7 +21,7 @@ Differences were found between the \Caii{} lines synthesised with \Radyn{} and \
 The Lyman series contains some of the strongest spectral lines in the flaring solar spectrum, with extreme enhancements observed over their quiet Sun values.
 The additional flux produced by these lines is sufficient to provoke substantial changes in the synthesised \Caii{} line profiles, in particular, that of the \CaLine{} line.
 The effects of the Lyman lines on the shape and intensity of the \Caii{} line profiles also changes the net radiative losses from the atmosphere.
-In the simulations there was found to be a 10--15\,\% variation in the radiative losses of the upper chromosphere.
+In the simulations there was found to be a 10--15\,\% variation in the chromospheric radiative losses.
 This difference could plausibly change the atmospheric evolution of the simulation, leading to greater differences in the \Caii{} line profiles from models self-consistently taking these effects into account, and also possibly changing the observed line profiles from other species such as hydrogen.
 
 We also investigated the necessity of performing a fully time-dependent treatment of the \Caii{} level populations, once again using \Lw{} to reprocess a \Radyn{} simulation.
@@ -39,14 +39,16 @@ The concept of time-dependent response functions was also introduced in this cha
 These also represent a powerful tool for disambiguating the atmospheric response to \emph{different} thermodynamic parameters, whilst also considering the natural settling time of the populations towards the statistical equilibrium solution.
 For species such as hydrogen, which are found to have a long settling time, a time-dependent treatment is necessary to obtain the instantaneous atmospheric response to a parameter, especially when including the effects on the electron density due to charge conservation.
 
-In Chap.~\ref{Chap:2DRT}, we investigated the radiative response and outgoing line profiles from a two-dimensional slab of quiet Sun illuminated by an adjacent flaring.
+In Chap.~\ref{Chap:2DRT}, we investigated the radiative response and outgoing line profiles from a two-dimensional slab of quiet Sun illuminated by an adjacent column of flaring plasma.
 Despite the thermodynamic properties of the slab being fixed to the initial quiet Sun atmosphere (other than the electron density, which was allowed to vary to ensure charge conservation), significant enhancements of the \Ha{} and \CaLine{} lines were found \SI{1}{\mega\m} and further from the flaring boundary.
 This has several implications.
-Firstly, any kind of traditional column-by-column inversion technique employed on regions adjacent to flaring ribbons is likely to be led astray, and suggest an incorrect atmospheric structure.
+Firstly, any kind of traditional column-by-column inversion technique employed on regions adjacent to flaring ribbons is likely to be led astray, and infer an incorrect atmospheric structure.
 This is due to the atomic level populations being determined by a non-local \emph{transverse} radiation field, rather than the plasma parameters in the column.
 Secondly, the enhancements produced in our simulations are far from uniform as a function of wavelength, being much more dramatic in the line core than in the wings, with no effect being seen in the continuum.
 The lack of continuum enhancement is primarily due to the temperature and mass density structure in the slab being fixed, whilst the continuum forms approximately LTE conditions, and is therefore dependent on the local thermodynamic parameters.
+As such, calculations of filling factors may need to take this wavelength dependence into account.
 Finally, the enhancements observed in our models are on a scale already easily resolvable with modern ground-based solar telescopes, such as the SST, and are likely to become more important with the generational leap provided by DKIST.
+We also presented a simple comparison against SST/CRISP observations and found enhancements on the same order of magnitude as those produced by our simple model.
 When analysing the regions adjacent to flaring ribbons in optical spectral lines, it therefore will be necessary to take into account the effects of horizontal irradiation such as this.
 
 RADYNVERSION, a novel machine learning inversion technique, was presented in Chap.~\ref{Chap:Radynversion}.
@@ -97,7 +99,7 @@ Similarly to RADYNVERSION, this has the potential to greatly accelerate this sty
 The two-dimensional slab model we presented is intended to serve as a ``first-order'' approximation of the situation, and there are clearly many effects that were not included here.
 A simple extension of this model would include a method by which the temperature of the plasma in the slab could change based on the radiation absorbed.
 Such a model should also likely consider the effects of heat-conduction, even if the magnetohydrodynamics of such a situation are not considered.
-In our opinion, allowing the plasma to be heated by the radiation from the neighbouring flare is likely to increase the magnitude of the effects seen in Chap.~\ref{Chap:2DRT}, and it is possible that this heating could produce continuum enhancements and affect spectral lines forming deeper in the atmosphere.
+In our opinion, allowing the plasma to be heated by the radiation from the neighbouring flare is likely to increase the magnitude of the effects seen in Chap.~\ref{Chap:2DRT}, and it is possible that this heating could produce continuum enhancements and affect spectral lines forming significantly deeper in the atmosphere.
 
 Another development of the two-dimensional flare model would be to investigate the limitations of the  plane-parallel radiative transfer model assumed by the field-aligned radiation hydrodynamic codes.
 The plane-parallel treatment of the radiative transfer equation considers that the stacked slabs of homogeneous atmosphere are infinitely ide, whereas flux tubes appear to be quite narrow, especially in the chromosphere.

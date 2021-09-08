@@ -1200,7 +1200,7 @@ The PRD line cores agree very well with the CRD LI treatment, but as expected wh
 
 \citet{Uitenbroek2002} undertook similar tests in a wave-heated quiet Sun \Radyn{} simulation and looked at the radiative losses in the \Caii{} K line when treated in PRD (under statistical equilibrium).
 In the chromosphere these losses were found to vary between the CRD and PRD treatments by a factor of 2--5.
-Qualitatively, there is a smaller difference in the \Caii{} wings in our flare simulation than their wave heated model.
+Qualitatively, there is a smaller difference in the \Caii{} wings in our flare simulation than their wave-heated model.
 The losses between these two different treatments in the chromosphere are shown in Fig.~\ref{Fig:F9KLossesPrd}.
 The differences in the radiative losses are most significant at $t=\SI{5}{\second}$ with the inversion of the sign of the losses between the PRD and CRD treatments around \SI{1}{\mega\metre}.
 Whilst less significant, at the other times shown there is also clear variation in radiative losses due to the treatment of these \Caii{} resonance lines in PRD, typically decreasing these relative to their CRD values.
@@ -1540,12 +1540,12 @@ It would then become significantly easier to apply machine learning models to th
 Parallels can be drawn between the application of machine learning to this problem and the use of simplified local rates following the method of \citet{Sollum1999} as used in HYDRAD \citep{Reep2019}, and BIFROST \citep{Gudiksen2011, Leenaarts2007}, but it remains to be proven whether this method retains sufficient accuracy at the high energy depositions that occur in flares.
 
 Despite the apparent simplicity of incorporating PRD into these tools, the iteration process was plagued with convergence problems that we have been unable to fully resolve.
-Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the PRD approximations (based on reducing the broadening of the hydrogen lines) currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
-We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed and implemented (that can simultaneously efficiently solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios), although it would be good to test these in more strongly heated atmospheres.
+Nevertheless, for the hydrogen Lyman lines in the F9 simulation presented in this chapter the Doppler-like PRD approximations currently present in \Radyn{} perform well, and come at no additional computational cost over the basic CRD treatment, validating the quiet Sun results of \citet{Leenaarts2012a}.
+We therefore recommend that this approximation continue to be employed for Ly$\alpha$ and Ly$\beta$ until more advanced iteration methods are developed and implemented (that can simultaneously efficiently solve for the atomic level populations, electron density, and necessary PRD line emission profile ratios), although it would be good to test the quality of this approximation in more strongly heated atmospheres.
 It is possible to apply the method outlined in Sec.~\ref{Sec:TimeDepPrd} to Mg\,\textsc{ii}, but it is likely, as shown by \citet{Kerr2019}, that treating it in statistical equilibrium with PRD will provide a sufficiently accurate solution whilst remaining relatively efficient, hopefully allowing this species to be incorporated into RHD simulations in the near future.
 
 The effects of treating the \Caii{} resonance lines in PRD were significantly larger than those seen with the hydrogen Lyman lines.
-This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD).
+This is seen not only in the line profiles, but also in the chromospheric radiative losses in these lines, which vary substantially when treated with PRD (and are typically smaller than those computed in CRD, as found previously in wave-heated atmospheres by \citet{Uitenbroek2002}).
 It is therefore important to investigate whether applying PRD to the H and K lines can be done efficiently.
 Empirically, we have found that the majority of convergence problems originate from the hydrogen Lyman lines, thus it may be relatively efficient to treat the \Caii{} resonance lines in PRD.
 If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that used for Ly$\alpha$ and Ly$\beta$.

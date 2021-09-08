@@ -1,48 +1,36 @@
 \chapter{Abstract}
 
-The solar chromosphere is a thin layer of the observable solar atmosphere responsible for radiating a large quantity of energy into space.
-This emission of this energy is mediated by atomic transitions, primarily spectral lines, the shape and intensity of which can be used to probe the atmospheric conditions in which they form.
-These atmospheric conditions cannot otherwise be measured due to the difficulty of obtaining \emph{in situ} measurements of the solar atmosphere.
-The spectral lines that form in this region cannot be correctly reproduced by assuming local thermodynamic equilibrium (LTE), and are instead affected by the radiation field produced in other regions of the atmosphere.
-A large portion of the energy produced by a solar flare is is deposited in the chromosphere, heating the plasma, provoking dramatic dynamic reactions, and substantial changes in the observed line profiles.
-Due to the complexity of the conditions under which these spectral lines form, it is necessary to undertake complex modelling efforts to develop a framework by which to interpret them, especially in flares where the plasma ionisation state and atomic level populations are driven out of time-independent statistical equilibrium.
-Many strong chromospheric spectral lines lie in the optical spectral region, and are frequently observed by advanced ground-based facilities, so improving our understanding of the formation of these lines is key to unlocking the information within these observations, extant and future.
+The chromosphere is a thin layer of the observable solar atmosphere maintained in a complex energy balance that is not well understood.
+Chromospheric conditions can only be probed through observations of radiation, primarily atomic spectral lines.
+The shapes and intensities of these spectral lines cannot be correctly reproduced by assuming local thermodynamic equilibrium (LTE) conditions, and are instead affected by non-local radiation fields.
+During solar flares, an enormous amount of energy is deposited in the chromosphere, heating the plasma, provoking dramatic dynamic reactions and substantial changes in the observed line profiles.
+A two-pronged approach is therefore required to develop our understanding of this region and its reaction to flares: detailed observations, and a theoretical framework derived from complex modelling by which to interpret them.
 
-In this thesis we focus on techniques for modelling these spectral lines in solar flare conditions, including a reassessment of previous assumptions, the radiative influence of a flare on neighbouring atmosphere, and present a novel technique based on machine learning for rapidly inferring the atmospheric properties associated with spectroscopic observations.
+In this thesis we focus on techniques for modelling optical spectral lines in solar flare conditions, including a reassessment of previous assumptions, the radiative influence of a flare on neighbouring atmosphere, and present a novel machine learning inversion technique.
+Our choice of optical lines is motivated by the exceptional resolution and cadence of modern and upcoming ground-based observatories, enabling a highly detailed exploration of this region.
 All of the radiative modelling presented is performed with our new Python framework \Lw{}, which aims to facilitate the development of complex radiative transfer simulations.
 
-An brief overview of the outer layers of the solar atmosphere and general introduction to solar flares and some of their observational characteristics is presented in Chap.~\ref{Chap:Intro}.
-Then, in Chap.~\ref{Chap:FlareModelling} we provide a technical review of the concepts used in flare modelling.
-A short summary of the history and current state of magnetic field-aligned radiation hydrodynamic modelling of solar flares is provided, followed by an in-depth discussion of radiative transfer in non-LTE conditions.
-This includes the description of robust numerical techniques for solving the problem of determining the self-consistent radiation field and set of atomic level populations for a given atmosphere, with discussion of a technique for also determining the electron density, if this is not known \emph{a priori}.
-Chap.~\ref{Chap:FlareObservations} describes the two primary spectral lines that will be investigated throughout the research presented, \Ha{} and \CaLine{}, along with an overview of the inverse problem of radiative transfer (that is, determining the atmosphere parameters responsible for an observed spectrum), and the concept of response functions, which describe the radiative response to a perturbation in atmospheric parameters.
+In Chaps.~\ref{Chap:Intro}, \ref{Chap:FlareModelling}, and \ref{Chap:FlareObservations}, we introduce the necessary background material.
+We first present a brief description of the outer layers of the solar atmosphere and general introduction to solar flares.
+Then, in Chap.~\ref{Chap:FlareModelling}, we provide an overview of field-aligned radiation hydrodynamic modelling of solar flares, and associated numerical techniques, including an in-depth discussion of radiative transfer in non-LTE conditions.
+In Chap.~\ref{Chap:FlareObservations}, we introduce the two primary spectral lines used in our research, \Ha{} and \CaLine{}, along with an overview of the inverse problem of radiative transfer (determining the atmospheric conditions responsible for an observed spectrum), and the concept of response functions, which describe the radiative response to a perturbation in atmospheric parameters.
 We also provide a brief introduction to machine learning techniques.
 
-The design philosophy and implementation of \Lw{} is discussed in Chap.~\ref{Chap:Lw}.
-We also provide validation examples for the various features of this framework, using \Sota{} radiative transfer codes RH and SNAPI, along with two further tests intended to validate its time-dependent treatment of atomic level populations.
+The design philosophy and implementation of \Lw{} is described in Chap.~\ref{Chap:Lw}.
+We also provide validation examples for the various features of this framework, presenting comparisons with \Sota{} radiative transfer codes RH and SNAPI, along with two further tests to validate its time-dependent treatment of atomic level populations.
 
-In Chap.~\ref{Chap:TimeDepRt} we present the application of \Lw{} to resynthesising the radiation produced by the radiation hydrodynamic code \Radyn{}.
-This includes a description of how we implement advection in a manner compatible with \Radyn{}, and three different case studies.
-Firstly, using two different \Radyn{} simulations, we investigate the photoionising effects of the hydrogen Lyman lines on \Caii{} and show that this has a significant effect on the emergent line profiles and even a 10--15\,\% change in chromospheric radiative losses.
-Secondly, the importance of a time-dependent treatment of \Caii{} is tested.
-We find that throughout the evolution of the flaring model investigated the differences between a time-dependent kinetic equilibrium treatment, and a time-independent statistical equilibrium treatment remain small.
-Finally, we present a modification of the tool developed in this chapter to include the effects of partial frequency redistribution (PRD), a phenomenon whereby the the frequency of a photon emitted from an atom may be correlated with its absorption frequency.
-The model is found to suffer from poor numerical convergence, but one radiation hydrodynamic simulation is successfully reprocessed.
-The current approximate PRD treatment used for the Lyman lines (where their line profile is modified to be Doppler-like) is found to remain relatively accurate in flaring simulation, but the \Caii{} K line profile and radiative losses (which do not have an approximate treatment) are found to differ significantly.
+In Chap.~\ref{Chap:TimeDepRt}, we apply \Lw{} to the synthesis of radiation from flare models produced by the radiation hydrodynamic code \Radyn{} and present three different case studies.
+% This includes the implementation of advection in a manner compatible with \Radyn{}, and three different case studies.
+Firstly, using two different \Radyn{} simulations, we investigate the photoionising effects of the hydrogen Lyman lines on \Caii{} and show that this has a significant effect on the emergent line profiles and a 10--15\,\% change in chromospheric radiative losses.
+Secondly, the importance of a time-dependent treatment of \Caii{} is tested, with only minor deviations found due to ignoring these effects.
+Finally, we present a modification of this tool to include the effects of partial frequency redistribution (PRD) and synthesise the radiation from a \Radyn{} model, despite the poor convergence of our technique.
+The Doppler-like approximate PRD treatment used for the Lyman lines is found to remain relatively accurate in the flaring simulation, but the \Caii{} K line profile and radiative losses differ more significantly.
 We also present a time-dependent formulation of response functions that, with further development, should allow for greater interpretability of spectral line formation in complex radiation hydrodynamic models.
 
-The extension and application of \Lw{} to a two-dimensional treatment of quiet Sun plasma adjacent for a radiative flare model is presented in Chap.~\ref{Chap:2DRT}.
-This slab is held at a constant temperature and density structure informed by a \Radyn{} pre-flare model atmosphere, whilst the atomic level populations and electron density are allowed to vary with incoming radiation from a reprocessed \Radyn{} flare model.
+The extension and application of \Lw{} to a two-dimensional slab of quiet Sun plasma adjacent to a \Radyn{} flare model is presented in Chap.~\ref{Chap:2DRT}.
+This slab is held at a constant pre-flare temperature and density structure, whilst the atomic level populations and electron density are allowed to vary with the incoming radiation.
 Significant enhancements in the \Ha{} and \CaLine{} line profiles are found in excess of \SI{1}{\mega\m} from the flare, although no continuum effects are seen in this simple model.
-These enhancements found in this simple model are compared against observations from the ChRomospheric Imaging SPectrpolarimeter (CRISP) on the Swedish Solar Telescope (SST) and effects of a similar order of magnitude are found.
+These enhancements found in this simple model are compared against observations from the CRisp Imaging SpectroPolarimeter (CRISP) on the Swedish Solar Telescope (SST) and effects of a similar order of magnitude are found, although substantial differences remain.
 
-The RADYNVERSION model is described in Chap~\ref{Chap:Radynversion}.
-RADYNVERSION is a novel deep learning based inversion technique built on an invertible neural network, allowing inference of atmospheric parameters to be done $\sim2$ orders of magnitude faster, outside of the constraints of statistical equilibrium (including ionisation) and hydrostatic equilibrium that are ill-suited to flares.
-We present a detailed description of the theory of its construction, and provide a brief proof of concept application to SST/CRISP data, which is found to match existing analysis of this event.
-
-Finally, in Chap~\ref{Chap:Conclusions} we present our conclusions and outline the consequences of this work on future research directions.
-
-
-
-
-% Chromosphere thickest region in scale heights (~9 in pressure!)
+RADYNVERSION, described in Chap.~\ref{Chap:Radynversion}, is a novel deep learning based inversion technique built on an invertible neural network, allowing inference of chromospheric conditions multiple orders of magnitude faster than conventional techniques, outside of the constraints of statistical and hydrostatic equilibrium that are ill-suited to flares.
+We discuss in detail the theory of its construction, and provide a brief proof of concept application to SST/CRISP data, which is found to agree with previous analysis of this event.
