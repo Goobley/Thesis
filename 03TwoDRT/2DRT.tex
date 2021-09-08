@@ -668,19 +668,20 @@ The boundary condition radiation for the almost vertical rays used in the right-
 
 Flares produce huge changes in the radiation field, in both lines and continua.
 They are typically modelled in a plane-parallel context and we analyse the radiation leaving the top of this plane-parallel atmosphere.
-In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} horizontally and represent an estimate of the conditions in the core of a heated flux-tube.
+In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} in diameter \citep{Jing2016} and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges on and interacts with neighbouring plasma.
-These effects include the possible `core-halo' pattern reported around flare kernels in Hinode/SOT G-band and Fe\,\textsc{i} \SI{630.1}{\nano\m} observations \citep{Isobe2007}. \TODO{Add more?}
-The proposed explanation for these was radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
+These effects include the possible `core-halo' pattern reported around flare kernels in ground-based line and continuum imaging \citet{Neidig1993,Xu2006}, TRACE white light observations \citep{Hudson2006}, and Hinode/Solar Optical Telescope (SOT) G-band and Fe\,\textsc{i} \SI{630.2}{\nano\m} observations \citep{Isobe2007},
+The proposed explanation for these halos is typically radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
 In the following we shall focus primarily on NLTE radiative effects affecting plasma neighbouring a flare, but leave the inclusion of temperature variations due to absorption of radiation to a future study.
 
 It is reasonable to suggest that the plasma neighbouring the flare is substantially cooler, both due to the lack of direct heating, and the low strength of cross-field conduction relative to that along the field \citep{Spitzer1953}, however photons are not affected by these limitations.
 Thus, we will investigate the effects of illumination from a neighbouring plane-parallel flare model on a two-dimensional slab of plasma representing the quiet atmosphere, with a time-dependent radiative treatment of both of these.
 This model can then serve as a ``first-order'' approximate investigation of the effects of flare radiation on the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
 
-Modelling undertaken by \citet{Leenaarts2012a} suggests that a three-dimensional treatment of \Ha{} yields very different synthetic line profiles than a 1.5D column-by-column treatment.
-\TODO{From here}.
+Modelling undertaken by \citet{Leenaarts2012a} suggests that a three-dimensional treatment of \Ha{} in quiet Sun models yields very different synthetic line profiles than a 1.5D column-by-column plane-parallel treatment.
+\citet{Bjorgen2019} found that these differences were less significant for the bright structure of an active region \citep[Based on the simulations of][]{Cheung2019}, but definition appears to be lost in regions adjacent to this structure when a 1.5D treatment is applied.
+It is precisely the effects of a bright region on the neighbouring atmosphere that we wish to investigate, and a simple two-dimensional model should reveal the importance and possible time-dependence of reactions to this radiation.
 
 Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}: the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
 On one side of this slab we place the RADYN simulation, and compute the intensity along each ray of the angular quadrature used for the 2D slab, at each depth in the simulation.
@@ -2323,6 +2324,7 @@ A context image of the region in the core of the \CaLine{} line at the flare pea
 We have selected a region on edge of the western ribbon for this comparison, which is highlighted in blue in both the left- and right-hand panels of this figure.
 The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being $0.057^{\prime\prime}$ ($\sim\SI{42}{\kilo\metre}$).
 This region was chosen as it represents the intersection between the flare ribbon and some of the quieter material present in the data (the east ribbon overlaps a sunspot), lies approximately perpendicular to structure visible here, and is close to the region analysed by \citet{Kuridze2015}.
+We note that for both spectral lines, the angular size of 2\,px is less than the diffraction limit of the SST at these wavelengths (Sec.~\ref{Sec:CRISP}), and this may slightly affect the extents of the enhancements measured in this data.
 
 To investigate the effects presented in the simulation we shall analyse the variation of the radiation in the selected region as a function of $x$ location and time.
 The 10\,{}px in $y$ are averaged to increase the signal to noise ratio.
@@ -2353,7 +2355,6 @@ If the same viewing angle is used with the simulation then all of the ``pixels''
 Due to the prohibitive computational cost of this (a similar horizontal spatial resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
 In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation); whilst the pixels in the data are nominally smaller this does not include the effects of viewing the inclined solar surface so we compare these extents in pixels directly.
 
-\TODO{Below diffraction limit!!}
 
 The \CaLine{} line behaves similarly in both the F9 and F10 simulations, with the line core immediately extending significantly further than the wings (by $9-13$\,{}px) as the heating begins.
 Around $t=\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing enhancement remains approximately constant, slightly approaching the line core.

@@ -155,8 +155,6 @@ This is relatively efficient as these rates depend only on local parameters, and
 As discussed in Sec.~\ref{Sec:ShortChar}, we adopt a short-characteristics formal solver to solve the RTE, and in \Lw{}, the default implementation for plane-parallel atmospheres is the cubic Bézier spline technique of \citet{DelaCruzRodriguez2013}.
 We also provide an implementation of the simple linear short-characteristics scheme, and allow for users to load their own formal solvers from shared libraries at runtime, provided they implement the interface described by the \Lw{} codebase.
 
-\TODO{Don't apply Ng because can be problem?}
-
 \section{Parallelisation}\label{Sec:LwParallelisation}
 
 The self-contained nature of the \texttt{Context} makes \Lw{} programs for computing grids of models easy to adapt to paradigms such as the Message Passing Interface \citep[MPI, e.g.][for an overview of the MPICH implementation]{Gropp1996} commonly used in high performance computing environments.

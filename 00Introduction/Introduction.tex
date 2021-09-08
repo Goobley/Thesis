@@ -41,7 +41,7 @@ lFig.short_caption = r'Temperature and total hydrogen number density ($n_H$) str
 \end{pycode}
 % spell-checker: enable
 
-\section*{To be Taught, if We are Fortunate}
+\section*{To be taught, if we are fortunate}
 
 The Sun is obviously responsible for the existence of life on Earth --- after all, there would be no solar system without it!
 The Earth lies within a narrow orbital zone in which the solar irradiance is precisely sufficient to maintain the very specific temperatures required for life as we know it, without cooking or freezing us.
@@ -67,19 +67,20 @@ These fascinating questions can and should be answered to slake the natural huma
 
 \section{The Layers of the Sun}
 
+\py[Intro]|chIntro.get_figure('FalC')|
+
 The observable solar atmosphere is composed of three main layers of plasma: photosphere, chromosphere, and corona.
-These are all permeated by a complex, structured, time-varying, magnetic field.
+These are all permeated by a complex, structured, time-varying magnetic field.
 The photosphere is the innermost observable ``surface'' of the Sun, and is the origin of the daylight we see with \citep{Zirin1992}.
 The photosphere appears granulated, a pattern of light and dark structure evolving slowly, like the surface of a pot of boiling water, due to the convection cells that form within the photosphere and the solar interior below it.
 These transport plasma that has cooled down deeper into the atmosphere and renew the hotter surface layer.
 Larger dark features known as sunspots are often visible on the photosphere: these occur in regions of stronger magnetic field which inhibits the local convection and allows the plasma locked in this region to cool.
 The photosphere serves as the visible surface of the Sun, and is optically opaque, primarily due to an abundance of negative hydrogen that forms due to the temperature and density of this region.
-This H$^-$ ion is formed by the addition of a second electron to a hydrogen atom, it has a low ionisation potential and is a significant component of solar opacity and emissivity across the optical region \citep{Hubeny2014}.
-The photosphere emits as an almost ideal black body with a temperature of approximately \SI{5800}{\kelvin}, and continues radially outward for $\sim\SI{500}{\kilo\metre}$ until we enter the chromosphere \citep{Carroll2007}.
+This H$^-$ ion is formed by the addition of a second electron to a hydrogen atom: it has a low ionisation potential and is a significant component of solar opacity and emissivity across the optical region and beyond \citep{Hubeny2014}.
+The photosphere emits as an almost ideal black body with a temperature of approximately \SI{5800}{\kelvin}, and continues radially outward for $\sim\SI{500}{\kilo\metre}$ from the optically opaque layer until we enter the chromosphere \citep{Carroll2007}.
 
-\py[Intro]|chIntro.get_figure('FalC')|
 
-The chromosphere is $\sim\SI{2000}{\kilo\m}$ thick, above which the density of the solar plasma drops off rapidly, and in standard reference models the temperature of the plasma starts to rise from approximately 4000--\SI{4500}{\kelvin} \citep{Vernazza1981,Solanki2004}.
+The chromosphere is $\sim\SI{2000}{\kilo\m}$ thick, throughout which the density of the solar plasma drops off rapidly, and in standard reference models the temperature of the plasma starts to rise from approximately 4000--\SI{4500}{\kelvin} \citep{Vernazza1981,Solanki2004}.
 This lower boundary is known as the temperature minimum region.
 The increase in temperature above this level clearly shows that the atmospheric temperature structure is not controlled by radiation and conduction alone (which would lead to a monotonic decrease), and there must be additional heating mechanisms at work \citep{Gurman1992}.
 In Fig.~\ref{Fig:FalC} we show the temperature and total hydrogen density structures of the FAL C semiempirical atmosphere \citep{Fontenla1993}.
@@ -91,23 +92,22 @@ At the top of the chromosphere, and the top of the FAL C model, there is a drama
 The average ionisation of the plasma increases significantly and many ultraviolet spectral lines are observed to form in this region.
 This exceedingly narrow layer, barely a few hundred kilometres thick, is known as the transition region, as it controls the atmosphere's transition from the denser inner layers to the hot and tenuous corona.
 
-The fully-ionised corona extends outwards to a distance several solar radii, and maintains a high temperature, from which extreme ultraviolet (EUV) and X-ray emission can be observed.
+The fully-ionised corona extends outwards to a distance of several solar radii, and maintains a high temperature, from which extreme ultraviolet (EUV) and X-ray emission can be observed.
 The corona presents a complex structure, containing loops of different scales and morphologies, due to closed magnetic field lines, as well as coronal holes where the plasma in a region is ejected outwards into the heliosphere by open magnetic field lines.
 An obvious, and long-standing problem in solar physics, is the so-called coronal heating problem \citep[reviewed by ][]{Klimchuk2006}: by what mechanism, or \emph{mechanisms}, does the corona reach and maintain its multi-million \si{\kelvin} temperature?
 The current consensus \citep[][ and references therein]{DeMoortel2015} is that this heating must occur through a variety of processes which is likely to include magnetic reconnection (a restructuring of the magnetic field to a lower potential, liberating the stored energy) and the dissipation of magnetohydrodynamic waves.
 
-Despite its much lower temperature than the corona, the chromosphere requires a much larger energy flux to maintain its temperature structure, due to the much higher density of this region \citep{DeMoortel2015}.
-The mechanisms proposed for this include acoustic waves propagating from the photosphere for heating the lower chromosphere, and primarily magnetic field effects in the upper chromosphere.
-The magnetic field can contribute in a multitude of ways including the dissipation and mode conversion of waves, as well as more direct heating through the release magnetic stresses by reconnection and Joule heating \citep{Carlsson2019}.
+Despite its much lower temperature than the corona, the chromosphere requires a much larger energy flux to maintain its temperature structure, due to the much higher density of this region \citep{DeMoortel2015,Carlsson2019}.
+The mechanisms proposed for this include acoustic waves propagating from the photosphere for heating the lower chromosphere, and magnetic field effects in the upper chromosphere.
+The magnetic field can contribute to heating in a multitude of ways including the dissipation and mode conversion of waves, as well as more direct heating through the release of magnetic stresses by reconnection and Joule heating \citep{Carlsson2019}.
 
 The solar atmosphere, at least from the upper photosphere, must be treated as a single unit, and as such, problems such as that of the corona's temperature cannot be considered separately.
 Some of the corona's energy will be conducted downwards into the chromosphere, a process aided by the magnetic field, and by the same, the magnetic field that permeates the corona originates from deeper in the solar atmosphere and has to pass through the chromosphere.
-Determining the energy balance throughout the atmosphere is a very active field of research, necessitating both complex numerical models and detailed observational results \citep{Carlsson2019}.
+Determining the energy balance throughout the atmosphere is a very active field of research, necessitating both complex numerical models and detailed observational results \citep[e.g.][]{Carlsson2019}.
 
 \section{Solar Flares}
 
-Solar flares are intense flashes of radiation that occur in the solar atmosphere.
-They can be observed across the entire electromagnetic spectrum.
+Solar flares are intense short-duration flashes of radiation that occur in the solar atmosphere and can be observed across the entire electromagnetic spectrum.
 The first documented scientific observation of a solar flare was that of \citet{Carrington1859}, that occurred spontaneously during a routine observation of a sunspot cluster.
 This event was so energetic the ensuing solar storm and magnetic disturbances wrought havoc on the telegraph network, and aurora were seen as far south as Colombia \citep{MorenoCardenas2016}.
 The Carrington Event, as it is known, was a particularly spectacular event, and whilst no event of equivalent magnitude has been recorded since, during the peak of the 11 year solar cycle it is not uncommon to observe multiple smaller flares over the course of a day.
@@ -124,7 +124,7 @@ As the potential energy stored in the magnetic field of the active region increa
 The photospheric motions and emergence of this magnetic flux builds and stores energy in coronal loops.
 In the minutes preceding a flare small-scale brightenings may be observed in the soft X-ray (SXR) and EUV bands.
 The flare proper, and the impulsive phase, are presumed to begin with a magnetic reconnection event that releases a large amount of magnetic energy previously stored in the coronal magnetic field.
-In some situations, an amount of material previously held by the closed magnetic field lines is ejected along field lines that are now open to the heliosphere.
+In some situations, an amount of material previously held in place by the closed magnetic field lines is carried by an expanding field and ejected along field lines that are now open to the heliosphere.
 This process is known as coronal mass ejection.
 At the looptop, near to the reconnection site, small SXR sources are observed due to the heating and acceleration of electrons.
 Less frequently, non-thermal hard X-ray (HXR, photon energies above \SI{10}{\kilo\electronvolt}) sources may also be observed in this region \citep{Krucker2008}.
@@ -133,7 +133,7 @@ The accelerated electrons then spiral along the magnetic field lines producing r
 A large portion of the energy released travels down the loop and arrives at the chromosphere, producing extreme heating, rapid ionisation, and driving significant plasma motions.
 There is a large spike observed in the X-ray flux, notably HXR bremsstrahlung from high-energy non-thermal electrons accelerated by the energy released by the flare colliding with the denser chromosphere.
 This has traditionally been described by the collisional thick target model \citep{Brown1971,Hudson1972}, which presumes that these non-thermal electrons are accelerated in the corona.
-Due to the heating that ensues from this process the chromosphere undergoes evaporation, where the heated dense material starts to rise along the magnetic loop.
+Due to the heating that ensues from this process the chromosphere undergoes evaporation, where the dense heated material starts to rise along the magnetic loop.
 These motions can be observed in the Doppler shift of spectral lines, and regions of heating can be seen in the enhancement of chromospheric spectral lines, such as the \Ha{} line.
 In a real-world system with neighbouring loops the reconnection process may travel along the loops, triggering these heating processes in turn and leading to ribbons along their footpoints visible in these lines.
 SXR observations have revealed compact hot sources with short durations ($\sim$1 minute) in flare footpoints \citep{Hudson1994}.
@@ -155,17 +155,29 @@ The frequency of flaring events is found to be inversely proportional to their m
 In September 2017, at the end of solar cycle 24, the Sun produced a series of flares from two active regions, including four X-class events, in the space of less than a week.
 Whilst these events are rare, their distribution is far from uniform.
 
+\begin{center}
+    \rule{0.5\textwidth}{0.6pt}
+\end{center}
+
 In this thesis we focus on the numerical modelling of solar flares, paying close attention to the formation and interpretation of chromospheric spectral lines.
 These spectral lines are accessible to ground-based instrumentation and have already yielded great insights into the evolution of the chromosphere during flares.
-As the chromosphere mediates a large portion of the energy liberated during a flare, understanding its response is key to the our understanding of the complete flaring system.
+As the chromosphere mediates a large portion of the energy liberated during a flare, understanding its response is key to developing our understanding of the complete flaring system.
 It is important to verify the soundness of assumptions made in current modelling, and investigate effects that will become important as the next generation of high-resolution solar telescopes enter service.
 
-\TODO{In Chap 2, 3 we present ... I'll do this after splitting chapters.}
+In Chap.~\ref{Chap:FlareModelling}, we present the numerical approaches employed in flare modelling.
+Then, in Chap.~\ref{Chap:FlareObservations} we describe the primary optical spectral lines that will be modelled, the instrumentation used, an overview of the inverse problem of radiative transfer, and an introduction to machine learning.
+The \Lw{} radiative transfer framework is presented and validated in Chap.~\ref{Chap:Lw}.
+\Lw{} is then applied, in Chap.~\ref{Chap:TimeDepRt}, to synthesising the radiation from current solar flare models to assess assumptions and investigate future directions.
+Chap.~\ref{Chap:2DRT} presents the modelled radiative response of a quiet Sun slab adjacent to a flare.
+In Chap.~\ref{Chap:Radynversion}, we describe our deep learning inversion technique, RADYNVERSION.
+Finally, in Chap.~\ref{Chap:Conclusions} concluding remarks are made.
+
 
 \section{Conventions}\label{Sec:Conventions}
 
 Throughout this thesis we use SI units unless otherwise noted, with wavelengths in \si{\nano\m}.
-In all discussions the ``height'' or altitude of a point is considered to increase radially from the solar surface, leading to a definition of velocity where a positive value indicates an observed blueshift.
+In all discussions the ``height'' or altitude of a point is considered to increase vertically from the solar surface (i.e. the layer of the photosphere which is opaque to light with a wavelength of \SI{500}{\nano\m}).
+This leads to a definition of velocity where a positive value indicates an observed blueshift.
 
 When referring to different computers, we refer to:
 \begin{enumerate}

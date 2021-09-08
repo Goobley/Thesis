@@ -23,7 +23,7 @@ chFlareModelling = texfigure.Manager(
 Simulation is a powerful scientific approach that seeks both to validate our understanding of a phenomenon and also learn how it is influenced by various parameters.
 Contrary to its dictionary definition, which suggests deceit or merely a surface level resemblance, simulations are essential tools in an astrophysical context.
 Astrophysical observations differ greatly from laboratory experiments, due to our lack of knowledge of the configuration and parameters of the system, and inability to repeat particular events.
-Simulations therefore represent our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
+Modelling therefore represents our best tool for bridging the gap between a theory of the physical processes at work in an observed event, and the observations thereof.
 A numerical approach is often needed as the coupled physical processes investigated are typically too complex and non-linear to analytically solve in detail.
 There will commonly be free parameters left in these models, some of which can be directly inferred from observation, but others may need to be investigated and later constrained by comparing the model output to observations.
 Due to computational or conceptual limitations, simplifying assumptions are often required to make these models tractable.
@@ -35,7 +35,7 @@ Due to computational or conceptual limitations, simplifying assumptions are ofte
 % \section{Modelling Flares and Observables}
 
 To design a model of solar flares it is first necessary to understand as much as possible from the available observations, so as to ascertain reasonable approximations and the most important processes to include.
-By the same, it is necessary to understand which observables vary between flares, to be able to exploit their specific sensitivities and choose those that exhibit sufficient variations to describe the processes at work and distinguish between flares.
+By the same, it is necessary to understand which observables vary between flares, to be able to exploit their specific sensitivities and choose those that exhibit sufficient variations to describe the processes at work and distinguish between models.
 The following builds on many years of work by the solar physics community, and we start from the understanding that has slowly been accrued to present the current state of flare modelling, and an introduction to some of the important numerical theory.
 A discussion of the flare observables we are focused on, as well as the techniques used to obtain these, is presented in Chap.~\ref{Chap:FlareObservations}.
 
@@ -53,8 +53,8 @@ The atmosphere is then treated as a plasma (ranging from semi-ionised in the low
 This gas dynamic system can be described by
 \begin{equation}
     \begin{aligned}
-    \frac{\partial \rho}{\partial t} + \frac{\partial \rho \varv}{\partial z} &= 0\\
-    \frac{\partial \rho \varv}{\partial t} + \frac{\partial \rho \varv^2}{\partial z} - \rho g + \frac{\partial P}{\partial z} - \frac{\partial}{\partial z}\left(\mu \frac{\partial \varv}{\partial z}\right) &= 0\\
+    \frac{\partial \rho}{\partial t} + \frac{\partial \rho \varv}{\partial z} &= 0,\\
+    \frac{\partial \rho \varv}{\partial t} + \frac{\partial \rho \varv^2}{\partial z} - \rho g + \frac{\partial P}{\partial z} - \frac{\partial}{\partial z}\left(\mu \frac{\partial \varv}{\partial z}\right) &= 0,\\
     \frac{\partial E}{\partial t} + \frac{\partial}{\partial z}\left( E\varv + P\varv - \kappa\frac{\partial T}{\partial z} \right)+ \mu\left(\frac{\partial \varv}{\partial z}\right)^2 -\rho \varv g + L - S &= 0,
     \end{aligned}\label{Eq:RhdEquations}
 \end{equation}
