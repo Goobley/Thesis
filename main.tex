@@ -9,6 +9,7 @@
 % \documentclass[11pt,titlepage,oneside,a4paper]{book}
 \documentclass[titlepage,oneside,a4paper,headinclude,
                headheight=16.5pt,footheight=16.5pt,
+               chapterprefix,
               %  autoenlargeheadfoot=true,
                parskip=half,
                bibliography=totoc,listof=totoc]{scrbook}
@@ -82,6 +83,23 @@
 \definecolor{MplC9}{rgb}{0.337255,0.705882,0.913725}
 \newcommand*{\MplCyanWord}{{\color{MplCyan}cyan}}
 \newcommand*{\MplCyanWordCap}{{\color{MplCyan}Cyan}}
+
+\definecolor{UniversityBlue}{HTML}{003865}
+\definecolor{SkyBlue}{HTML}{005398}
+
+\renewcommand*{\raggedchapter}{\centering}
+\renewcommand*{\chapterformat}{%
+\color{SkyBlue}%
+\rule{0.3\textwidth}{1pt}%
+\hspace{0.5em}%
+\scalebox{3}{\thechapter}%
+\hspace{0.5em}%
+\rule{0.3\textwidth}{1pt}%
+\vspace*{-0.5\baselineskip}%
+}
+\renewcommand*{\sectionformat}{\color{SkyBlue}{\thesection\autodot}\enspace}
+\renewcommand*{\subsectionformat}{\color{SkyBlue}{\thesubsection\autodot}\enspace}
+\renewcommand*{\subsubsectionformat}{\color{SkyBlue}{\thesubsubsection\autodot}\enspace}
 
 % \usepackage[margin=1em, font=small, labelfont=bf]{caption}
 \setcapmargin*{1em}
@@ -214,10 +232,10 @@
 \setpythontexcontext{figurewidth=\the\columnwidth}
 \newcommand{\includepgf}[1]{\IfFileExists{#1}{\input{#1}}{}}
 
-\usepackage[pdftex,    colorlinks=true,    bookmarksnumbered=true,    linkcolor=blue,
-  urlcolor=blue,    citecolor=blue,       bookmarksopen=false,  pagebackref=true,
-  pdfauthor={},    pdftitle={},    pdfkeywords={},
-  pdfsubject={},    pdfcreator={},
+\usepackage[pdftex,colorlinks=true,bookmarksnumbered=true,linkcolor=UniversityBlue,
+  urlcolor=blue,citecolor=UniversityBlue,bookmarksopen=false,pagebackref=true,
+  pdfauthor={},pdftitle={},pdfkeywords={},
+  pdfsubject={},pdfcreator={},
   pdfproducer={}, pdfencoding=auto, psdextra, breaklinks=true]{hyperref}
 
 \newcommand*{\Ca}{Ca\,\textsc{ii}}
