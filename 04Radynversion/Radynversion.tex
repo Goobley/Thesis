@@ -156,7 +156,7 @@ Whilst it is possible to continue to increase the depth of this network, this is
 RADYNVERSION is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
 The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time; in our case the temperature $T$, electron density $n_e$, and velocity $v$.
 These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
-The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $\varv\mapsto\mathrm{sign}(\varv)\log_{10} \left( |\varv_{\mathrm{km\, s^{-1}}}| + 1\right)$.
+The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $\varv\mapsto\textnormal{sign}(\varv)\log_{10} \left( |\varv_{\si{\kilo\metre\per\s}}| + 1\right)$.
 The mapping for $\varv$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
 These logarithmic mappings preserve detail better over each decade than a simple linear rescaling.
 
@@ -198,9 +198,9 @@ Our training method is based on the one presented in \citet{2018Ardizzone} and t
 The INN is trained in both directions to ensure the conditioning of both the forward and inverse problems.
 The model is trained using minibatching with the same minibatch of the training set being used in both directions.
 Both training directions are constrained by two loss functions and a linear combination of these serves as our final loss to minimise.
-The forward direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\mathrm{true}||_2^2$, where $y$ indicates the output of the network and $y_\mathrm{true}$ the expected output) on the output vector of line profiles and zero padding.
+The forward direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\textnormal{true}||_2^2$, where $y$ indicates the output of the network and $y_\textnormal{true}$ the expected output) on the output vector of line profiles and zero padding.
 This latent space is constrained by a Maximum Mean Discrepancy (MMD) loss.
-The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\mathrm{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
+The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\textnormal{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
 This is discussed in depth, along with implementation details in Section~\ref{Sec:Mmd}.
 During the forward process the MMD loss is used to ensure that the network learns to map the true latent space to our chosen form for it (the multivariate unit Gaussian distribution).
 A traditional regression loss cannot be applied here, as we would have to assign fixed samples from the latent space for each timestep in the training set, which cannot be done without understanding the true latent space.
@@ -212,24 +212,24 @@ The inverse process is trained similarly, with an additional two losses.
 An L2 loss is used for $x$ and the zero-padding to ensure the expected atmosphere parameters are produced (and that the padding remain 0), and an MMD loss ensuring the correct distribution of $x$ for random latent samples.
 
 Both of the forward and backwards losses are linearly combined to produce a set of weighted gradients used to update the network.
-We define three hyperparameter weights for this purpose $w_\mathrm{pred}$, $w_\mathrm{latent}$, and $w_\mathrm{rev}$.
+We define three hyperparameter weights for this purpose $w_\textnormal{pred}$, $w_\textnormal{latent}$, and $w_\textnormal{rev}$.
 These are combined to produce the losses
 \begin{align}
-    loss_f &= w_\mathrm{pred} L2_f + w_\mathrm{latent} MMD_f,\\
-    loss_b &= 0.5w_\mathrm{pred} L2_b + \xi(n)w_\mathrm{rev} MMD_b,
+    \textnormal{loss}_f &= w_\textnormal{pred} L2_f + w_\textnormal{latent} MMD_f,\\
+    \textnormal{loss}_b &= 0.5w_\textnormal{pred} L2_b + \xi(n)w_\textnormal{rev} MMD_b,
 \end{align}
 where $f$ and $b$ represent the forward and backward terms respectively, and $\xi$ is a term that gradually increases towards unity over the course of a fade-in period.
 It is parametrised as
 \begin{equation}
-    \xi(n) = \left( \min\left( \frac{n}{0.4 N_\mathrm{fade}}, 1 \right) \right)^3,
+    \xi(n) = \left( \min\left( \frac{n}{0.4 N_\textnormal{fade}}, 1 \right) \right)^3,
 \end{equation}
-where $n$ is the current epoch, and $N_\mathrm{fade}$ is the fade-in period.
-This terms serves to slowly increase the effect of the MMD loss, as this was otherwise found to hinder the training of both the forward and inverse problems by dominating $loss_b$ and guiding the system away from a solution that minimised both terms.
+where $n$ is the current epoch, and $N_\textnormal{fade}$ is the fade-in period.
+This terms serves to slowly increase the effect of the MMD loss, as this was otherwise found to hinder the training of both the forward and inverse problems by dominating $\textnormal{loss}_b$ and guiding the system away from a solution that minimised both terms.
 To ensure that the output in the zero-padded sections remains close to zero we also use $1-\xi$ to initialise these with a small amount of random noise, decaying over this same period.
 This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
-Through a manual hyperparameter search we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\mathrm{pred}=4000$, $w_\mathrm{latent}=900$, and $w_\mathrm{rev}=1000$.
-After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\mathrm{pred}$ by 1000 for each of these blocks to fine-tune the line profiles and atmospheric parameters which were otherwise a little noisy.
-From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\mathrm{pred}$ again being increased by 1000.
+Through a manual hyperparameter search we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\textnormal{pred}=4000$, $w_\textnormal{latent}=900$, and $w_\textnormal{rev}=1000$.
+After the fade-in period the network was trained in blocks of 400 epochs, increasing the value of $w_\textnormal{pred}$ by 1000 for each of these blocks to fine-tune the line profiles and atmospheric parameters which were otherwise a little noisy.
+From 4,800 epochs to 12,000 epochs the network was trained in blocks of 600 epochs, with the value of $w_\textnormal{pred}$ again being increased by 1000.
 These weights were all tuned empirically, and others were also found to yield good convergence, however we found it important that the L2 weight be a factor of 2 or more larger than the MMD weights or the forward process would not reliably converge.
 
 The update of the weights inside the neural networks is computed from the gradients of the linearly combined losses using the Adam optimisation algorithm \citep{2014Kingma} with hyperparameters $\beta_1=\beta_2=0.8$ and $\epsilon=1\times10^{-6}$.
@@ -266,7 +266,7 @@ Let us define two probability distributions $P$ and $Q$ and draw observations $X
 The MMD is then defined by
 \begin{equation}\label{Eq:MmdDef}
 \begin{aligned}
-    \mathrm{MMD}^2 &= ||\mu_P - \mu_Q ||_\mathcal{H}^2\\
+    \textnormal{MMD}^2 &= ||\mu_P - \mu_Q ||_\mathcal{H}^2\\
     &= \langle \mu_P, \mu_P \rangle_\mathcal{H} +
        \langle \mu_Q, \mu_Q \rangle_\mathcal{H} -
        2 \langle \mu_P, \mu_Q \rangle_\mathcal{H},
@@ -290,19 +290,19 @@ where $X^\prime$ is an independently drawn copy of $X$ from $P$, and $k(\cdot\, 
 Thus $k(\cdot,\, X)$ is the feature map $\phi(X)$.
 We define $Y^\prime$ analogously for $Y$ and $Q$ to then write \eqref{Eq:MmdDef} as
 \begin{equation}
-    \mathrm{MMD}^2 = ||\mu_P - \mu_Q|| ^2
+    \textnormal{MMD}^2 = ||\mu_P - \mu_Q|| ^2
                    = \mathbb{E}_P [k(X, X^\prime)] + \mathbb{E}_Q [k(Y, Y^\prime)] - 2 \mathbb{E}_{P,Q}[k(X,Y)].
 \end{equation}
 Here the first two terms compare the distributions for internal similarity, whereas the last compares the intra-distribution similarity.
 
 For length $n$ finite observations $X$ and $Y$ we can expand this to provide an unbiased sample estimate
 \begin{equation}
-    \widehat{\mathrm{MMD}}_u^2 = \frac{1}{n(n-1)} \sum_{i\neq j} k(x_i, x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i, y_j) - \frac{2}{n^2} \sum_{i, j} k(x_i, y_j).
+    \widehat{\textnormal{MMD}}_u^2 = \frac{1}{n(n-1)} \sum_{i\neq j} k(x_i, x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i, y_j) - \frac{2}{n^2} \sum_{i, j} k(x_i, y_j).
 \end{equation}
-As this statistic is unbiased and computed from a finite sample size, it can be negative when $P$ and $Q$ are similar distributions, despite being the definition of $\mathrm{MMD}^2$.
+As this statistic is unbiased and computed from a finite sample size, it can be negative when $P$ and $Q$ are similar distributions, despite being the definition of $\textnormal{MMD}^2$.
 We therefore employ a biased estimate of the MMD which remains positive in all scenarios
 \begin{equation}
-    \widehat{\mathrm{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, y_j) \right).
+    \widehat{\textnormal{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, y_j) \right).
 \end{equation}
 This biased form of the MMD is also more efficient to compute using the vectorised tensor operations present in machine learning frameworks like pytorch.
 

@@ -501,12 +501,12 @@ It can be very limiting to impose a chosen source function, especially in region
 A far more flexible approach is to attempt to fit a source function.
 From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
 \begin{equation}
-    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau}\, d\tau,
+    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau} \mathop{\dd{}\tau},
 \end{equation}
 whereby we have once again assumed that $I(\tau=\infty)=0$.
 If the source function is taken to be constant in each slab this becomes
 \begin{equation}\label{Eq:LinearResponse}
-    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau}\, d\tau,
+    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau} \mathop{\dd{}\tau},
 \end{equation}
 and for each slab the associated integral represents its contribution to the outgoing intensity.
 In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
@@ -585,10 +585,10 @@ This problem becomes more complex still if the contribution function is double-p
 
 It is common to use the integral form of the RTE
 \begin{equation}
-    I(\nu) = \int_0^\infty S(\nu, t_\nu) e^{-t_\nu}\, dt_\nu,
+    I(\nu) = \int_0^\infty S(\nu, t_\nu) e^{-t_\nu} \mathop{\dd{}t_\nu},
 \end{equation}
 and define the contribution function as the integrand of this expression \citep{Carlsson1997,DelToroIniesta2003}.
-As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu)\, dt_\nu = 0$, $C_I + f$ is also an equivalently valid contribution function.
+As commented by \citet{DelToroIniesta2003} this leads to an ill-posed definition for the contribution function $C_I$, as for any function $f$ such that $\int_0^\infty f(t_\nu) \mathop{\dd{}t_\nu} = 0$, $C_I + f$ is also an equivalently valid contribution function.
 
 The contribution function will qualitatively capture most of the information about the regions important to the formation of a certain line, but it misses the non-local effects that occur in NLTE radiative transfer as the radiation field from one region of the model atmosphere often determines the populations and thus the emissions in another.
 These effects can instead be captured by the use of response functions.
@@ -600,9 +600,9 @@ They were generalised to full Stokes radiative transfer by \citet{LandiDeglInnoc
 A similar approach (built on framing the intensity perturbations as a Fredholm integral equation and using the finite difference method to evaluate necessary terms) for the scalar RTE was employed in the inversions of \citet{Metcalf1990a}, but their focus was on the direct application to inversions rather than the interpretation of the response functions produced.
 
 In the following we shall consider only the response of the unpolarised Stokes I component, as we are focusing on unpolarised models, although the techniques discussed here can easily be applied to the full Stokes case.
-The frequency- and depth-dependent response function $\mathcal{R}_{\nu, q} (z)$ to a parameter $q$ can then be defined
+The frequency- and depth-dependent response function $\mathcal{R}_{\nu, q} (z)$ to a parameter $q$ can then be defined by
 \begin{equation}
-    \Delta I(\nu) = \int\mathcal{R}_{\nu, q}(z) \Delta q(z)\,dz,
+    \Delta I(\nu) = \int\mathcal{R}_{\nu, q}(z) \Delta q(z) \mathop{\dd{}z},
 \end{equation}
 where $\Delta I(\nu)$ is the change in outgoing radiation due to a change in of $\Delta q(z)$ in parameter $q$.
 
@@ -714,11 +714,11 @@ There are many common forms of activation function.
 Due to the backpropagation method used for training ANNs it is highly advantageous if these non-linear activation functions be trivially differentiable.
 Some common choices are the sigmoid function
 \begin{equation}
-    \mathrm{S}(x) = \frac{1}{1+e^{-x}},
+    \textnormal{S}(x) = \frac{1}{1+e^{-x}},
 \end{equation}
 inverse tangent $\tan^{-1}(x)$, and variants of the rectified linear unit (ReLU; \citet{2010Nair}).
 \begin{equation}
-    \mathrm{ReLU}(x) = \mathrm{max}(0, x).
+    \textnormal{ReLU}(x) = \textnormal{max}(0, x).
 \end{equation}
 All of these functions are used in the creation of ANN based models, but the ReLU family is key to modern machine learning for reasons of sparsity in its output.
 Here sparsity refers to the presence of zeros in the output of a layer creating clearer pathways through the network.

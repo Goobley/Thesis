@@ -61,7 +61,7 @@ This gas dynamic system can be described by
 
 where $\rho$ is the mass density of the gas, $\varv$ is the bulk velocity, $z$ is the spatial coordinate, $g$ is the local gravitational acceleration, $P$ is the pressure, $\mu$ is the coefficient of dynamic viscosity, $E$ is the total plasma energy, $L$ is the radiative loss term, and $S$ is all additional energy source terms, from radiative transfer and atmospheric heating.
 In these models the plasma is typically assumed to behave as an ideal gas, and therefore uses the equation of state
-$P = n_{\mathrm{tot}} k_B T$, where $n_{\mathrm{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa$ is the temperature-dependent coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
+$P = n_{\textnormal{tot}} k_B T$, where $n_{\textnormal{tot}}$ is the total particle number density, $k_B$ is Boltzmann's constant, and $T$ is the plasma temperature. Additionally, $\kappa$ is the temperature-dependent coefficient of heat conduction, and is discussed in detail in Sec.~\ref{Sec:NumericalConduction}.
 
 All of the quasi-one dimensional codes solve a variant of the RHD equations presented in \eqref{Eq:RhdEquations}. The first of these describes mass continuity, the second conservation of momentum, and the third conservation of energy.
 The nuance typically occurs in ensuring that all terms are solved in a self-consistent fashion and the treatment of the optically thick radiation source and sink terms appearing in the energy equation.
@@ -154,7 +154,7 @@ S(\mu, \vec{d}) = \frac{\eta(\nu, \vec{d})}{\chi(\nu, \vec{d})},
 \end{equation}
 and the optical depth along a ray from the observer as the number of photon mean free paths along this segment
 \begin{equation}
-\tau(z, \nu, \vec{d}) = \int_z^{z_{\mathrm{obs}}}  \frac{\chi_\nu(z^\prime)}{\mu}\, dz^\prime,
+\tau(z, \nu, \vec{d}) = \int_z^{z_{\textnormal{obs}}}  \frac{\chi_\nu(z^\prime)}{\mu} \mathop{\dd{}z^\prime},
 \end{equation}
 we can write the RTE as
 \begin{equation}
@@ -164,7 +164,7 @@ we can write the RTE as
 
 Equation \eqref{Eq:1DRte} is a first-order linear differential equation and can be solved with the integrating factor $e^{-\tau(\nu, \vec{d})}$ giving the formal solution of the RTE:
 \begin{equation}
-I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_{\tau_0}^{\tau_1}S(t_\nu, \nu, \vec{d})e^{-(t_\nu - \tau_0)}\, dt_\nu,
+I(\tau_0, \nu, \vec{d}) = I(\tau_1, \nu, \vec{d}) e^{-(\tau_1 - \tau_0)} + \int_{\tau_0}^{\tau_1}S(t_\nu, \nu, \vec{d})e^{-(t_\nu - \tau_0)} \mathop{\dd{}t_\nu},
 \label{Eq:IntegratedRte}
 \end{equation}
 for $\tau_0$ the optical depth at the observer, $t_\nu$ a dummy variable used for integration, and $\tau_1 > \tau_0$ along the line of sight.
@@ -182,7 +182,7 @@ This approach was first presented by \citet{Olson1987}.
 
 The RTE for one frequency and direction through a slab of a plane-parallel atmosphere (in the case of outgoing radiation (i.e. $\mu > 0$)) can be written
 \begin{equation}
-    I(\tau_0) = I(\tau_1) \exp(- |\tau_0 - \tau_1|) + \int_{\tau_0}^{\tau_1} S(t) \exp(-(t - \tau_0))\, dt,
+    I(\tau_0) = I(\tau_1) \exp(- |\tau_0 - \tau_1|) + \int_{\tau_0}^{\tau_1} S(t) \exp(-(t - \tau_0)) \mathop{\dd{}t},
     \label{Eq:ShortCharForm}
 \end{equation}
 with $t$ as a dummy integration variable.
@@ -357,7 +357,7 @@ The radiative rates that are needed to solve the kinetic or statistical equilibr
 The formulation of emissivity and opacity through $U$ and $V$ also allows us to express the radiative rates succinctly for both upwards and downwards transitions in lines and continua at each location in the atmosphere as
 \begin{equation}
     \label{Eq:RadiativeRates}
-    R_{ll^\prime} = \oint \int \frac{1}{h\nu} \left( U_{ll^\prime}(\nu, \vec{d}) + V_{ll^\prime}(\nu, \vec{d})I(\nu, \vec{d}) \right)\,d\nu\,d\Omega,
+    R_{ll^\prime} = \oint \int \frac{1}{h\nu} \left( U_{ll^\prime}(\nu, \vec{d}) + V_{ll^\prime}(\nu, \vec{d})I(\nu, \vec{d}) \right) \mathop{\dd{}\nu}\mathop{\dd{}\Omega},
 \end{equation}
 where $I(\nu, \vec{d})$ is the specific intensity at this location for a given frequency $\nu$ and direction $\vec{d}$.
 It is through $I$ that the non-locality of the radiation field enters the problem.
@@ -366,11 +366,11 @@ It is through $I$ that the non-locality of the radiation field enters the proble
 
 Where multiple atomic species are present, the total emissivity and opacity are simply the sum of the emissivity and opacity for every transition on each atom at the current frequency and direction. It is common to additionally consider scattering by processes such as Thomson scattering, in which case the source function will be written
 \begin{equation}
-    S(\nu, \vec{d}) = \frac{\eta_\mathrm{tot}(\nu, \vec{d}) + \sigma(\nu)J(\nu)}{\chi_\mathrm{tot}(\nu, \vec{d})},
+    S(\nu, \vec{d}) = \frac{\eta_\textnormal{tot}(\nu, \vec{d}) + \sigma(\nu)J(\nu)}{\chi_\textnormal{tot}(\nu, \vec{d})},
 \end{equation}
 where the ``tot'' subscript refers to these terms being summed over all interacting species, $\sigma$ describes the frequency-dependent coherent and isotropic continuum scattering cross-section, and
 \begin{equation}
-    J(\nu) = \frac{1}{4\pi}\oint I(\nu, \vec{d})\, d\Omega
+    J(\nu) = \frac{1}{4\pi}\oint I(\nu, \vec{d}) \mathop{\dd{}\Omega}
 \end{equation}
 % NOTE(cmo): This angle-average term is what is computed directly from the sum_updown sum_i 0.5 * wmu_i * I, i.e., the averaging is rolled in when we use the integration. The 1/4pi vanishes due to normalisation and the fact we're in ``mu-space''. The 4pi terms all come back in wlambda, but check setup_wavelength on the _atom_ for this, it's not super clear.
 is the angle-averaged intensity at frequency $\nu$.
@@ -439,11 +439,10 @@ The other, more rapidly convergent, methods present possible avenues of improvem
 Now, following \citet{Rybicki1992} and \citet{Uitenbroek2001} and substituting \eqref{Eq:LambdaOperator} into \eqref{Eq:StatEq}, and subsequently expanding the radiative rates gives
 \begin{equation}
 \begin{aligned}
-   \sum_{l^\prime\neq l} &(n_{l^\prime}C_{l^\prime l}) +
-   \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} n_{l^\prime} (U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l} I(\nu, \vec{d}))\, d\nu\, d\Omega\\
-   -
-   n_l &\sum_{l^\prime\neq l} C_{l l^\prime} -
-   n_l \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} (U^\dagger_{l l^\prime} + V^\dagger_{l l^\prime} I(\nu, \vec{d}))\, d\nu\, d\Omega
+   &\sum_{l^\prime\neq l} (n_{l^\prime}C_{l^\prime l}) +
+   \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} n_{l^\prime} (U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l} I(\nu, \vec{d})) \mathop{\dd{}\nu}\mathop{\dd{}\Omega}\\
+   &\mathop{-} n_l \sum_{l^\prime\neq l} C_{l l^\prime} -
+   n_l \sum_{l^\prime\neq l} \oint \int \frac{1}{h\nu} (U^\dagger_{l l^\prime} + V^\dagger_{l l^\prime} I(\nu, \vec{d})) \mathop{\dd{}\nu}\mathop{\dd{}\Omega}
    = 0.
    \label{Eq:StatEqExpanded}
 \end{aligned}
@@ -466,7 +465,7 @@ and then considering the effects on one atom, under the assumption that backgrou
                     + \sum_j\sum_{i<j}\Psi_{\nu,\vec{d}}^*[n_j U^\dagger_{ji}],
 \end{equation}
 where $i$ and $j$ refer to the levels present in the atomic model.
-The first two terms of this expression are often termed $I^\mathrm{eff}$ and in the case of a diagonal $\Psi^*$ operator this represents the non-local contribution to the radiation field from the current atom, and the contribution from all other species.
+The first two terms of this expression are often termed $I^\textnormal{eff}$ and in the case of a diagonal $\Psi^*$ operator this represents the non-local contribution to the radiation field from the current atom, and the contribution from all other species.
 
 We can write the preconditioned statistical equilibrium system \eqref{Eq:StatEqExpanded} as
 \begin{equation}
@@ -476,7 +475,7 @@ We can write the preconditioned statistical equilibrium system \eqref{Eq:StatEqE
 where $\Gamma$ is a matrix consisting of the sum of $\Gamma^R$ due to the radiative contributions, and $\Gamma^C$ from the collisional contributions. $\vec{n}$ is the vector of the updated level populations for the species at this point in the atmosphere.
 We can then write
 \begin{equation}
-    \Gamma^R_{ll^\prime} = \bigointss \bigintss \frac{1}{h\nu} \left( U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l}I_{\nu, \vec{d}}^\mathrm{eff} - \left(\sum_{m\neq l}\chi^\dagger_{lm}\right) \Psi^*_{\nu, \vec{d}} \left[ \sum_p U^\dagger_{l^\prime p} \right] \right)\, d\nu\,d\Omega
+    \Gamma^R_{ll^\prime} = \bigointss \bigintss \frac{1}{h\nu} \left( U^\dagger_{l^\prime l} + V^\dagger_{l^\prime l}I_{\nu, \vec{d}}^\textnormal{eff} - \left(\sum_{m\neq l}\chi^\dagger_{lm}\right) \Psi^*_{\nu, \vec{d}} \left[ \sum_p U^\dagger_{l^\prime p} \right] \right) \mathop{\dd{}\nu}\mathop{\dd{}\Omega}
     \label{Eq:GammaR}
 \end{equation}
 for $l\neq l^\prime$.
@@ -487,7 +486,7 @@ Due to the necessity of total number conservation the sum of the entries in each
 \end{equation}
 
 An additional constraint must be applied to \eqref{Eq:StatEqMatVec} to determine the new populations, and avoid the trivial solution of $\vec{n} = \vec{0}$, which is otherwise always a valid solution.
-This constraint is typically expressed through local population conservation, which amounts to replacing one of the rows of $\Gamma$ with ones, and the associated entry in the right-hand-side zero-vector with the local species number density $n_\mathrm{total}$.
+This constraint is typically expressed through local population conservation, which amounts to replacing one of the rows of $\Gamma$ with ones, and the associated entry in the right-hand-side zero-vector with the local species number density $n_\textnormal{total}$.
 There is then a $\Gamma$ matrix at each point in the atmosphere for each atomic species being considered in detail; each of these is square with dimension equal to the number of levels in the atomic model for this species.
 This system can then be solved for $\vec{n}$, independently at each location in the atmosphere, as the current estimate of non-local coupling through the radiation field is already present in the terms that compose $\Gamma$.
 
@@ -527,7 +526,7 @@ We can define the emission profile coefficient $\rho_{ij} = \psi_{ij} / \phi_{ij
 From this definition of $\rho_{ij}$, under the assumptions of a line with an infinitely sharp lower level and broadened upper level, and the validity of PRD in the atomic frame being approximated by PRD in the observer's frame \citep{Uitenbroek2001}, following \citet{Hubeny2014} we have
 \begin{align}
 \begin{split}
-    \rho_{ij}(\nu, \vec{d}) = 1 + &\gamma\frac{\sum_{l < j}n_j B_{lj}}{n_j P_j} \oint\frac{1}{4\pi}\int I(\nu^\prime, \vec{d}^\prime) \\ &\cdot \left[ \frac{R^{II}_{lji}(\nu^\prime, \vec{d}^\prime; \nu, \vec{d})}{\phi_{ij}(\nu, \vec{d})} - \phi_{lj}(\nu^\prime, \vec{d}) \right]\,d\nu^\prime\,d\Omega^\prime,
+    \rho_{ij}(\nu, \vec{d}) = 1 &+ \gamma\frac{\sum_{l < j}n_j B_{lj}}{n_j P_j} \oint\frac{1}{4\pi}\int I(\nu^\prime, \vec{d}^\prime) \\ &\cdot \left[ \frac{R^{II}_{lji}(\nu^\prime, \vec{d}^\prime; \nu, \vec{d})}{\phi_{ij}(\nu, \vec{d})} - \phi_{lj}(\nu^\prime, \vec{d}) \right] \mathop{\dd{}\nu^\prime}\mathop{\dd{}\Omega^\prime},
 \end{split}
 \end{align}
 where $R^{II}$ is the generalised redistribution function for transitions of this kind \citep{Hubeny1982}, and $\gamma$ is the coherency fraction.
@@ -549,11 +548,11 @@ Ignoring bulk plasma motions that create anisotropy in the radiation field, the 
 Also defining $g_{II}(\nu, \nu^\prime) = R^{II}(\nu, \nu^\prime)/\phi_{ij}(\nu^\prime)$ such that the fast approximation of \citet{Gouttebroze1986} and \citet{Uitenbroek1989} can be employed, and ignoring cross redistribution terms we have
 \begin{equation}
     \label{Eq:RhoPrdAa}
-    \rho_{ij}(\nu) = 1 + \gamma \frac{n_i B_{ij}}{n_j P_j} \left( \int g_{II}(\nu, \nu^\prime) J(\nu^\prime)\,d\nu^\prime - \bar{J}_{ij} \right),
+    \rho_{ij}(\nu) = 1 + \gamma \frac{n_i B_{ij}}{n_j P_j} \left( \int g_{II}(\nu, \nu^\prime) J(\nu^\prime) \mathop{\dd{}\nu^\prime} -\,\bar{J}_{ij} \right),
 \end{equation}
 where
 \begin{equation}
-\bar{J}_{ij} = \frac{1}{4\pi} \oint \int I(\nu, \vec{d}) \phi(\nu, \vec{d})\,d\nu\,d\Omega = \frac{R_{ij}}{B_{ij}}
+\bar{J}_{ij} = \frac{1}{4\pi} \oint \int I(\nu, \vec{d}) \phi(\nu, \vec{d}) \mathop{\dd{}\nu}\mathop{\dd{}\Omega} = \frac{R_{ij}}{B_{ij}}
 \end{equation}
 is the frequency-integrated mean intensity across the transition.
 In the case of plasma flows we adopt the approximate hybrid treatment of \citet{Leenaarts2012}, using $J$ in the plasma's rest frame, to compute $\rho_{ij}$ in this same frame.
@@ -593,18 +592,18 @@ Applying this procedure to the preconditioned statistical equilibrium equations 
 \end{equation}
 where $\delta n_j$ and $\delta n_e$ are the necessary corrections to obtain self-consistent level populations and electron density.
 
-This system applies \emph{simultaneously} to all species to be considered in the determination of the self-consistent electron density, and contains $\sum_s N_{\mathrm{level}, s} + 1$ equations, where $N_{\mathrm{level}, s}$ is the number of levels in the model of species $s$.
+This system applies \emph{simultaneously} to all species to be considered in the determination of the self-consistent electron density, and contains $\sum_s N_{\textnormal{level}, s} + 1$ equations, where $N_{\textnormal{level}, s}$ is the number of levels in the model of species $s$.
 Similarly to the initial population update through the MALI method \eqref{Eq:StatEqMatVec}, constraints are needed to ensure that all parameters are correctly conserved.
 Here we require constraints on the population of each species, and on the charge neutrality of the system.
 The former of these is expressed as
 \begin{equation}
-    \sum_j \delta n_j = n_\mathrm{total} - \sum_j \widetilde{n_j},
+    \sum_j \delta n_j = n_\textnormal{total} - \sum_j \widetilde{n_j},
 \end{equation}
 for each species, while the latter is described by
 \begin{equation}
-    \delta n_e - \sum_s \sum_j \mathion_s(j) \delta n_{s, j} = n_{e, \mathrm{bg}} + \sum_s \sum_j \mathion_s(j) - n_e^\dagger,
+    \delta n_e - \sum_s \sum_j \mathion_s(j) \delta n_{s, j} = n_{e, \textnormal{bg}} + \sum_s \sum_j \mathion_s(j) - n_e^\dagger,
 \end{equation}
-where $\mathion_s(j)$ is the ionisation state of the $j$-th level of species $s$, and $n_{e, \mathrm{bg}}$ represents the electron density due to background species not considered in detail here.
+where $\mathion_s(j)$ is the ionisation state of the $j$-th level of species $s$, and $n_{e, \textnormal{bg}}$ represents the electron density due to background species not considered in detail here.
 The left-hand side of the population conservation equation replaces one of the rows of the Jacobian for each species, analogously to the population conservation equation used in \eqref{Eq:StatEqMatVec}.
 The charge conservation equation is the ``extra'' equation in this system, and the left-hand side of the expression here forms one row of the Jacobian.
 
@@ -639,7 +638,7 @@ Instead, it is common to use the $L^\infty$ norm\footnote{The $L^\infty$ norm of
 For a population $n_i$, following \citet{Auer1994a}, we denote the relative change $R_c(itr, i)$ for level $i$ and iteration $itr$.
 It can be expressed as
 \begin{equation}
-    R_c(itr, i) = \mathrm{max}_k \left|\frac{n_i^{itr} - n_i^{itr-1}}{n_i^{itr}}\right|,
+    R_c(itr, i) = \textnormal{max}_k \left|\frac{n_i^{itr} - n_i^{itr-1}}{n_i^{itr}}\right|,
 \end{equation}
 where $k$ represents the location in the atmosphere, and $n_i^{itr}$ represents the population of level $i$ after iteration $itr$.
 By iterating until $R_c(itr, i)$ is low for all transitions, we ensure that the largest update to a term is small relative to its current value.
@@ -683,7 +682,7 @@ where $f$ is a function describing the the flux of $q$ at each location in the d
 In the following discussions, there is an inherent assumption that the flux function is local, and acts only on the local state variables $q$.
 This is not necessarily the case with radiative terms, but these can be incorporated into such a scheme by determining their local effects on the plasma energy.
 
-Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q\, dx$ is constant in time.
+Equations of the form \eqref{Eq:ConsLaw} are known as conservation laws, and the quantities $q$ are often termed ``conserved quantities'', implying that $\int_{-\infty}^{\infty} q \mathop{\dd{}x}$ is constant in time.
 This does not preclude the addition of sources and sinks of this quantity, but simply requires that the total of a conserved quantity not change \emph{without} being acted on in such a way.
 The simplest equation of this form is advection, which arises from conservation of mass in a moving fluid and is written for mass density $\rho$ and fluid velocity $\varv$ as
 \begin{equation}\label{Eq:Advection}
@@ -753,13 +752,13 @@ Instead, the finite volume description is often preferable and consists of treat
 Conservation can then be ensured by evolving this value based on the fluxes in and out of the cell.
 This implies
 \begin{equation}
-    q_i^t \approx \frac{1}{\Delta x}\int_{x_i}^{x_{i+1}} q^t(x)\, dx.
+    q_i^t \approx \frac{1}{\Delta x}\int_{x_i}^{x_{i+1}} q^t(x)\, \dd{}x.
 \end{equation}
 Rewriting the conservation law \eqref{Eq:ConsLaw} in an integral form then gives
 \begin{equation}
-    \int_{x_i}^{x_{i+1}} q^{t+1}(x)\, dx = \int_{x_i}^{x_{i+1}} q^{t}(x)\, dx
-                                         + \int_{t_t}^{t_{t+1}} q_i(t)\, dt
-                                         - \int_{t_t}^{t_{t+1}} q_{i+1}(t)\, dt,
+    \int_{x_i}^{x_{i+1}} q^{t+1}(x) \mathop{\dd{}x} = \int_{x_i}^{x_{i+1}} q^{t}(x) \mathop{\dd{}x}
+                                         \,+ \int_{t_t}^{t_{t+1}} q_i(t) \mathop{\dd{}t}
+                                         \,- \int_{t_t}^{t_{t+1}} q_{i+1}(t) \mathop{\dd{}t},
 \end{equation}
 which can then be written as the flux-differencing form
 \begin{equation}\label{Eq:FiniteVolumeMethod}
@@ -924,7 +923,7 @@ An obvious first choice would be the average flux from the reconstructed states 
 Unfortunately, this leads to numerical instabilities, and some artificial damping (numerical viscosity) is needed.
 This leads to a flux known as the Local Lax-Friedrichs, or Rusanov Flux \citep{Rusanov1962}
 \begin{equation}
-    F_{\mathrm{LLF}} = \frac{1}{2}(f(q_{i+1}^L) + f(q_i^R)) - \frac{1}{2}\alpha(q_i^R - q_{i+1}^L).
+    F_{\textnormal{LLF}} = \frac{1}{2}(f(q_{i+1}^L) + f(q_i^R)) - \frac{1}{2}\alpha(q_i^R - q_{i+1}^L).
 \end{equation}
 Here $q_i^L$ and $q_i^R$ represent the left- and right-hand reconstructed states of the $i$-th Riemann problem, $f$ represents the flux function of the conservation law, and $\alpha$ is the local maximum wave propagation speed for this system.
 Whilst $\alpha$ can often be formally derived from the Jacobian of $f$, it can often be replaced with either the maximum absolute value of the sum of the sound speed on each side of the interface and the local fluid velocity, or the average of these on both sides of the interface.

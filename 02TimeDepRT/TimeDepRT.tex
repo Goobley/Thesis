@@ -811,14 +811,14 @@ In many regions of the plasma absorption leads to a net gain in plasma energy, e
 It is therefore difficult to immediately assess the effect that a change in radiative loss has on the system.
 For this we adopt an absolute relative difference metric computed following
 \begin{equation}
-    \frac{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LE}}| - \sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LI}}|}{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{LE}}|}
+    \frac{\sum_{i\in\mathcal{C}}|\textnormal{loss}_{i,\,\textnormal{LE}}| - \sum_{i\in\mathcal{C}}|\textnormal{loss}_{i,\,\textnormal{LI}}|}{\sum_{i\in\mathcal{C}}|\textnormal{loss}_{i,\,\textnormal{LE}}|}
 \end{equation}
-where $\mathcal{C}$ is the set of calcium lines used on our model atom, and $\mathrm{loss}_i$ is the volumetric radiative loss of transition $i$.
+where $\mathcal{C}$ is the set of calcium lines used on our model atom, and $\textnormal{loss}_i$ is the volumetric radiative loss of transition $i$.
 This metric therefore quantifies the effect on the total energy being redistributed throughout the simulation (or leaving the simulation) from the different treatments of the \Caii{} lines.
 To assess the importance of this it is also essential to know the impact of the \Caii{} lines on the total energy balance of the simulation.
 Thus we also compute
 \begin{equation}
-    \frac{\sum_{i\in\mathcal{C}}|\mathrm{loss}_{i,\,\mathrm{\Radyn{}}}|}{\sum_j|\mathrm{loss}_{j,\,\mathrm{\Radyn{}}}|},
+    \frac{\sum_{i\in\mathcal{C}}|\textnormal{loss}_{i,\,\textnormal{\Radyn{}}}|}{\sum_j|\textnormal{loss}_{j,\,\textnormal{\Radyn{}}}|},
 \end{equation}
 which describes the proportion of all radiative losses considered with a detailed NLTE treatment in \Radyn{} (hydrogen, helium, and calcium, lines and continua) due to the calcium lines.
 These two metrics are plotted in the left- and right-hand panels respectively of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison} for the F9 and F10 simulations respectively.
@@ -1456,7 +1456,7 @@ For the LI model, the electron density is dependent on the rest of the atmospher
 In the LE case, where the hydrogen populations are considered fixed over each timestep, the electron density is also held fixed over the duration of the response functions.
 We note that the radiative response to the electron density could likely be computed using the method of \citet{Metcalf1990a} who present the following method for computing the response to electron density $n_e$
 \begin{equation}
-    \frac{\partial I}{\partial n_e} = \left( \frac{dI}{dT} - \frac{\partial I}{\partial T} \right)\left( \frac{d n_e}{dT} \right)^{-1},
+    \frac{\partial I}{\partial n_e} = \left( \frac{\dd{}I}{dT} - \frac{\partial I}{\partial T} \right)\left( \frac{\dd{}n_e}{dT} \right)^{-1},
 \end{equation}
 where these terms are defined as follows: the total derivative of $I$ with respect to $T$ can be evaluated from computing the response with charge conservation enabled, the partial derivative of $I$ with respect to $T$ from computing the response with $n_e$ fixed, and the derivative of $n_e$ with respect to $T$ can simply be computed from the change in $n_e$ during evaluation of the response function with charge conservation.
 This method was originally presented for computing the response of an intermediate parameter such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.

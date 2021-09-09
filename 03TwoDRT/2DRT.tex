@@ -84,7 +84,7 @@ The points $U$ and $D$ refer to them being ``upwind'' and ``downwind'' of the po
 This can be visualised by looking at the intersections of ray with the grid.
 To compute the intensity in the direction of this ray at point $O$ using the short-characteristics formulation we have, as in one-dimension,
 \begin{equation}\label{Eq:MiniScDefinition}
-   I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)}\, dt,
+   I_O = I_U e^{-(\tau_U - \tau_O)} + \int_{\tau_O}^{\tau_U} S(t) e^{-(t - \tau_O)} \mathop{\dd{}t},
 \end{equation}
 where these terms have their usual meanings, $I_O$ is the intensity in this direction at $O$, $I_U$ is the intensity in this direction at $U$, and we have dropped the angular and frequency dependencies for clarity.
 Thus, to compute the intensity at $O$, the intensity at $U$ must first be known.
