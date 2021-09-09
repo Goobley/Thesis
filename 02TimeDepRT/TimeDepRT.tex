@@ -849,7 +849,7 @@ This is sufficiently large to noticeably modify the atmospheric evolution, which
 
 \section{Case Study: Is Full Time-Dependence Necessary?}\label{Sec:TimeDepSE}
 
-\emph{The work in this section was undertaken in collaboration with P. Heinzel and J. Kašparová, in parallel with the study of \Caii{} photoionisation, as a result of the International Space Science Institute (ISSI) meeting: "Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving: led by G.S. Kerr and V. Polito.}
+\emph{The work in this section was undertaken in collaboration with P. Heinzel and J. Kašparová, in parallel with the study of \Caii{} photoionisation, as a result of the International Space Science Institute (ISSI) meeting: ``Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving'' led by G.S. Kerr and V. Polito.}
 
 It has been repeatedly shown that a time-dependent treatment of the hydrogen populations is necessary in RHD simulations.
 This was first investigated in wave heated chromospheric simulations by \citet{Carlsson2002}, who found a settling time for hydrogen to return to equilibrium ionisation of the order of thousands of seconds.
@@ -857,7 +857,7 @@ This was first investigated in wave heated chromospheric simulations by \citet{C
 They found that the time-dependence had a more significant effect than PRD on the Lyman lines, and could not be ignored.
 More recently \citet{Kerr2019a} have investigated the effects of a time-dependent treatment of the level populations of Mg\,\textsc{ii}, and found that whilst there were differences between the statistical equilibrium and time-dependent treatments, the statistical equilibrium treatment was sufficient for most stages of the flare models investigated.
 They conclude that for this line priority should be given to the PRD treatment.
-Similarly, \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$ from three-dimensional RMHD models, only an equation of state taking into account the non-equilibrium ionisation and its effects on the electron density is necessary, and under this condition a full 3D treatment is more important than complete time-dependence.
+Similarly, \citet{Leenaarts2012a} found that for a correct synthesis of H$\alpha$ from three-dimensional RMHD models, only an equation of state taking into account the non-equilibrium ionisation and its effects on the electron density is necessary, and under this condition a full three-dimensional treatment is more important than complete time-dependence.
 \citet{Wedemeyer-Bohm2011} investigated the non-equilibrium ionisation of calcium in quiet RADYN simulations and found that whilst the statistical equilibrium and time-dependent treatments gave different ionisation fractions, the difference in the synthesised line profiles was hardly discernable.
 
 It is therefore important to assess the importance of a time-dependent treatment of \Caii{} in solar flare models.
@@ -1235,8 +1235,8 @@ def rf_sym_range(rf):
 
 def plot_cf_rf_comparison(cfnData, rfTempLI, rfVlosLI,
                           rfTempLE, rfVlosLE, wavelengthLI, wavelengthLE):
-    fig, ax = plt.subplots(2, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.7))
-    fig.subplots_adjust(left=0.12, right=0.99)
+    fig, ax = plt.subplots(2, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
+    fig.subplots_adjust(left=0.12, right=0.99, hspace=0.09, wspace=0.12)
 
     wavelengthEdgesLI = np.concatenate(([wavelengthLI[0]],
                                         0.5 * (wavelengthLI[1:] + wavelengthLI[:-1]),
@@ -1333,8 +1333,10 @@ for i, t in enumerate(timesToPlot):
     lFig  = chRT.save_figure('F9RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
     if i == 0:
         lFig.caption = r'Comparative plots of the temperature and velocity response functions and the contribution function for the Ca\,\textsc{{ii}} \SI{{854.2}}{{\nano\metre}} line in the F9 simulation at $t=\SI{{{:d}}}{{\second}}$. The upper row shows the LI treatment, and the lower row the LE treatment. For the response functions, enhancement to a positive perturbation is shown in red, and reduction in blue. The same colour scale is used in all response function panels, and $\tau_\nu=1$ altitude is overlaid on each plot.'.format(t)
+        lFig.placement = 'tb'
     else:
         lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F9 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
+        lFig.placement = 'p'
     lFig.short_caption = r'Comparison of contribution, temperature response, and velocity response functions for the F9 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
 
 for i, t in enumerate(timesToPlot):
@@ -1344,11 +1346,12 @@ for i, t in enumerate(timesToPlot):
     lFig  = chRT.save_figure('F10RfComp{:d}s'.format(t), fig, fext='.pgf', dpi=500)
     lFig.caption = r'Comparative plots of the response and contribution functions, equivalent to Fig.~\ref{{Fig:F9RfComp11s}} for the F10 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
     lFig.short_caption = r'Comparison of contribution, temperature response, and velocity response functions for the F10 simulation at $t=\SI{{{:d}}}{{\second}}$.'.format(t)
+    lFig.placement = 'p' if i == 0 else 'tbp'
 
 def plot_stat_eq_rf_comp(cfnData, rfTimeDep, rfStatEqCc, rfStatEqNeFix,
                          wavelengthLI):
-    fig, ax = plt.subplots(1, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.45))
-    fig.subplots_adjust(bottom=0.13, left=0.12, right=0.99)
+    fig, ax = plt.subplots(1, 3, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.4))
+    fig.subplots_adjust(bottom=0.16, left=0.12, right=0.99, wspace=0.12)
 
     wavelengthEdgesLI = np.concatenate(([wavelengthLI[0]],
                                         0.5 * (wavelengthLI[1:] + wavelengthLI[:-1]),
@@ -1418,13 +1421,6 @@ lFig.short_caption = r'Comparison of time-dependent and statistical equilibrium 
 lFig.placement = 'tbp'
 \end{pycode}
 
-\py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
-
-\py[TimeDepRT]|chRT.get_figure('F9RfComp20s')|
-
-\py[TimeDepRT]|chRT.get_figure('F10RfComp11s')|
-
-\py[TimeDepRT]|chRT.get_figure('F10RfComp20s')|
 % spell-checker: enable
 
 In Section~\ref{Sec:TimeDep8542Profiles} the contribution function was used to investigate the effects of the LI treatment on the \CaLine{} line.
@@ -1448,6 +1444,8 @@ In the analysis of \citet{Carlsson2002} the full rate matrix was found to signif
 \citet{Judge2005} applied a simplified variant of the mathematical framework of \citet{Gayley1990} showing how, at high optical depths, NLTE radiative transfer effects can reduce the radiative decay rate.
 Extreme care should therefore be taken when trying to make quantitative use of these time-dependent response functions, and the meaning of this timestep parameter, but for now we shall focus on qualitative aspects.
 
+\py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
+
 Time-dependent response functions were computed for perturbations in temperature and velocity to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
 These properties were chosen as they are important but ``relatively'' free parameters in the system.
 It is also common to compute the response functions to electron density, microturbulent velocity and magnetic field, however these parameters are either not considered or truly free.
@@ -1462,6 +1460,11 @@ where these terms are defined as follows: the total derivative of $I$ with respe
 This method was originally presented for computing the response of an intermediate parameter such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.
 In the context of inversions, this additional response is very useful, however our RHD models should normally remain self-consistent.
 Nevertheless, this could also be useful for interpretation, but is $\sim2\times$ more computationally costly than other parameters due to the requirement of additional derivatives.
+
+\py[TimeDepRT]|chRT.get_figure('F9RfComp20s')|
+\py[TimeDepRT]|chRT.get_figure('F10RfComp11s')|
+
+\py[TimeDepRT]|chRT.get_figure('F10RfComp20s')|
 
 Our contribution and response functions are shown in Fig.~\ref{Fig:F9RfComp11s} -- \ref{Fig:F10RfComp20s} (LI in the upper rows and LE in the lower).
 In the response function plots red shows an enhancement in outgoing radiation as a response to an increase in the perturbed parameter at the particular depth, whereas blue indicates a reduction.
@@ -1489,8 +1492,6 @@ The structure in the line core is far more complex, and has a non-trivial respon
 This is most pronounced in the F10 response function at \SI{11}{\second} (Fig.~\ref{Fig:F10RfComp11s}).
 There are also responses due to changes in velocity from well below the $\tau_\nu=1$ level in the line core which produce changes in opacity in these regions affecting the radiation field in the line forming region.
 
-\py[TimeDepRT]|chRT.get_figure('StatEqRfComparison')|
-
 The difficulties of a quantitative analysis become clear when looking at the scales of two different LI temperature response functions from the F10 simulation at $t=\SI{11}{\s}$.
 Normalising the response to the line profile, for a timestep of \SI{10}{\milli\s} the maximum response in the \CaLine{} line was $8.84\times{}10^{-5}\,\si{\per\kelvin}$, and for
 a timestep of \SI{0.1}{\milli\s} this was $8.86\times{}10^{-5}\,\si{\per\kelvin}$.
@@ -1500,6 +1501,8 @@ This consistency poses problems to recasting these response functions as a fract
 
 More interestingly, the \Ha{} response function computed for these two timesteps was also found to be almost identical, despite the accepted need for a time-dependent treatment.
 It is probable that we are seeing results similar to those of \citet{Leenaarts2012a}, who found that for RMHD simulations \Ha{} can be synthesised correctly in statistical equilibrium if the equation of state takes into account non-equilibrium ionisation.
+
+\py[TimeDepRT]|chRT.get_figure('StatEqRfComparison')|
 
 This leads to the question of whether it is possible to employ statistical equilibrium response functions in these simulations.
 These are compared both with and without charge conservation to the time-dependent temperature response function for the \CaLine{} line in the F10 atmosphere at $t=\SI{11}{\s}$ in Fig.~\ref{Fig:StatEqRfComparison}.

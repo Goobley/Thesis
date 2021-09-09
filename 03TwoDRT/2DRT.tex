@@ -659,13 +659,6 @@ The boundary condition radiation for the almost vertical rays used in the right-
 
 \section{2D Simulation Configuration}
 
-\begin{figure}
-\centering
-\subimport{03TwoDRT/}{SimConfig}
-\caption{Configuration of the two-dimensional simulation showing the flaring boundary condition.}
-\label{Fig:2DSimConfig}
-\end{figure}
-
 Flares produce huge changes in the radiation field, in both lines and continua.
 They are typically modelled in a plane-parallel context and we analyse the radiation leaving the top of this plane-parallel atmosphere.
 In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} in diameter \citep{Jing2016} and represent an estimate of the conditions in the core of a heated flux-tube.
@@ -682,6 +675,13 @@ This model can then serve as a ``first-order'' approximate investigation of the 
 Modelling undertaken by \citet{Leenaarts2012a} suggests that a three-dimensional treatment of \Ha{} in quiet Sun models yields very different synthetic line profiles than a 1.5D column-by-column plane-parallel treatment.
 \citet{Bjorgen2019} found that these differences were less significant for the bright structure of an active region \citep[Based on the simulations of][]{Cheung2019}, but definition appears to be lost in regions adjacent to this structure when a 1.5D treatment is applied.
 It is precisely the effects of a bright region on the neighbouring atmosphere that we wish to investigate, and a simple two-dimensional model should reveal the importance and possible time-dependence of reactions to this radiation.
+
+\begin{figure}[tbp]
+\centering
+\subimport{03TwoDRT/}{SimConfig}
+\caption{Configuration of the two-dimensional simulation showing the flaring boundary condition.}
+\label{Fig:2DSimConfig}
+\end{figure}
 
 Our simulation is set up as shown in Fig.~\ref{Fig:2DSimConfig}: the primary simulation domain is a \SI{2}{\mega\metre} wide slab of plasma initially set to the quiet sun atmosphere used for the RADYN simulation.
 On one side of this slab we place the RADYN simulation, and compute the intensity along each ray of the angular quadrature used for the 2D slab, at each depth in the simulation.
@@ -714,7 +714,7 @@ We can use the symmetric definition of these to synthesise the radiation observe
 This is shown in Fig.~\ref{Fig:2DSimFlipped}; for an observation inclined as shown we are observing the radiation along the blue arrows.
 For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.
 
-\begin{figure}[htb]
+\begin{figure}[tbp]
 \centering
 \subimport{03TwoDRT/}{SimFlipped}
 \caption[Configuration of two-dimensional simulation to produce radiation that would be observed by a slit spectrograph looking across the model flare.]{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere. The angles of the rays shown in this diagram are exaggerated relative to those used in the results presented later, to better illustrate the configuration.}
@@ -756,7 +756,7 @@ def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
                     angularIdxDown, enhancementLine=0.4, enhancementLineDown=0.1):
     xAxis = d['xAxis']
     xEdges = np.concatenate(([xAxis[0]], 0.5 * (xAxis[1:] + xAxis[:-1]), [xAxis[-1]])) / 1e6
-    spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75, 1], figure=fig)
+    spec = gridspec.GridSpec(nrows=3, ncols=2, width_ratios=[1.75, 1], hspace=0.3, figure=fig)
     xAxis = d['xAxis'][...] / 1e6
     wavelength = d['wavelength']
 
@@ -827,7 +827,7 @@ def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
     ax.tick_params(axis='x', labelbottom=False)
     ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
 #     ax.set_ylim(None, 1.5)
-    cax = fig.colorbar(mesh, ax=ax)
+    cax = fig.colorbar(mesh, ax=ax, pad=0.02, aspect=10)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[1, 0])
@@ -843,7 +843,7 @@ def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
     ax.tick_params(axis='x', labelbottom=False)
     ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
 #     ax.set_ylim(None, 1.5)
-    cax = fig.colorbar(mesh, ax=ax)
+    cax = fig.colorbar(mesh, ax=ax, pad=0.02, aspect=10)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[2, 0])
@@ -859,7 +859,7 @@ def plot_2d_imaging(fig, d, wl, wlOffset, position, angularIdx,
     ax.set_xlabel('Time [s]')
     ax.set_ylabel('$x$ [Mm]', fontdict={'fontsize': 11})
 #     ax.set_ylim(None, 1.5)
-    cax = fig.colorbar(mesh, ax=ax)
+    cax = fig.colorbar(mesh, ax=ax, pad=0.02, aspect=10)
     cax.ax.tick_params(axis='y', direction='out')
 
     ax = fig.add_subplot(spec[:, 1])
@@ -890,7 +890,7 @@ fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F9 case. The left-hand column shows the intensity enhancement over quiet values on each side of the flare (red line) for the three different wavelengths indicated on the right-hand panel with vertical lines. The blue lines show the extent of a 40\% enhancement over the quiet boundary condition, and the orange a 10\% enhancement. The right-hand panel shows the spectral output at position $x=\SI{500}{\kilo\metre}$ at different times in the simulation.'
 lFig.short_caption = r'\Ha{} spectral line and variation in the 2D F9 simulation.'
-lFig.placement = 'htb'
+lFig.placement = 'tb'
 \end{pycode}
 % spell-checker: enable
 
@@ -902,7 +902,7 @@ fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF9', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F9 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.short_caption = r'\CaLine{} spectral line and variation in the 2D F9 simulation.'
-lFig.placement = 'htb'
+lFig.placement = 'ptb'
 \end{pycode}
 
 \begin{pycode}[2DRT]
@@ -913,7 +913,7 @@ fig.tight_layout()
 lFig = ch2DRT.save_figure('2DHaF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\Ha{} for 2D F10 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.short_caption = r'\Ha{} spectral line and variation in the 2D F10 simulation.'
-lFig.placement = 'htb'
+lFig.placement = 'ptb'
 \end{pycode}
 
 
@@ -924,7 +924,7 @@ fig.tight_layout()
 lFig = ch2DRT.save_figure('2DCaF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r'\CaLine{} for 2D F10 case. The panels show equivalent information to Fig.~\ref{Fig:2DHaF9}.'
 lFig.short_caption = r'\CaLine{} spectral line and variation in the 2D F10 simulation.'
-lFig.placement = 'htb'
+lFig.placement = 'ptb'
 \end{pycode}
 
 \begin{pycode}[2DRT]
@@ -967,8 +967,8 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('HaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\Ha{} intensity on both sides of the flare (indicated by the red line) at different points during the F9 simulation. The intensity scale is constant in each panel."
-lFig.caption = r'\Ha{} spectroscopy in the 2D F9 simulation.'
-lFig.placement = 'htbp'
+lFig.short_caption = r'\Ha{} spectroscopy in the 2D F9 simulation.'
+lFig.placement = 'tbp'
 
 fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeCa = (854.3444, 854.5444)
@@ -991,8 +991,8 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('CaFull2dPlot', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity in the F9 simulation shown equivalently to Fig.~\ref{Fig:HaFull2dPlot}."
-lFig.caption = r'\CaLine{} spectroscopy in the 2D F9 simulation.'
-lFig.placement = 'htbp'
+lFig.short_caption = r'\CaLine{} spectroscopy in the 2D F9 simulation.'
+lFig.placement = 'tbp'
 
 fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeHa = (656.326, 656.626)
@@ -1015,8 +1015,8 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('HaFull2dPlotF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\Ha{} intensity in the F10 simulation shown equivalently to Fig.~\ref{Fig:HaFull2dPlot}."
-lFig.caption = r'\Ha{} spectroscopy in the 2D F10 simulation.'
-lFig.placement = 'htbp'
+lFig.short_caption = r'\Ha{} spectroscopy in the 2D F10 simulation.'
+lFig.placement = 'tbp'
 
 fig, ax = plt.subplots(2,2, figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.6))
 waveRangeCa = (854.3444, 854.5444)
@@ -1039,8 +1039,8 @@ ax[1,1].set_yticklabels([])
 
 lFig = ch2DRT.save_figure('CaFull2dPlotF10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"\CaLine{} intensity in the F10 simulation shown equivalently to Fig.~\ref{Fig:HaFull2dPlot}."
-lFig.caption = r'\CaLine{} spectroscopy in the 2D F10 simulation.'
-lFig.placement = 'htbp'
+lFig.short_caption = r'\CaLine{} spectroscopy in the 2D F10 simulation.'
+lFig.placement = 'tbp'
 \end{pycode}
 % spell-checker: enable
 
@@ -1063,10 +1063,6 @@ lFig.short_caption = r'Spectroscopy at $t=\SI{10}{\second}$ in the F10 model wit
 %spell-checker: enable
 
 \py[2DRT]|ch2DRT.get_figure('2DHaF9')|
-\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
-\py[2DRT]|ch2DRT.get_figure('2DHaF10')|
-\py[2DRT]|ch2DRT.get_figure('2DCaF10')|
-
 
 Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10} show the \Ha{} and \CaLine{} spectral lines in the F9 and F10 simulations respectively.
 The left-hand column shows the intensity enhancement in three different wavelengths as a function of space and time, configured as described in Fig.~\ref{Fig:2DSimFlipped} with the reflected side shown in negative $x$.
@@ -1076,11 +1072,17 @@ This left-hand panel also shows the emergent intensity in this line at $x=\SI{50
 Blue and orange lines are also plotted on the left-hand panel and indicate the distance at which an enhancement of 40\% and 10\% (respectively) over the quiet boundary are observed for this wavelength and time in the simulation.
 The different thresholds are used for the positive and negative $x$ regions respectively as the scale of the enhancements vary significantly between these, with the effect in the negative $x$ region being notably smaller.
 
+\py[2DRT]|ch2DRT.get_figure('2DCaF9')|
+
+\py[2DRT]|ch2DRT.get_figure('2DHaF10')|
+
 It is clear from these figures that in all cases the enhancement in the line core is significantly larger in all of value, extent (dimension in $x$), and duration than the wing feature enhancements, with both the positive and negative $x$ enhancements remaining over \SI{0.5}{\mega\metre} from the flare for the entire duration.
 The enhancements in the wing features are much smaller in extent and more transient, especially for \Ha{}, where the blue wing feature near the flaring boundary enters a reduction relative to the quiet boundary value soon after heating ends in the flare model ($t=\SI{10}{\second}$).
 In \CaLine{} both the blue and red wing features in positive $x$ present a similar extent, but the red wing feature persists for the entire simulation whereas the blue feature vanishes around $t=\SI{30}{\second}$.
 There are interesting differences in the negative $x$ enhancements for \CaLine{} between the F9 and F10 models.
 In the former there is an enhancement only during the flare heating period, whereas in the latter there is no significant enhancement until after the heating has ended, and this persists for the remainder of the simulation.
+
+\py[2DRT]|ch2DRT.get_figure('2DCaF10')|
 
 The \Ha{} line profile in the F9 simulation (Fig.~\ref{Fig:2DHaF9}) synthesised at $x=\SI{500}{\kilo\metre}$ shows that over the course of the simulation the line core intensity increases, but does not rise above the continuum value, and two secondary features form in the red and blue wings during the flare heating.
 These decay rapidly after heating ends, dropping to below the initial quiet value at our blue wing sampling.
@@ -1133,7 +1135,6 @@ Regions $b$, $c$, and $C$ do not change substantially over the course of the sim
 
 \py[2DRT]|ch2DRT.get_figure('HaFull2dPlotF10')|
 \py[2DRT]|ch2DRT.get_figure('CaFull2dPlotF10')|
-\py[2DRT]|ch2DRT.get_figure('ZeroBcSpectro')|
 
 The \Ha{} and \CaLine{} line profiles from the F10 simulation are shown in Figs.~\ref{Fig:HaFull2dPlotF10} and \ref{Fig:CaFull2dPlotF10} respectively.
 The results are similar to those from the F9 simulations, but mostly exaggerated.
@@ -1158,6 +1159,8 @@ The line core near the flare is shallower and narrower than in the F9 case, but 
 
 We see that these optical line profiles can present significant core enhancements up to \SI{1}{\mega\metre} away from the flare boundary in these simulations when looking at a viewing angle that intersects this boundary (i.e. the positive $x$ region).
 For viewing angles where this is not the case (the negative $x$ region), the effects on the line profile are much more modest, but measurable line core enhancements can still be detected over \SI{1}{\mega\metre} from the flare with wing effects up to \SI{0.4}{\mega\metre} from the flaring boundary.
+
+\py[2DRT]|ch2DRT.get_figure('ZeroBcSpectro')|
 
 As some of the rays emerging from positive $x$ region intersect the flaring boundary condition it is important to ascertain to what extent we are observing the ``conventional'' plane-parallel simulation, and what is due to two-dimensional effects.
 To assess this we have synthesised the spectra of the \Ha{} and \CaLine{} lines using the populations computed for $t=\SI{10}{\second}$ in the F10 simulation, but setting the radiation from the boundary conditions to zero.
@@ -1351,11 +1354,12 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ca = CaII()
     h = H_6()
 
-    spec = gridspec.GridSpec(nrows=2, ncols=9, width_ratios=[15, 1, 15, 1, 15, 1, 3, 15, 1])
+    spec = gridspec.GridSpec(nrows=2, ncols=9, width_ratios=[15, 1, 15, 1, 15, 1, 4, 15, 1],
+                             hspace=0.11, left=0.09)
 
     ax = fig.add_subplot(spec[0, 0])
     line = h.lines[4]
-    waveRange = (-0.2, 0.2)
+    waveRange = (-0.205, 0.205)
     lambda0 = line.lambda0
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
@@ -1385,14 +1389,13 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx*2], fact), '--', c='C2', alpha=0.6)
-    ax.set_xlim(xlim)
+    ax.set_xlim(*waveRange)
     ax.set_ylabel('$z$ [Mm]')
     ax.text(-0.19, 1.96, r'H$\alpha$', va='top', ha='left', fontsize=10)
     ax.text(0.19, 1.96, r'C$_\mathrm{I}$', va='top', ha='right', fontsize=10)
 
     ax = fig.add_subplot(spec[0, 2])
     line = h.lines[4]
-    waveRange = (-0.2, 0.2)
     lambda0 = line.lambda0
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
@@ -1402,7 +1405,8 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
     ax.pcolormesh(wlEdges[lowerIdx:higherIdx+1]-lambda0, zEdges,
                   chiTau,
                   cmap='Blues', vmin=minVal, vmax=maxVal, rasterized=True)
-    xlim = ax.get_xlim()
+    # xlim = ax.get_xlim()
+    ax.set_xlim(*waveRange)
     ax.set_ylim(None, 2)
     ax.set_yticklabels([])
     ax.text(0.19, 1.96, r'$\chi_\nu / \tau_\nu$', va='top', ha='right', fontsize=10)
@@ -1436,7 +1440,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
 
     ax = fig.add_subplot(spec[1, 0])
     line = ca.lines[-1]
-    waveRange = (-0.1, 0.1)
+    waveRange = (-0.105, 0.105)
     lambda0 = line.lambda0
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
@@ -1461,14 +1465,16 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
             scale_profile_fact(dataRad['I'][tIdx, :, 1, positionIdx*2], fact), '--', c='C1', alpha=0.6)
     ax.plot(wavelength - lambda0,
             scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx], fact), c='C2', alpha=0.6)
-    ax.set_xlim(xlim)
-    ax.text(-0.095, 1.96, r'Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre}', va='top', ha='left', fontsize=10)
+    ax.plot(wavelength - lambda0,
+            scale_profile_fact(dataRad['I'][tIdx, :, 3, positionIdx*2], fact), '--', c='C2', alpha=0.6)
+    # ax.set_xlim(xlim)
+    ax.set_xlim(*waveRange)
+    ax.text(-0.1, 1.96, r'Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre}', va='top', ha='left', fontsize=10)
     ax.set_ylabel('$z$ [Mm]')
     ax.set_xlabel('$\Delta\lambda$ [nm]')
 
     ax = fig.add_subplot(spec[1, 2])
     line = ca.lines[-1]
-    waveRange = (-0.1, 0.1)
     lambda0 = line.lambda0
     lowerIdx = np.searchsorted(wlEdges-lambda0, waveRange[0]) - 1
     higherIdx = np.searchsorted(wlEdges-lambda0, waveRange[1]) + 1
@@ -1479,6 +1485,7 @@ def plot_rel_change_pops(fig, data, dataRad, atmost, time, hIdxU, hIdxL, caIdxU,
                   cmap='Blues', vmax=maxVal, rasterized=True)
     xlim = ax.get_xlim()
     ax.set_ylim(None, 2)
+    ax.set_xlim(*waveRange)
     ax.set_yticklabels([])
     ax.set_xlabel(r'$\Delta\lambda$ [nm]')
 
@@ -1519,7 +1526,7 @@ plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdx
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation at $t=\SI{10}{\second}$. The $\tau=1$ line and initial line profile are plotted in red and dashed black respectively in the first column. The pink line profile shows the flaring boundary condition. The other solid and dashed line profiles in the first panel are synthesised at 200, and \SI{400}{\kilo\metre} from the flaring boundary respectively, with orange being positive $x$ and green being negative $x$."
 lFig.short_caption = r'Contribution function, $\chi_\nu/\tau_\nu$ and relative population changes at $t=\SI{10}{\second}$ in the F9 simulation.'
-lFig.placement = 'htbp'
+lFig.placement = 'ptb'
 
 atmostF10 = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
 atmostF10.to_SI()
@@ -1530,7 +1537,7 @@ plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmostF10, 10, hIdxU=2, hIdxL
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to atomic populations equivalent to Fig.~\ref{Fig:2dLevelsT10} for the F10 simulation at $t=\SI{10}{\second}$."
 lFig.short_caption = r'Contribution function, $\chi_\nu/\tau_\nu$, and relative population changes at $t=\SI{10}{\second}$ in the F10 simulation.'
-lFig.placement =  'htbp'
+lFig.placement =  'ptb'
 
 \end{pycode}
 
@@ -1831,6 +1838,7 @@ plot_stat_eq_comparison(fig, dataRad, statEq2d, (656.376, 656.576))
 
 lFig = ch2DRT.save_figure('2dCompareStatEqTimeDep', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Comparison of statistical equilibrium and time-dependent treatments at $t=\SI{10}{\second}$ for the H$\alpha$ line in the F9 model.'
+lFig.placement = 'tbp'
 
 from scipy.integrate import trapezoid
 import astropy.units as u
@@ -1914,12 +1922,14 @@ def plot_integrated_line_intensity(fig, dataRadTd, dataRad, dataRad15, centralWa
 
 statEq2d15= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopy_besser_MsLw2d_thesis.zip'))
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+fig.subplots_adjust(right=0.95)
 plot_integrated_line_intensity(fig, dataRad, statEq2d, statEq2d15, 656.476, 0.2)
 lFig = ch2DRT.save_figure('2dCompareIntegratedHa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of H$\alpha$ lines shown in Fig.~\ref{Fig:2dCompareStatEqTimeDep} as a function of $x$ position.'
 lFig.short_caption = r'Comparison of statistical equilibrium and time-dependent treatments of \Ha{} as a function of $x$ position.'
 
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+fig.subplots_adjust(right=0.95)
 plot_integrated_line_intensity(fig, dataRad, statEq2d, statEq2d15, 854.4444, 0.1)
 lFig = ch2DRT.save_figure('2dCompareIntegratedCa', fig, fext='.pgf')
 lFig.caption = r'Integrated intensity of Ca\,\textsc{ii}\,\SI{854.2}{\nano\metre} lines treated with time dependence and statistical equilibrium as a function of $x$ position, analagous to Fig.~\ref{Fig:2dCompareIntegratedHa}.'
@@ -1928,7 +1938,9 @@ lFig.short_caption = r'Comparison of statistical equilibrium and time-dependent 
 \end{pycode}
 
 \py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDep')|
+
 \py[2DRT]|ch2DRT.get_figure('2dCompareIntegratedHa')|
+
 \py[2DRT]|ch2DRT.get_figure('2dCompareIntegratedCa')|
 % spell-checker: enable
 
@@ -1971,6 +1983,7 @@ lFig.placement = 'htbp'
 \end{pycode}
 
 \py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDepLoadNe')|
+
 \py[2DRT]|ch2DRT.get_figure('2dCompareStatEqTimeDepLoadNeCa')|
 %spell-checker: enable
 
@@ -2052,6 +2065,7 @@ plot_2d_intensity_ratio(fig, statEq2d, statEq2d_81, (656.376, 656.576), (854.344
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison10s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{10}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{10}{\second}$ in the F9 simulation.'
+lFig.placement = 'ptb'
 
 statEq2d05 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
 statEq2d05_81= zarr.convenience.open(ch2DRT.data_file('F9_flat_450_81_StatEqUpdated_t05_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
@@ -2061,6 +2075,7 @@ plot_2d_intensity_ratio(fig, statEq2d05, statEq2d05_81, (656.376, 656.576), (854
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison05s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{5}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{5}{\second}$ in the F9 simulation.'
+lFig.placement = 'tbp'
 
 
 statEq2d15 = zarr.convenience.open(ch2DRT.data_file('F9_flat_450_41_StatEqUpdated_t15_1stColCopyTrue_besser_MsLw2d_thesis.zip'))
@@ -2071,12 +2086,10 @@ plot_2d_intensity_ratio(fig, statEq2d15, statEq2d15_81, (656.376, 656.576), (854
 lFig = ch2DRT.save_figure('HorizontalResolutionComparison15s', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ratio of outgoing statistical equilibrium radiation using 41 and 81 horizontal points in \Ha{} (left) and \CaLine{} (right) at $t=\SI{15}{\second}$. The number in the upper-left corner is the maxmum change in intensity in each panel (i.e. the absolute value of the ratio presented in the figure subtracted from unity.)'
 lFig.short_caption = r'Ratio of outgoing radiation using 41 and 81 horizontal points at $t=\SI{15}{\second}$ in the F9 simulation.'
+lFig.placement = 'ptb'
 
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison05s')|
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison10s')|
-\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison15s')|
 % spell-checker: enable
 
 Whilst it would be nice to evaluate the radiation with arbitrary horizontal precision, the limitations of computer performance do not allow this.
@@ -2084,11 +2097,16 @@ Clearly, we want to investigate the problem at a resolution similar or better th
 If the problem produces smoothly varying solutions then it is not necessarily required to run the simulation at the same resolution as the observations; however we anticipate fine features that only span one or two pixels, and thus use a \SI{50}{\kilo\metre} element spacing as our baseline.
 This is similar to the \SI{42}{\kilo\metre} resolution provided by CRISP observation against which our results will be compared.
 
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison05s')|
+
 To analyse whether this resolution appears sufficient we shall compare the statistical equilibrium solution to our problem (as this only requires the calculation of a single timestep, rather than the entire model) at a horizontal grid spacing of both \SI{50}{\kilo\metre} and \SI{25}{\kilo\metre} at several timesteps in the F9 simulation and compare the outgoing radiation.
 It is reasonable to use a statistical equilibrium treatment for this as we are primarily testing the performance of the formal solver on this atmospheric configuration, and it should converge to similar solutions in both cases if sufficient resolution is used.
 The incident radiation at the $x=\SI{0}{\mega\metre}$ boundary is the same in both instances and the atmospheric parameters are horizontally uniform, although the electron density in the slab is allowed to vary through charge conservation.
 In Figs.~\ref{Fig:HorizontalResolutionComparison05s}--\ref{Fig:HorizontalResolutionComparison15s} we show the ratio of the outgoing radiation from the 41 point (\SI{50}{\kilo\metre}) and 81 point (\SI{25}{\kilo\metre}) models at $t=\{5, 10, \SI{15}{\second}\}$ respectively.
 The maximum fractional error is shown in the upper-left corner of each panel.
+
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison10s')|
+\py[2DRT]|ch2DRT.get_figure('HorizontalResolutionComparison15s')|
 
 The location of the peak differences between the treatments in the positive and negative $x$ regions appear to follow a pattern similar to those considered in Sec.~\ref{Sec:2dTimeDepSE}, with the largest differences in positive $x$ appearing in region $B$ while those in negative $x$ appear in $a$.
 The maximum difference is found to be an enhancement of around 14\% in both line cores at $x\approx\SI{0.6}{\mega\metre}$ for the ratio of lower resolution simulation to the higher resolution.
@@ -2205,7 +2223,7 @@ def slice_plots(slices, times, wingOffset=1, wingOffsetNm=0.01, sliceY=50):
 
 def plot_enhancement_dists(dists, times, wingOffsetNm=0.01):
     distsBlue, distsCore, distsWing = dists
-    plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
+    fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 
     timeObjs = [Time(t) for t in times]
     timePlots = [t.plot_date for t in timeObjs]
@@ -2220,6 +2238,7 @@ def plot_enhancement_dists(dists, times, wingOffsetNm=0.01):
 #     plt.title('Extent of 40% enhancement in Ca ɪɪ 8542 $\AA$')
     plt.legend()
     plt.grid()
+    return fig
 
 def plot_enhancement_dists_sim(fig, d, wl, wlOffset, position,
                                angularIdx, enhancementLine=0.4, dashed=False):
@@ -2281,41 +2300,43 @@ fig, distsCa = slice_plots(sliceData['Ca'], sliceData['times'], wingOffset=2, wi
 lFig = ch2DRT.save_figure('2dCrispCaSliceEnhance', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Extent of enhancement in Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
 lFig.short_caption = r'Extent of enhancement in \CaLine{} for selected region.'
-lFig.placement = 'htbp'
+lFig.placement = 'tbp'
 
 fig = plot_enhancement_dists(distsCa, sliceData['times'], wingOffsetNm=0.02)
+fig.gca().set_title(r'Ca\,\textsc{ii} 854.2\,nm')
 lFig = ch2DRT.save_figure('2dCrispCaEnhanceDists', fig, fext='.pgf')
 lFig.caption = r'Offset between the enhancement of the blue and red wings of the \CaLine{} line and the line core for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
 lFig.short_caption = r'Offset between the enhancement of the blue and red wings of the \CaLine{} line and the line core for the labelled region.'
-lFig.placement = 'htbp'
+lFig.placement = 'ptb'
 
 fig, distsHa = slice_plots(sliceData['Ca'], sliceData['times'], wingOffset=3, wingOffsetNm=0.06)
 fig = plot_enhancement_dists(distsHa, sliceData['times'], wingOffsetNm=0.06)
+fig.gca().set_title(r'H$\alpha$')
 lFig = ch2DRT.save_figure('2dCrispHaEnhanceDists', fig, fext='.pgf')
 lFig.caption = r'Offset between the enhancement of the blue and red wings of the H$\alpha$ line and the line core for the region labelled in Fig.~\ref{Fig:2dCaContext}.'
 lFig.short_caption = r'Offset between the enhancement of the blue and red wings of the \Ha{} line and the line core for the labelled region.'
-lFig.placement = 'htbp'
+lFig.placement = 'ptb'
 
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_enhancement_dists_sim(fig, dataRad, 927, 7, 2, 1)
 plot_enhancement_dists_sim(fig, dataRadF10, 927, 7, 2, 1, dashed=True)
+fig.gca().set_title(r'Ca\,\textsc{ii} 854.2\,nm')
 lFig = ch2DRT.save_figure('2dSimCaEnhanceDists', fext='.pgf')
 lFig.caption = r'Offset between the enhancement of the blue and red wings of the Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line and the line core. The dashed lines show the F10 simulation, and the solid lines the F9.'
 lFig.short_caption = r'Offset between the enhancement of the blue and red wings of the \CaLine{} line and the line core in the simulations.'
-lFig.placement = 'htbp'
+lFig.placement = 'ptb'
 
 fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1, height_ratio=0.55))
 plot_enhancement_dists_sim(fig, dataRad, 743, 15, 2, 1)
 plot_enhancement_dists_sim(fig, dataRadF10, 743, 15, 2, 1, dashed=True)
+fig.gca().set_title(r'H$\alpha$')
 lFig = ch2DRT.save_figure('2dSimHaEnhanceDists', fext='.pgf')
 lFig.caption = r'Offset between the enhancement of the blue and red wings of the H$\alpha$ line and the line core. The dashed lines show the F10 simulation, and the solid lines the F9.'
 lFig.short_caption = r'Offset between the enhancement of the blue and red wings of the \Ha{} line and the line core in the simulations.'
-lFig.placement = 'htbp'
+lFig.placement = 'ptb'
 \end{pycode}
 
 \py[2DRT]|ch2DRT.get_figure('2dCrispCaSliceEnhance')|
-\py[2DRT]|ch2DRT.get_figure('2dCrispCaEnhanceDists')|
-\py[2DRT]|ch2DRT.get_figure('2dCrispHaEnhanceDists')|
 % spell-checker: enable
 
 Whilst any real world flare situation is far more complex than the simplified two-dimensional model presented in the previous section, we will compare these results against observations of the two-ribbon M1.1 flare SOL 20140906T17:09 from the CRISP instrument, observed in \Ha{} and \CaLine{}.
@@ -2334,6 +2355,11 @@ This extent is shown as the blue lines in Fig.~\ref{Fig:2dCrispCaSliceEnhance}.
 The bright expansion of the flare ribbon can be seen on these plots as the triangular region that collapses rapidly around 17:11.
 This figure is similar in concept to the imaging plots (Figs.~\ref{Fig:2DHaF9}--\ref{Fig:2DCaF10}) produced from our models, where the ``ribbon'' was held at the $x=0$ boundary.
 
+% spell-checker: disable
+\py[2DRT]|ch2DRT.get_figure('2dCrispCaEnhanceDists')|
+\py[2DRT]|ch2DRT.get_figure('2dCrispHaEnhanceDists')|
+% spell-checker: enable
+
 We can compare the differences between the extents for these different spectral positions on both lines to investigate the differences in emission throughout the slab.
 This is shown for \CaLine{} and \Ha{} in Figs.~\ref{Fig:2dCrispCaEnhanceDists} and \ref{Fig:2dCrispHaEnhanceDists} respectively.
 The comparison here is against the line core, so an offset of $0$\,{}px implies that the enhancement is co-spatial in the line core and at this wavelength.
@@ -2341,11 +2367,6 @@ For \CaLine{}, prior to 17:05, there is little difference between both line wing
 As the flare peaks, the enhancement of the line core extends consistently $5-10$\,{}px further from the ribbon than either of the wings, and this trend continues for the remainder of the dataset.
 For \Ha{}, before $\sim$17:07, the red wing enhancement remains $\sim$15\,{}px behind the line core, whilst the blue wing starts in this region, then extends past the line core at $\sim$17:00 before falling back to a similar offset to the red wing at $\sim$17:07.
 From this point onwards, both wings remain at a similar offset, typically remaining $10-30$\,{}px less extended than the line core.
-
-%spell-checker: disable
-\py[2DRT]|ch2DRT.get_figure('2dSimCaEnhanceDists')|
-\py[2DRT]|ch2DRT.get_figure('2dSimHaEnhanceDists')|
-%spell-checker: enable
 
 We can compute this same metric for the two simulations presented in this chapter, and these are shown in Figs.~\ref{Fig:2dSimCaEnhanceDists} and \ref{Fig:2dSimHaEnhanceDists} respectively for the \CaLine{} and \Ha{} results.
 The red and blue wings are again shown with the same colours, the solid lines refer to the F9 simulation and the dashed lines the F10 simulation.
@@ -2355,6 +2376,10 @@ If the same viewing angle is used with the simulation then all of the ``pixels''
 Due to the prohibitive computational cost of this (a similar horizontal spatial resolution would still be required), we instead choose to compare the simulations using this smaller viewing angle as a ``first-order approximation'' of the problem.
 In both cases, the size of a pixel is similar (\SI{42}{\kilo\metre} for CRISP and \SI{50}{\kilo\metre} in the simulation); whilst the pixels in the data are nominally smaller this does not include the effects of viewing the inclined solar surface so we compare these extents in pixels directly.
 
+%spell-checker: disable
+\py[2DRT]|ch2DRT.get_figure('2dSimCaEnhanceDists')|
+\py[2DRT]|ch2DRT.get_figure('2dSimHaEnhanceDists')|
+%spell-checker: enable
 
 The \CaLine{} line behaves similarly in both the F9 and F10 simulations, with the line core immediately extending significantly further than the wings (by $9-13$\,{}px) as the heating begins.
 Around $t=\SI{30}{\second}$ the extent of the blue wing enhancement decreases significantly, whilst the red wing enhancement remains approximately constant, slightly approaching the line core.

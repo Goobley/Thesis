@@ -381,7 +381,7 @@ As observed radiation is the only vector by which information can arrive from th
     \draw[->] (x3) -- (y2.175);
     \draw[->] (x4) -- (y5.190);
 \end{tikzpicture}
-\caption[The degeneracy present in traditional inversions.]{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
+\caption[Diagram illustrating the degeneracy present in traditional inversions.]{The degenerate mapping $f$ demonstrates the difficulty of traditionally framed inversions.}
 \label{Fig:DegenerateMapping}
 \end{figure}
 
@@ -425,7 +425,7 @@ As observed radiation is the only vector by which information can arrive from th
     \node[below=6cm of ySet.center,font=\bfseries, align=center] (yLabel) {$\mathcal{Y}\times\mathcal{Z}$\\Observed Intensity $\times$ Latent Space};
     \node[font=\bfseries, align=center] (xLabel) at (xSet |- yLabel){$\mathcal{X}$\\Atmospheric Parameters};
     \node[font=\bfseries, align=center] (zLabel) at (zSet |- yLabel){$\mathcal{Z}$\\Latent Space};
-    \node[font=\bfseries, align=center, above=0.2cm of yySet.north] (yyLabel) {$\mathcal{Y}$\\Observed Intensity};
+    \node[font=\bfseries, align=center, above=0.2cm of yySet.north] (yyLabel) {$\mathcal{Y}$\\Observed\\Intensity};
 
     % \node[below=2cm of y5,font=\bfseries, align=center] (ylabel) {$\mathcal{Y}$\\Observed Intensity};
     % \node[left=3cm of ylabel.center,font=\bfseries, align=center] {$\mathcal{X}$\\Atmospheric Parameters};
@@ -554,13 +554,13 @@ Iout = np.sum(S[:, None] * responseFn, axis=0)
 # response function (via pseudoinverse)
 Sinferred = np.linalg.pinv(responseFn.T) @ Iout
 
-fig = plt.figure()
+fig = plt.figure(figsize=texfigure.figsize(pytex, scale=1))
 ax = plt.gca()
 plt.plot(np.log10(tau), S, label='True source function')
 plt.plot(np.log10(tau), Sinferred, label='Pseudoinverse inferred source function')
 plt.xlabel(r'$\log\tau_c$')
 plt.ylabel(r'S')
-plt.legend(frameon=False, loc='lower right', handlelength=1.5)
+plt.legend(frameon=False, loc='lower right', handlelength=1.5, handletextpad=0.5)
 
 lFig = chFlareObs.save_figure('InferredSourceFn', fig, fext='.pgf')
 lFig.caption = r'Comparison between true source function and inferred for the case of a quadratic variation.'
