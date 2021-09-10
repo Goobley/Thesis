@@ -93,7 +93,7 @@ As $U$ does not generally lie on a point of our discrete two-dimensional grid, t
 Following the short-characteristic method, a functional form must be assigned to the variation of $S$ over the the line segment $[UO]$.
 In the simplest case, this can again be a linear functional form, but due to the additional dimension for inhomogeneities in the two-dimensional case, unless the grid is very fine or the atmosphere very slowly varying, this may be a poor choice.
 A higher order parametrisation of $S$ is likely to require the values of the source function at both $U$ and $D$, and possibly other points along the ray.
-Similarly to the cubic Bézier spline\footnote{A superb graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under and over-shoots.
+Similarly to the cubic Bézier spline\footnote{A superb graphical introduction to Bézier spline methods and a visualisation of their construction and features is provided in the video by Freya Holmér, \emph{The Beauty of Bézier Curves} available at \url{https://youtu.be/aVwxzDHniEw}.} method used as standard in our plane-parallel code, we once again turn to monotonic Bézier splines for safe, smooth interpolation, minimising the presence of under- and over-shoots.
 The cubic method we apply in plane-parallel atmospheres requires four points along $UD$, which becomes less practical in higher dimensions, due to the computational demands of the method.
 Instead we choose the quadratic Bézier spline method, BESSER, of \citet{Stepan2013}, which will be briefly summarised here for the scalar case of the RTE.
 
@@ -180,12 +180,12 @@ Most of the nodes on this figure are solved equivalently to this one, with all n
 The {\color{TolBlue} blue} question marks along the $x$ axis all require values that must be computed from the boundary conditions.
 The upper and lower boundary conditions in $z$ are typically taken to be described by a defined in-going radiation field (possibly zero or based on a black body).
 The upper and lower boundaries in $x$ can be described by fixed boundary conditions, but it is also common to describe these with periodic boundary conditions where the ray wraps from one side of the grid to the other.
-The {\color{TolTeal} teal} question marks along the upper $x$ boundary can then be interpreted in multiple ways; in the case of periodic boundary conditions they can be prolonged along the {\color{TolTeal} teal} arrows, and used in the same way as the previously described case.
+The {\color{TolTeal} teal} question marks along the upper $x$ boundary can then be interpreted in multiple ways: in the case of periodic boundary conditions they can be prolonged along the {\color{TolTeal} teal} arrows, and used in the same way as the previously described case.
 If fixed boundary conditions are used then the intensity at these points must be computed by a linear formal solver indicated by the black arrows ending at the nodes labelled 4 and 8.
 
 Finally, the region around the {\color{TolOrange} orange} question mark, the tail end of the arrow passing through node 11, requires some additional explanation.
 In the configuration shown here, the arrow can stop at its intersection with the vertical line on which nodes 6 and 10 lie as the intensity information has been computed at both of these.
-If an equivalent situation occurs at a periodic $x$ boundary, then a long characteristics approach will need to be applied to this ray.
+If an equivalent situation occurs at a periodic $x$ boundary, then a long-characteristics approach will need to be applied to this ray.
 This implies that the ray will need to be prolonged back to the previous intersection with a horizontal grid line, where the necessary intensity values can be interpolated, as is shown on this figure.
 There are multiple options for treating the integration over the segment between this upwind point and the node.
 Whilst it is possible to take this segment as a singular integration term, very inclined rays may cross multiple vertical grid lines and regions with dramatically varying parameters.
@@ -205,7 +205,7 @@ The restrictive ordering of a formal solver sweep discussed in the previous sect
 % In the case of a single-threaded program, it is sufficient to obey this order, however, when distributing work across threads or multiple computing nodes it is essential that the necessary information be present to avoid computation stalls, or the use of uninitialised data.
 There is an in-depth discussion of an advanced spatial and frequency parallelisation algorithm for multi-dimensional radiative transfer in \citet{Stepan2013}, however in \Lw{} we assume that the entire simulation domain can be held in memory and the formal solver is parallelised in frequency, equivalently to the plane-parallel case.
 
-The data structures for storing the atmospheric and population information in \Lw{} were updated to support two dimensional atmospheres, storing the data contiguously so as to be able to reuse the core iteration machinery from the plane-parallel case (as inspired by the RH code).
+The data structures for storing the atmospheric and population information in \Lw{} were updated to support two-dimensional atmospheres, storing the data contiguously so as to be able to reuse the core iteration machinery from the plane-parallel case (as inspired by the RH code).
 Two-dimensional formal solvers can be loaded from external libraries via the same interface as used for their one-dimensional counterparts, and through these interfaces we ensure the modularity of \Lw{}.
 An equivalent interface is also defined for the interpolation function to be used in two-dimensions, giving flexibility in the interpolation order and any form of limiting used (which may need to be adapted to specific grids).
 \Lw{} provides default implementations of the two-dimensional linear and BESSER short-characteristics formal solvers, along with linear and BESSER interpolation schemes for the necessary parameters.
@@ -348,6 +348,7 @@ ax[1].plot(wave, (Iwave[:, 2] - Iwave1d) / Iwave[:, 2])
 ax[1].set_xlabel(r'$\Delta\lambda$ [\si{\nano\metre}]')
 ax[1].set_ylabel(r'Relative Error')
 ax[1].set_xlim(wave[0], wave[-1])
+fig.align_ylabels(ax)
 lFig = ch2DRT.save_figure('2DValidation', fig, fext='.pgf')
 lFig.caption = r'Validation of 2D formal solver in static FALC atmosphere with periodic $x$ boundary conditions.'
 \end{pycode}
@@ -664,7 +665,7 @@ They are typically modelled in a plane-parallel context and we analyse the radia
 In reality, the flaring kernels that we are simulating with these RHD models are likely small; on the scale of 10s to 100s of \si{\kilo\metre} in diameter \citep{Jing2016} and represent an estimate of the conditions in the core of a heated flux-tube.
 As the resolution of solar telescopes increases, so does their ability to resolve spatial effects tangential to the solar surface (henceforth horizontal).
 The lack of horizontal atmospheric homogeneity, that is not accounted for in these models, may produce complex intensity structures resolvable with these new telescopes as the huge outgoing flux of radiation from the flare core impinges on and interacts with neighbouring plasma.
-These effects include the possible `core-halo' pattern reported around flare kernels in ground-based line and continuum imaging \citet{Neidig1993,Xu2006}, TRACE white light observations \citep{Hudson2006}, and Hinode/Solar Optical Telescope (SOT) G-band and Fe\,\textsc{i} \SI{630.2}{\nano\m} observations \citep{Isobe2007},
+These effects include the possible `core-halo' pattern reported around flare kernels in ground-based line and continuum imaging \citep{Neidig1993,Xu2006}, TRACE white light observations \citep{Hudson2006}, and Hinode/Solar Optical Telescope (SOT) G-band and Fe\,\textsc{i} \SI{630.2}{\nano\m} observations \citep{Isobe2007},
 The proposed explanation for these halos is typically radiative backwarming from the flare's radiation (previously investigated in-depth using Mg\,\textsc{i} lines by \citet{Metcalf1990}).
 In the following we shall focus primarily on NLTE radiative effects affecting plasma neighbouring a flare, but leave the inclusion of temperature variations due to absorption of radiation to a future study.
 
@@ -673,7 +674,7 @@ Thus, we will investigate the effects of illumination from a neighbouring plane-
 This model can then serve as a ``first-order'' approximate investigation of the effects of flare radiation on the slab, as well as the depth of radiation penetration, effects on the atomic populations, and observable signatures.
 
 Modelling undertaken by \citet{Leenaarts2012a} suggests that a three-dimensional treatment of \Ha{} in quiet Sun models yields very different synthetic line profiles than a 1.5D column-by-column plane-parallel treatment.
-\citet{Bjorgen2019} found that these differences were less significant for the bright structure of an active region \citep[Based on the simulations of][]{Cheung2019}, but definition appears to be lost in regions adjacent to this structure when a 1.5D treatment is applied.
+\citet{Bjorgen2019} found that these differences were less significant for the bright structure of an active region \citep[based on the simulations of][]{Cheung2019}, but definition appears to be lost in regions adjacent to this structure when a 1.5D treatment is applied.
 It is precisely the effects of a bright region on the neighbouring atmosphere that we wish to investigate, and a simple two-dimensional model should reveal the importance and possible time-dependence of reactions to this radiation.
 
 \begin{figure}[tbp]
@@ -691,13 +692,13 @@ Similarly to the process described in the previous chapter a time-dependent simu
 The separate components of this model share a $z$ stratification based on a combination of RADYN's grids used for both the initial quiet sun atmosphere and the current timestep.
 This method ensures that 450 points are spaced across the entire altitude range of the atmosphere and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
 The populations are interpolated between the $z$ grids from one timestep to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
-The electron density in the RADYN atmosphere is model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed in Sec.~\ref{Sec:ChargeCons}.
+The electron density in the flare model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed in Sec.~\ref{Sec:ChargeCons}.
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
 In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
 As these points span \SI{2}{\mega\metre} each point is spaced \SI{50}{\kilo\metre} apart.
 The use of this grid is justified in Sec.~\ref{Sec:HorizontalResolution}.
 Due to the very fine $z$ spacing that often occurs due to the strong gradients in the transition region, many of the 2D cells have an aspect ratio very far from square, which can pose convergence difficulties if insufficient angular resolution is used .
-Unlike the model in the previous chapter, we do not consider advection here; the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small
+Unlike the model in the previous chapter, we do not consider advection here: the plasma in the two-dimensional slab is static, and the effect of advection on the flaring boundary condition is small.
 This also has the effect of allowing more flexibility in the $z$ stratification, as a grid that is stable for radiative transfer may not be so for advection.
 
 The left-most column of the 2D slab requires special treatment due to the nature of fixed boundary conditions in radiative transfer simulations.
@@ -711,7 +712,7 @@ There should not be any need to perform the same process at the quiet sun bounda
 
 This configuration produces the outgoing intensity at 12 different angles from each of the 41 cells in $x$.
 We can use the symmetric definition of these to synthesise the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
-This is shown in Fig.~\ref{Fig:2DSimFlipped}; for an observation inclined as shown we are observing the radiation along the blue arrows.
+This is shown in Fig.~\ref{Fig:2DSimFlipped} for an observation inclined as shown we are observing the radiation along the blue arrows.
 For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.
 
 \begin{figure}[tbp]
@@ -737,7 +738,7 @@ To justify the importance of the time-dependent treatment, we will also compare 
 
 Due to the additional complexity of the two-dimensional simulation these models are substantially more computationally intensive than the plane-parallel models of the previous chapter, both due to the larger number of points at which the RTE is to be solved as well as the increased angular samples and interpolations needed at each point.
 The F9 simulation, consisting of 1793 internal timesteps takes $\sim$2,300 CPU hours, and the F10 model, with 5996 timesteps takes $\sim$8,000 CPU hours on \emph{hercules}.
-The tool employed for these simulations is derived from the code presented in Chap.~\ref{Chap:TimeDepRt}, and is available on GitHub\footnote{\url{https://github.com/Goobley/MsLightweaver2d}}, with archival on Zenodo \citep{MsLw2dThesisRelease}.
+The tool employed for these simulations is derived from the code described in Chap.~\ref{Chap:TimeDepRt}, and is available on GitHub\footnote{\url{https://github.com/Goobley/MsLightweaver2d}}, with archival on Zenodo \citep{MsLw2dThesisRelease}.
 
 \subsection{Observed Radiation}
 
@@ -1775,7 +1776,8 @@ This increase in electron density affects line formation within the slab, both i
 It overlaps well with the more complex features shown in the population change plots for the F10 model and shows that the atomic populations responsible for these chromospheric lines can be significantly affected by the incoming radiation.
 
 From the population change figures shown in this section it becomes clear that the the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
-It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation, thus without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
+It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the this incoming radiation.
+Thus, without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
 It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.
 Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
 
@@ -2404,7 +2406,7 @@ The basic agreement between the simulation and observation suggests that this si
 
 \section{Discussions}
 
-The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} demonstrate that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing significant enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
+The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} demonstrate that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the the level populations deep in the slab, causing notable enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
 Traditional inversion techniques performed on this region are likely to lead to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the slab's local thermodynamic properties, but is instead significantly influenced by the incident radiation.
 
 It is necessary to perform a time-dependent treatment of the hydrogen populations in this problem, taking into account the effects of non-equilibrium ionisation, and this species' slow return to statistical equilibrium, despite the lack of time-varying thermodynamic modifications of the quiet Sun slab.

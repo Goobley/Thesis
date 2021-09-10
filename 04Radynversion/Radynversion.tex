@@ -36,7 +36,7 @@ Simple fully connected networks have long been used to obtain plausible atmosphe
 \citet{AsensioRamos2019} and \citet{Milic2020} both presented models focused on the photosphere, that learn to mimic the results of traditional inversions with convolutional neural networks, the former using spatial correlations and inferring the depth of the Wilson depression, the latter using a much simpler model and taking a pixel-by-pixel approach.
 These models are not theoretically capable of handling degeneracies, but in practice produce plausible results, much faster than is possible with any traditional gradient-based inversion code.
 \citet{Gafeira2021} caution the direct use of these CNN models directly, and instead applied the model of \citet{Milic2020} to initialise traditional inversions, allowing them to converge substantially faster, and in some cases, produce more accurate fits.
-More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method using of normalising flows, a family of methods related to the one we present below.
+More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method using normalising flows, a family of methods related to the one we present below.
 They present the results of this method and show that it is capable of providing plausible inversions and posterior distributions using observations of \CaLine{} and Fe\,\textsc{i} \SI{630.15}{\nano\m}.
 The field of machine learning based, and assisted, inversions is undergoing rapid development and appears to have a very exciting future.
 
@@ -471,7 +471,7 @@ For each pair of line profiles we draw a large number of samples from the latent
 This gives a large number of possible sets of atmospheric parameters which we plot on a two dimensional histogram to show the probability density of the solution in each altitude node.
 This method then allows us to gauge possible degeneracies and establish the relative probabilities of different solutions.
 An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process as input.
-These histograms were generated from 10,000 draws latent space draws, and their values were gamma corrected (with $\gamma=$ \py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
+These histograms were generated from 10\,000 draws latent space draws, and their values were gamma corrected (with $\gamma=$ \py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
 The overplotted black dashed lines show the ground truth solution for each of the atmospheric parameters, and overlap the peak density of the histogram extremely well.
 The histogram remains very narrow in the lower atmosphere, but starts to expand above \SI{3}{\mega\metre}, where the solution is poorly constrained by the chromospheric lines in use here.
 This effect is most visible on the velocity plot, but despite the increase in uncertainty, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.
@@ -635,11 +635,11 @@ These images were taken just after flare onset.
 Two pixels are marked, a circle on the flare ribbon, and a square far from the flare, in a much quieter region.
 The spectral line profiles from these two pixels are shown in Fig.~\ref{Fig:LineProfilesToInvert}.
 For the circular point both lines are strongly in emission whereas for the square point they are broad absorption lines.
-These lines from these pixels have then been inverted using RADYNVERSION, with 20,000 latent space draws each.
+These lines from these pixels have then been inverted using RADYNVERSION, with 20\,000 latent space draws each.
 The results of these inversions are shown in Figs~\ref{Fig:InversionResultsFlare}~and~
 \ref{Fig:InversionResultsQuiet} for the circular and square points respectively.
 These figures present equivalent information to the lower panels of Fig.~\ref{Fig:RadynversionValidationReverse}, although the dashed black lines now show the median of the histogram at each atmospheric point as there is no ground truth solution available.
-Performing these inversions with 20,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU installed in \emph{hephaistos}.
+Performing these inversions with 20\,000 draws each takes $\sim$\SI{893}{\milli\second} on an NVIDIA GTX 1050 Ti GPU installed in \emph{hephaistos}.
 
 \py[Radynversion]|chRad.get_figure('LineProfilesToInvert')|
 \py[Radynversion]|chRad.get_figure('InversionResultsFlare')|
@@ -654,7 +654,7 @@ This is likely due to chromospheric evaporation in this region causing an increa
 For the off-ribbon pixel we note that both line profiles are very broad.
 The inverted velocity field contains a significant number of small magnitude oscillations which we believe are due to RADYN's conservative assumption of a \SI{2}{\kilo\metre\per\second} microturbulent velocity throughout the atmosphere, as this is insufficient to produce line profiles as broad as those observed here.
 If the network has learned that bulk plasma flows can shift the position of the line core (i.e. the majority of the opacity in a line), then it is reasonable to suggest that these represent our model's attempt to broaden the line profiles.
-Recent studies have shown that significantly higher microturbulent velocities are needed to explain the non-thermal broadenings observed in chromospheric plages \citep[\SIrange{6}{7}{\kilo\metre\per\second};][]{2015Carlsson}.
+Recent studies have shown that significantly higher microturbulent velocities are needed to explain the non-thermal broadenings observed in chromospheric plages \citep[6--\SI{7}{\kilo\metre\per\second},][]{2015Carlsson}.
 The other atmospheric parameters vary more smoothly and do not reach values as large as those found for the on-ribbon pixel, which is consistent with the much quieter atmosphere expected at this location.
 
 \section{Discussion}
@@ -664,7 +664,7 @@ This is achieved by the union of machine learning and a large body of RHD simula
 The implementation is currently a proof of concept but shows much promise, agreeing with previous investigations, and can easily be extended to other spectral lines and atmospheric parameters.
 With the addition of more advanced forward models this technique could be applied to inference of the chromospheric magnetic field from full Stokes observations.
 Inversions using this method are fast and robust; the effort of ``exploring'' the latent space that is common in regression based codes has effectively been replaced with an up-front cost in the training process.
-Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due the previous training effort, and this is then shared between every application of the model (contrary to the traditional 1.5D inversion technique, where every column is treated independently, a lot of this work is replicated).
+Once the model is trained, taking multiple draws from the latent space replicates the exploration, but extremely rapidly, due to the previous training effort which is then shared between every application of the model (contrary to the traditional 1.5D inversion technique, where every column is treated independently, and a lot of this work is replicated).
 These latent draws additionally serve to provide an estimate of the uncertainty on the inferred parameters.
 Potential future extensions to this model include incorporating the concept of time-dependence in a robust fashion so as to condition the solution from previous observations, and increasing the number of atmospheric parameters inferred.
 

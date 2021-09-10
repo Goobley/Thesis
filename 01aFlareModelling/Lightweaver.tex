@@ -40,7 +40,7 @@ This latter configuration is applied extensively in Chap.~\ref{Chap:2DRT} where 
 Whilst there are other solutions to this problem, such as saving necessary data and loading it in a reconfigured program, these are typically more error-prone than a simple program which can flexibly represent the coupling between these models in its code, even allowing for memory sharing of certain components.
 To this end, each radiative transfer simulation performed in \Lw{} occurs in a self-contained \texttt{Context}, a Python object containing all necessary configuration and storage needed for this model.
 These can be serialised using the \texttt{pickle} package of the Python standard library, allowing for a complete simulation to be dumped to disk or transferred between processes using the standard approach expected in the Python ecosystem.
-This has impacts on parallelisation which will be discussed in Sec.~\ref{Sec:LwParallelisation}.
+This has impacts on parallelisation, which will be discussed in Sec.~\ref{Sec:LwParallelisation}.
 
 \section{Accessibility \& Code Overview}\label{Sec:LwCodeOverview}
 
@@ -110,7 +110,7 @@ Active atoms are given the full NLTE treatment, with the terms necessary for ite
 To correctly resolve the effects of Doppler shifts, the emissivity and opacity terms associated with the transitions of these atoms are considered to be angle-dependent, and are computed for each ray in the angular quadrature, both up- and downgoing.
 So-called detailed static atoms are treated similarly, but the terms for updating the populations are not computed.
 As such, they will be ignored by the population update routines.
-A model atom defined as detailed static is intended to be used when the atomic populations of a species are known \emph{a priori}, e.g., it is in LTE, or its populations determined in an alternative manner but its transitions are a significant source of emissivity and opacity that may affect another species being simulated (and the radiative terms associated with this other species is not expected to have a significant effect on the former).
+A model atom defined as detailed static is intended to be used when the atomic populations of a species are known \emph{a priori}, e.g., it is in LTE, or its populations determined in an alternative manner but its transitions are a significant source of emissivity and opacity that may affect another species being simulated (and the radiative terms associated with this other species are not expected to have a significant effect on the former).
 Model atoms designated as passive are treated in LTE and only their bound-free transitions are considered.
 Their contributions to the plasma emissivity and opacity are considered isotropic and incorporated into the background terms.
 The populations of all of these species are stored in a \texttt{SpeciesStateTable}, which holds the arrays that are shared with the C++ iteration machinery.
@@ -122,7 +122,7 @@ During the formal solution, all of the sources of emissivity and opacity present
 
 As discussed in Sec.~\ref{Sec:LwCodeOverview}, the background emissivity, opacity, and scattering terms take the same form as those in RH.
 The background implementation is defined through a flexible interface that receives the atomic populations, model atoms, and wavelength at which the background parameters need to be known.
-Through this interface, a user can easily override the implementation provided with RH.
+Through this interface, a user can easily override the provided implementation.
 In all of the numerical experiments presented in this thesis the default implementation (or its parallel cousin \texttt{FastBackground}) is used.
 The components considered in the default background implementation and their original references are:
 \begin{itemize}
@@ -140,10 +140,10 @@ The components considered in the default background implementation and their ori
     \item CH bound-free \citep{Kurucz1987}
     \item Bound-free terms from all passive atoms.
 \end{itemize}
-We note that the terms with \citep{Mihalas1978} as their reference are also discussed similarly in \citep{Hubeny2014}.
+We note that the terms with \citep{Mihalas1978} as their reference are also discussed similarly in \citet{Hubeny2014}.
 Due to its importance in obtaining a correct background opacity, the molecular H$^-$ population is always computed.
 \Lw{} can compute the formation of molecules, assuming that they form in instantaneous chemical equilibrium.
-Their formation will reduce the total populations of the species bound up in them, and may contribute to the background opacities (e.g. CH, OH, H$_2$).
+Their formation will reduce the total populations of the species bound up in them, and they may contribute to the background opacities (e.g. CH, OH, H$_2$).
 
 In \Lw{}, the time-dependent population updates are computing using the fully implicit variant of the method described in Sec.~\ref{Sec:TimeDepPopUpdates}, i.e. with $\theta=1$.
 In general, we have found no difference between the fully- and semi-implicit treatments of the term, and adopt $\theta=1$ for simplicity.
@@ -173,7 +173,7 @@ The choices of the terms to parallelise has been motivated by our observations o
 The \Lw{} framework was extensively validated during development, primarily against RH \citep{Uitenbroek2001}, but also the synthesis module of SNAPI \citep{Milic2018} when discrepancies were found.
 RH is a well-established code that serves as a cornerstone of NLTE radiative transfer in the solar physics community.
 It assumes a single time-independent atmospheric input, for which the statistical equilibrium solution of the atomic populations is computed.
-The MALI method with full preconditioning \citep{Rybicki1992} is used, and implementations of angle-averaged and angle-dependent PRD and cross-redistribution are present following the methods outlined in \citet{Uitenbroek2001,MillerRicci2002}.
+The MALI method with full preconditioning \citep{Rybicki1992} is used, and implementations of angle-averaged and angle-dependent PRD with cross-redistribution are present following the methods outlined in \citet{Uitenbroek2001} and \citet{MillerRicci2002}.
 RH can also be used for NLTE modelling of molecular lines, but we do not make use of this here.
 In the examples presented here, we make use of v2 of the RH code, distributed by H. Uitenbroek, and not the massively parallel RH 1.5D presented in \citet{Pereira2015}.
 
@@ -603,9 +603,9 @@ Here RH's solution is once again shown in blue, \Lw{}'s in dashed orange, and SN
 This problem serves primarily as a test of the formal solver: the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail.
 The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in all three of these codes, along with their standard MALI iteration machinery, provides a very similar solution in all three cases.
 The slight differences apparent around $\Delta\lambda=\SI{-0.1}{\nano\metre}$ is likely to be caused by differences in the formal solver implementations; the version implemented in RH uses the method of \citet{Fritsch1984} to compute numerical estimates of the necessary derivatives, whereas we use the method of \citet{Steffen1990} in \Lw{} following the recommendation of \citet{Janett2018}, as the accuracy of \citet{Fritsch1984} falls to first-order on non-uniform grids.
-Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
+Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of J. de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
 The differences between SNAPI and the other methods around $\Delta\lambda=\SI{0.02}{\nano\metre}$ is also likely due to choices made when estimating the derivatives and limiting the control points.
-SNAPI also uses a different formulation for the background emissivities and opacities, as well as parametrisations for the damping terms present in the Voigt profile.
+SNAPI also uses a different formulation for the background emissivities and opacities, as well as different parametrisations for the damping terms present in the Voigt profile.
 These are likely responsible for the differences in the $|\Delta\lambda| \geq \SI{0.15}{\nano\metre}$ far wing to continuum region.
 Nevertheless, we consider that the agreement between the three implementations is very good on this challenging test.
 
@@ -645,14 +645,14 @@ Thus, the use of this approximate method by \citet{Judge2017} is likely to be th
 The most substantial difference between our results is for the $n=2$ population: in Fig.~\ref{Fig:Judge2017Original}, the points close to a column mass of \SI{-4.9315}{\per\square\centi\metre} do not vary from their initial values, whereas in our model they change quite dramatically, with an enhancement of up to 2\,dex, leaving the range of the original plot, but converge close to the expected final solution.
 This is likely an effect of downgoing radiation not being considered in the escape probability based formal solution of \citet{Judge2017}.
 The maximum enhancement in this level also peaks higher than that seen in Fig.~\ref{Fig:Judge2017Original}, but rapidly drops towards the expected solution.
-The downgoing radiation is also likely responsible for the offset of the final populations from the initial model in the \SI{-4.9315}{\per\square\centi\m} region that is not present, as the populations stay stable when the populations are advanced in time through the same process without the temperature perturbation, i.e. statistical equilibrium is maintained.
+The downgoing radiation is also likely responsible for the offset of the final populations from the initial model in the \SI{-4.9315}{\per\square\centi\m} region that is not present in Fig.~\ref{Fig:Judge2017Original}, as the populations stay stable when the populations are advanced in time through the same process without the temperature perturbation, i.e. statistical equilibrium is maintained.
 This simple example illustrates that \Lw{}'s behaviour is reasonable when applied to time-dependent problems, and the quality of its treatment will become apparent in the in-depth comparisons with \Radyn{} presented in Chap.~\ref{Chap:TimeDepRt}.
 
 \py[Lw]|chLw.get_figure('LwValidationTimeDepNe')|
 
 In Fig.~\ref{Fig:LwValidationTimeDepNe} we show the electron density in the lower atmosphere at four different timesteps of a \Radyn{} simulation where the radiative transfer (including self-consistent electron density) has been reprocessed using \Lw{}.
 The techniques used here will be described in depth in Chap.~\ref{Chap:TimeDepRt}, and this figure is produced using the F9 model described in Sec.~\ref{Sec:CaiiRadynSims}.
-The \Lw{} model presented is run with time-dependent charge conservation, maintaining self-consistency throughout the remainder of the simulation, whilst loading the other thermodynamic parameters from the \Radyn{} model at each timestep, and using these to compute the time-dependent population updates and self-consistent electron density.
+The \Lw{} model presented is run with time-dependent charge conservation, maintaining self-consistency throughout the simulation, whilst loading the other thermodynamic parameters from the \Radyn{} model at each timestep, and using these to compute the time-dependent population updates and self-consistent electron density.
 Advection of the atomic populations and electron density is performed using a similar technique to \Radyn{}, implemented as per Sec.~\ref{Sec:MsLwAdvection}.
 The electron density in the \Radyn{} model is shown in blue, and the \Lw{} model in dashed orange.
 The agreement between the two models is extremely good, including the fine features around $z=\SI{1.2}{\mega\metre}$ shown in the \SI{11}{\second} panel.

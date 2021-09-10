@@ -287,7 +287,7 @@ Following \citet{DelaCruzRodriguez2017} these are primarily the \Caii{} H \& K l
 Many other spectral lines with chromospheric diagnostic potential, such as Ly$\alpha$, Mg\,\textsc{ii} h \& k, He\,\textsc{ii} \SI{30.4}{\nano\metre} can only be observed from space.
 The decision regarding which of these to focus on depends both on the availability of observations (current and future) and the complexity of modelling.
 The \Ha{} line at \SI{656.3}{\nano\m} has long been exploited.
-It has a strong line core and wide wings with a varying degree of central reversal and asymmetry \citep[e.g. ][]{Svestka1966}.
+It has a strong line core and wide wings with a varying degree of central reversal and asymmetry \citep[e.g.][]{Svestka1966}.
 These features suggest that the line responds differently to different flares, suggesting that it has good diagnostic potential.
 Indeed, \Ha{} has been a component of many investigations into flare dynamics and evolution \citep[e.g.][]{Acton1982,Heinzel1994,Wang1995,Kuridze2015,RubioDaCosta2016}.
 Other lines in the hydrogen Balmer series can also be used, optionally in conjunction with \Ha{}, such as in the work of \citet{Capparelli2017}.
@@ -318,21 +318,21 @@ The light is then sent from this corrector to an adaptive optics system that com
 This adaptive optics system allows the SST to operate at close to its diffraction limit in good seeing conditions ($\sim 0.17^{\prime\prime}$ for \Ha{} and $\sim 0.21^{\prime\prime}$ for \CaLine{}). % Rayleigh criterion
 
 There are three instruments usable with the SST: TRIPPEL, CHROMIS, and CRISP.
-TRI-Port Polarimetric Echelle-Littrow \citep[TRIPPEL, ][]{Kiselman2011} is a spectrograph that can simultaneously observe in three different wavelength regions (across 380--\SI{1100}{\nano\m}) with a spectral resoution $R\approx200\,000$.
-CHROMospheric Imaging Spectrometer \citep[CHROMIS, ][]{Lofdahl2021} and CRisp Imaging SpectroPolarimeter \citep[CRISP, ][]{Scharmer2008,Scharmer2019} are both dual Fabry-Pérot tunable filter systems that can be operated simultaneously.
+TRI-Port Polarimetric Echelle-Littrow \citep[TRIPPEL,][]{Kiselman2011} is a spectrograph that can simultaneously observe in three different wavelength regions (across 380--\SI{1100}{\nano\m}) with a spectral resolution $R\approx200\,000$.
+CHROMospheric Imaging Spectrometer \citep[CHROMIS,][]{Lofdahl2021} and CRisp Imaging SpectroPolarimeter \citep[CRISP,][]{Scharmer2008,Scharmer2019} are both dual Fabry-Pérot tunable filter systems that can be operated simultaneously.
 CHROMIS serves the blue end of the spectrum between 380 and \SI{500}{\nano\m}, whereas CRISP operates in the 510--\SI{860}{\nano\m} region.
 The diffraction limit is lower at the CHROMIS wavelengths, but CRISP can perform full spectropolarimetric imaging.
 
 In this thesis we make use of one set of observations taken from the SST using the CRISP instrument, so we shall briefly describe how these are processed.
 This observation was performed on 2014-09-06 and captures the M1.1 flare SOL 20140906T17:09 from National Oceanic and Atmospheric Administration (NOAA) Active Region 12157 at heliocentric coordinates ($-732^{\prime\prime},\,-302^{\prime\prime}$).
-This data is available in the F-CHROMA database\footnote{\url{https://star.pst.qub.ac.uk/wiki/public/solarflares/0450.html}} and was prepared using the CRISPRED pipeline \citep{DelaCruzRodriguez2015} which is responsible for image calibration, alignment, instrumental effects, and seeing restoration through the multi-object multi-frame blind deconvolution algorithm \citep[MOMFBD, ][]{VanNoort2005}.
+This data is available in the F-CHROMA database\footnote{\url{https://star.pst.qub.ac.uk/wiki/public/solarflares/0450.html}} and was prepared using the CRISPRED pipeline \citep{DelaCruzRodriguez2015} which is responsible for image calibration, alignment, instrumental effects, and seeing restoration through the multi-object multi-frame blind deconvolution algorithm \citep[MOMFBD,][]{VanNoort2005}.
 MOMFBD is a phase diversity algorithm needed to account for seeing worse, or evolving faster, than the adaptive optics system of the telescope can cope with.
 It has been suggested by \citet{Armstrong2021} that the differences between the wide- and narrowband images of flares may hinder the reconstructive abilities of the MOMFBD system, and they have developed a machine learning approach to correcting for these effects.
 This method has not been applied to the data used in this thesis.
 
 \subsection{The Daniel K Inouye Solar Telescope}
 
-The Daniel K Inouye Solar Telescope \citep[DKIST, ][]{Rimmele2020} is a new 4-metre Gregorian solar telescope that saw first solar light in December 2019.
+The Daniel K Inouye Solar Telescope \citep[DKIST,][]{Rimmele2020} is a new 4-metre Gregorian solar telescope that saw first solar light in December 2019.
 It is designed to support a number of instruments observing between 380 and \SI{5000}{\nano\metre} with a diffraction limit of $0.026^{\prime\prime}$ (\SI{20}{\kilo\metre}) at \SI{500}{\nano\metre}.
 The instruments initially expected to capture flaring chromospheric observations are the Visible Tunable Filter (VTF) and the Visible Spectro-Polarimeter (ViSP).
 The former of these will capture narrow-band line images similar to CRISP, but at higher spatial resolution, whereas the latter will provide high-precision spectropolarimetric observations through a slit spectrograph with $R>180\,000$.
@@ -769,7 +769,7 @@ The use of ReLU activation functions often minimises this effect, but can instea
 The residual blocks of these networks contain so-called skip connections, which take the output from a layer and sum or concatenate it with the output of layer one or more levels deeper.
 These skip connections provide a path for gradients to propagate through the network, helping to avoid both vanishing and exploding gradients.
 Variants of the ReLU function are almost uniquely used in ResNets as these additionally provide sparsity to the representation (i.e. their output is 0 for all input less than or equal to 0), which can improve the expressiveness\footnote{The expressive power of a neural network is its ability to approximate functions.} of the representation and aid in disentangling information propagating through the network \citep{Glorot2011}.
-These variants include the leaky ReLU \citep[$\max(0.01x, x)$;][]{Maas2013} which still produces a small amount of gradient information for negative inputs, helping to prevent neurons with ReLU activation from ``dying'', and exponential linear units \citep[ELUs;][]{Clevert2015} which achieve a similar result in a smoothly varying fashion.
+These variants include the leaky ReLU \citep[$\max(0.01x, x)$,][]{Maas2013} which still produces a small amount of gradient information for negative inputs, helping to prevent neurons with ReLU activation from ``dying'', and exponential linear units \citep[ELUs,][]{Clevert2015} which achieve a similar result in a smoothly varying fashion.
 
 Like all regression models with a large number of free parameters, ANNs can very easily enter a regime of overfitting their training set.
 In this situation the ANN has learnt to match its training set so closely that it is unlikely to perform reliably on inference of unseen data.
