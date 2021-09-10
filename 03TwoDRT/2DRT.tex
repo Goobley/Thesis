@@ -604,6 +604,7 @@ ax[1,1].plot(wave, (IwaveFixedX[:, 2] - Iwave1dFixedX) / IwaveFixedX[:, 2])
 # ax[1,1].set_ylabel(r'Relative Error')
 ax[1,1].ticklabel_format(axis='y', scilimits=(0,0))
 ax[1,1].set_xlim(*waveRange)
+fig.align_ylabels(ax[:, 0])
 lFig = ch2DRT.save_figure('2DValidationVlosFixedX', fig, fext='.pgf')
 lFig.caption = r'Validation of 2D formal solver in FALC atmosphere with \SI{20}{\kilo\metre\per\second} sinusoidal vertical velocity field and periodic $x$ boundary conditions in the left-hand column and \SI{5}{\kilo\metre\per\second} vertical sinusoidal velocity field and fixed $x$ boundary conditions computed from a one-dimensional plane-parallel model in the right-hand column. The left-hand column is again synthesised and $\mu_z=0.9$ whereas the right-hand column is synthesised at $\mu_z=0.99999$ to include transverse effects, without simply sampling the fixed boundary condition that would give the plane-parallel result directly.'
 lFig.short_caption = r'Validation of 2D formal solver with complex velocity field, and with fixed $x$ boundary conditions.'
