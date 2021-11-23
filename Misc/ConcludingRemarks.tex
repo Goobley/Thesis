@@ -20,7 +20,7 @@ Differences were found between the \Caii{} lines synthesised with \Radyn{} and \
 \Radyn{}'s default includes the photoionising effects of the Lyman continuum on \Caii{}, but neglects the impact of the Lyman lines.
 The Lyman series contains some of the strongest spectral lines in the flaring solar spectrum, with extreme enhancements observed over their quiet Sun values.
 The additional flux produced by these lines is sufficient to provoke substantial changes in the synthesised \Caii{} line profiles, in particular, that of the \CaLine{} line.
-The effects of the Lyman lines on the shape and intensity of the \Caii{} line profiles also changes the net radiative losses from the atmosphere.
+The effects of the Lyman lines on the shape and intensity of the \Caii{} line profiles also impact the net radiative losses from the atmosphere.
 In the simulations there was found to be a 10--15\,\% variation in the chromospheric radiative losses.
 This difference could plausibly change the atmospheric evolution of the simulation, leading to greater differences in the \Caii{} line profiles from models self-consistently taking these effects into account, and also possibly changing the observed line profiles from other species such as hydrogen.
 
@@ -33,7 +33,7 @@ We implemented a method for including the effects of partial frequency redistrib
 This was found to be a difficult problem, often suffering from non-convergence, but we were able to fully reprocess the previously discussed F9 simulation.
 The Doppler-like line profile approximations implemented in \Radyn{} for the Ly$\alpha$ and Ly$\beta$ proved to be relatively accurate at most points in the simulation.
 Much larger differences were found for the calcium resonance lines, with significant differences in the radiative losses due to these lines.
-It therefore seems essential to develop approximate treatments for the Ca H \& K spectral lines.
+It therefore seems essential to develop approximate treatments for the \Caii{} H \& K spectral lines.
 
 The concept of time-dependent response functions was also introduced in this chapter: these generalise the statistical equilibrium response functions for atomic level populations that cannot be treated in a time-independent fashion.
 These also represent a powerful tool for disambiguating the atmospheric response to \emph{different} thermodynamic parameters, whilst also considering the natural settling time of the populations towards the statistical equilibrium solution.
@@ -45,14 +45,14 @@ This has several implications.
 Firstly, any kind of traditional column-by-column inversion technique employed on regions adjacent to flaring ribbons is likely to be led astray, and infer an incorrect atmospheric structure.
 This is due to the atomic level populations being determined by a non-local \emph{transverse} radiation field, rather than the plasma parameters in the column.
 Secondly, the enhancements produced in our simulations are far from uniform as a function of wavelength, being much more dramatic in the line core than in the wings, with no effect being seen in the continuum.
-The lack of continuum enhancement is primarily due to the temperature and mass density structure in the slab being fixed, whilst the continuum forms approximately LTE conditions, and is therefore dependent on the local thermodynamic parameters.
+The lack of continuum enhancement is primarily due to the temperature and mass density structure in the slab being fixed, whilst the continuum forms in approximately LTE conditions, and is therefore dependent on the local thermodynamic parameters.
 As such, calculations of filling factors may need to take this wavelength dependence into account.
 Finally, the enhancements observed in our models are on a scale already easily resolvable with modern ground-based solar telescopes, such as the SST, and are likely to become more important with the generational leap provided by DKIST.
 We also presented a simple comparison against SST/CRISP observations and found enhancements on the same order of magnitude as those produced by our simple model.
 When analysing the regions adjacent to flaring ribbons in optical spectral lines, it therefore will be necessary to take into account the effects of horizontal irradiation such as this.
 
 RADYNVERSION, a novel machine learning inversion technique, was presented in Chap.~\ref{Chap:Radynversion}.
-This model uses a invertible neural network to simultaneously learn both the forward (synthesis) and inverse problems of radiative transfer based on atmospheric snapshots produced with \Radyn{}.
+This model uses an invertible neural network to simultaneously learn both the forward (synthesis) and inverse problems of radiative transfer based on atmospheric snapshots produced with \Radyn{}.
 Thanks to this training set, the model learns to synthesise the \Ha{} and \CaLine{} spectral lines from a geometric stratification of temperature, electron density, and velocity.
 It is the first non-LTE inversion technique not constrained by the assumptions of statistical equilibrium and hydrostatic equilibrium, rendering it much more applicable to flares than conventional approaches.
 RADYNVERSION learns the possible information lost in the forward process from its training set, and we are then able to sample this to produce posterior distributions for the stratified atmospheric parameters.
@@ -66,7 +66,7 @@ The \Lw{} framework is robust and has been proven production-ready by the applic
 Nevertheless, there are many enhancements that could yet be implemented.
 These include:
 \begin{itemize}
-	\item The inclusion of more rapid iteration schemes such as forth-and-back implicit lambda iteration \citep{AtanackovicVukmanovic1997,Kuzmanovska2017}, or the hybrid scheme described in \citet{Avrett2008} for possibly improving the handling strong lines that exhibit partial frequency redistribution effects.
+	\item The inclusion of more rapid iteration schemes such as forth-and-back implicit lambda iteration \citep{AtanackovicVukmanovic1997,Kuzmanovska2017}, or the hybrid scheme described in \citet{Avrett2008} for possibly improving the handling of strong lines that exhibit partial frequency redistribution effects.
 	\item Full Stokes synthesis is currently supported in plane-parallel models, but only an unpolarised formal solver has been implemented for the two-dimensional case.
 	\item \Lw{} could be extended to treat three-dimensional radiative transfer. The frontend of the framework is already designed to support this, but no formal solver has been implemented.
 	\item To support the use of \Lw{} in two- and three-dimensional modelling, a domain-decomposition technique to split these large simulations across clusters of machines is likely to be beneficial. An MPI-based implementation has already been tested for the 1.5D column-by-column situation, but full domain-decomposition will require modifications to the core of \Lw{} itself.
@@ -102,7 +102,7 @@ Such a model should also likely consider the effects of heat-conduction, even if
 In our opinion, allowing the plasma to be heated by the radiation from the neighbouring flare is likely to increase the magnitude of the effects seen in Chap.~\ref{Chap:2DRT}, and it is possible that this heating could produce continuum enhancements and affect spectral lines forming significantly deeper in the atmosphere.
 
 Another development of the two-dimensional flare model would be to investigate the limitations of the  plane-parallel radiative transfer model assumed by the field-aligned radiation hydrodynamic codes.
-The plane-parallel treatment of the radiative transfer equation considers that the stacked slabs of homogeneous atmosphere are infinitely ide, whereas flux tubes appear to be quite narrow, especially in the chromosphere.
+The plane-parallel treatment of the radiative transfer equation considers that the stacked slabs of homogeneous atmosphere are infinitely wide, whereas flux tubes appear to be quite narrow, especially in the chromosphere.
 It is plausible that the radiative losses and spectral lines produced by these models will differ significantly when embedded in a plasma with non-uniform opacity, and when the compact heated regions are not modelled as having infinite transverse extent.
 This could be modelled in a similar way to the work undertaken in Chap.~\ref{Chap:2DRT}, but instead embedding the \Radyn{} simulation in the centre of the slab, rather than using it as a boundary condition.
 To model this, assumptions would need to be made regarding the diameter of the flux tube, although a series of models could be performed with different diameters, constrained by observations and radiative magnetohydrodynamic modelling.
@@ -119,7 +119,7 @@ All of \Caii{} H \& K and Mg\,\textsc{ii} h \& k need to be modelled taking into
 Additionally, the \Caii{} photoionisation effects discussed in Chap.~\ref{Chap:TimeDepRt} had significant effects on the outgoing line profiles and should be taken into account in an updated RADYNVERSION model.
 This would require generating a new grid of models using an updated version of \Radyn{} or reprocessing pre-existing models using \Lw{}, although this is dependent on the necessary output having been generated and preserved.
 
-The quality of inference obtained from models such RADYNVERSION is entirely dependent on the quality of the training data: a larger and more varied training set, as well as models that are trained for multiple different viewing angles will all be key to the development of RADYNVERSION into a dependable, widely applicable, inversion tool.
+The quality of inference obtained from models such as RADYNVERSION is entirely dependent on the quality of the training data: a larger and more varied training set, as well as models that are trained for multiple different viewing angles will all be key to the development of RADYNVERSION into a dependable, widely applicable, inversion tool.
 
 \section*{Closing Remarks}
 

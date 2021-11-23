@@ -228,6 +228,9 @@
 \KOMAoptions{DIV=12, BCOR=10mm}
 % \usepackage{showframe}
 
+\usepackage[draft]{changes}
+% \usepackage[final]{changes}
+
 \usepackage{import}
 \setpythontexcontext{figurewidth=\the\columnwidth}
 \newcommand{\includepgf}[1]{\IfFileExists{#1}{\input{#1}}{}}
@@ -250,6 +253,7 @@
 \newcommand*{\NeedRef}{{\color{Red} REF}}
 \newcommand*{\ExpandMe}{{\color{Red} EXPAND}}
 \newcommand*{\TODO}[1]{{\color{Red} TODO: #1}}
+\newcommand*{\NOTE}[1]{{\color{Red} NOTE: #1}}
 \newcommand*{\varv}{\upsilon}
 % Roman or math font derivatives
 % \newcommand*{\dd}{\mathrm{d}}

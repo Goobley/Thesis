@@ -35,7 +35,7 @@ The RADYNVERSION model was the first machine learning model for solar inversions
 Simple fully connected networks have long been used to obtain plausible atmospheric parameters based on Milne-Eddington inversions \citep[e.g.][]{Carroll2001, SocasNavarro2005}.
 \citet{AsensioRamos2019} and \citet{Milic2020} both presented models focused on the photosphere, that learn to mimic the results of traditional inversions with convolutional neural networks, the former using spatial correlations and inferring the depth of the Wilson depression, the latter using a much simpler model and taking a pixel-by-pixel approach.
 These models are not theoretically capable of handling degeneracies, but in practice produce plausible results, much faster than is possible with any traditional gradient-based inversion code.
-\citet{Gafeira2021} caution the direct use of these CNN models directly, and instead applied the model of \citet{Milic2020} to initialise traditional inversions, allowing them to converge substantially faster, and in some cases, produce more accurate fits.
+\citet{Gafeira2021} caution against the direct use of these CNN models directly, and instead applied the model of \citet{Milic2020} to initialise traditional inversions, allowing them to converge substantially faster, and in some cases, produce more accurate fits.
 More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method using normalising flows, a family of methods related to the one we present below.
 They present the results of this method and show that it is capable of providing plausible inversions and posterior distributions using observations of \CaLine{} and Fe\,\textsc{i} \SI{630.15}{\nano\m}.
 The field of machine learning based, and assisted, inversions is undergoing rapid development and appears to have a very exciting future.
@@ -80,7 +80,7 @@ We have stated that the $s_i$ and $t_i$ functions can be of arbitrary complexity
 The networks used for $s_i$ and $t_i$ are identical, save for the application of a $\tan^{-1}$ transformation on the output of the $s_i$ block, which prevents extreme values from being produced whereby the exponential term would dominate, or have no effect on the output of the block.
 
 In the spirit of DNNs we then stack multiple affine coupling layers to allow for increased representational capability within the INN.
-As the the input is split in half upon entering each affine layer, we can see that the data in each half is only combined at the elementwise multiplication step in each layer on its journey through the network.
+As the input is split in half upon entering each affine layer, we can see that the data in each half is only combined at the elementwise multiplication step in each layer on its journey through the network.
 To alleviate this, and further increase the generalisation capabilities of the network, we interleave a permutation layer between each affine coupling layer.
 This layer shuffles the data in a random, but fixed order which is different for each permutation layer, before it is split, whilst allowing for trivial reversibility.
 
@@ -149,7 +149,7 @@ This is shown schematically in Fig. \ref{Fig:RadynversionDiagram}.
 Given the presence of four DNNs per affine coupling layer, our final model is composed of twenty DNNs.
 Each of these networks is an individual four-layer fully connected network utilising leaky ReLU activation functions after each of the first three layers, and a ReLU following the final layer.
 This architecture was developed empirically, guided both by the examples presented in \citep{2018Ardizzone} and machine-learning best practices.
-A commonly used approach that we applied extensively is to take a small subset of the the training data and attempt to find a model which can successfully overfit this mapping; a model that can memorise the mapping for a subset of inputs can demonstrably learn the problem (although it may not have enough dimensionality to generalise, depending on the range and complexity of the input data).
+A commonly used approach that we applied extensively is to take a small subset of the training data and attempt to find a model which can successfully overfit this mapping; a model that can memorise the mapping for a subset of inputs can demonstrably learn the problem (although it may not have enough dimensionality to generalise, depending on the range and complexity of the input data).
 Models with both three and five affine coupling layers were trialled, with the latter performing significantly better.
 Whilst it is possible to continue to increase the depth of this network, this is not without significant computational cost, and did not seem necessary given the quality of the results.
 
@@ -304,7 +304,7 @@ We therefore employ a biased estimate of the MMD which remains positive in all s
 \begin{equation}
     \widehat{\textnormal{MMD}}_b^2 = \frac{1}{n^2}\sum_{i, j}\left( k(x_i, x_j) + k(y_i, y_j) - 2k(x_i, y_j) \right).
 \end{equation}
-This biased form of the MMD is also more efficient to compute using the vectorised tensor operations present in machine learning frameworks like pytorch.
+This biased form of the MMD is also more efficient to compute using the vectorised tensor operations present in machine learning frameworks like PyTorch.
 
 The choice of kernel used in the MMD will then determine how this statistic is able to distinguish between distributions.
 We choose to employ the inverse multi-quadric (IMQ) kernel as used by \citet{2017Tolstikhin} and \citet{2018Ardizzone}
@@ -471,7 +471,7 @@ For each pair of line profiles we draw a large number of samples from the latent
 This gives a large number of possible sets of atmospheric parameters which we plot on a two dimensional histogram to show the probability density of the solution in each altitude node.
 This method then allows us to gauge possible degeneracies and establish the relative probabilities of different solutions.
 An example validation inversion is shown in Fig.~\ref{Fig:RadynversionValidationReverse}, using the ground truth output line profiles shown in the forward validation process as input.
-These histograms were generated from 10\,000 draws latent space draws, and their values were gamma corrected (with $\gamma=$ \py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
+These histograms were generated from 10\,000 latent space draws, and their values were gamma corrected (with $\gamma=$ \py[Radynversion]|powerNormIdx|) to enhance the visibility of less probable solutions.
 The overplotted black dashed lines show the ground truth solution for each of the atmospheric parameters, and overlap the peak density of the histogram extremely well.
 The histogram remains very narrow in the lower atmosphere, but starts to expand above \SI{3}{\mega\metre}, where the solution is poorly constrained by the chromospheric lines in use here.
 This effect is most visible on the velocity plot, but despite the increase in uncertainty, the solutions remain accurate on the validation set due to the model's conditioning to the RADYN training data.

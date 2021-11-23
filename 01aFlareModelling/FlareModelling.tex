@@ -132,7 +132,7 @@ Everyone is familiar with the concept of images, which show the spatial variatio
 Using both of these properties is referred to as \emph{spectropolarimetry}, and \emph{spectroscopy} when only the unpolarised intensity is considered.
 The most basic property to consider here is the specific intensity, commonly denoted $I(\nu, \vec{d})$ for a particular frequency $\nu$ and direction $\vec{d}$ at a location in space with typical SI units \si{\joule\per\square\metre\per\s\per\hertz\per\steradian}.
 
-A ray propagating through a medium, such as a neutral gas or plasma, will gain a certain amount of energy per unit length due to emission processes, whilst also losing another amount due to absorption and scattering processes. These will depend on the local parameters of the plasma as well as the direction of the ray. For a plasma where the primary interacting species are atomic, we can distinguish bound-bound (spectral lines) and bound-free (continuum) transitions. In the former a bound electron moves between two different sublevels of an atom\footnote{Here \emph{atom} refers to either a neutral atom or an ion}, whilst in the latter the atom either absorbs sufficient energy to free a previously bound electron, or an ion loses sufficient energy to recombine with a free electron.
+A ray propagating through a medium, such as a neutral gas or plasma, will gain a certain amount of energy per unit length due to emission processes, whilst also losing another amount due to absorption and scattering processes. These will depend on the local parameters of the plasma as well as the direction of the ray. For a plasma where the primary interacting species are atomic, we can distinguish bound-bound (spectral lines) and bound-free (continuum) transitions. In the former a bound electron moves between two different sublevels of an atom\footnote{Here \emph{atom} refers to either a neutral atom or an ion}, whilst in the latter the atom either absorbs sufficient energy to free a previously bound electron, or \replaced{a free electron recombines with an atom and loses energy in the process}{ an ion loses sufficient energy to recombine with a free electron}.
 
 In addition to the obvious spontaneous emission and absorption processes, there is also a process of stimulated emission which is needed to balance the transitions. This occurs when an electron is stimulated to transition between levels by photons with the same frequency and direction as the photon produced by this transition.
 
@@ -150,11 +150,11 @@ where $\eta$ is the plasma emissivity, $\chi$ is the plasma opacity, $z$ is the 
 We consider that the light-crossing time for the propagation of light on a solar scale is small compared to the time evolution of both the atmosphere and our observations so we ignore the time-derivative term.
 Defining the source function
 \begin{equation}
-S(\mu, \vec{d}) = \frac{\eta(\nu, \vec{d})}{\chi(\nu, \vec{d})},
+S(\nu, \vec{d}) = \frac{\eta(\nu, \vec{d})}{\chi(\nu, \vec{d})},
 \end{equation}
 and the optical depth along a ray from the observer as the number of photon mean free paths along this segment
 \begin{equation}
-\tau(z, \nu, \vec{d}) = \int_z^{z_{\textnormal{obs}}}  \frac{\chi_\nu(z^\prime)}{\mu} \mathop{\dd{}z^\prime},
+\tau(z, \nu, \vec{d}) = \int_z^{z_{\textnormal{obs}}}  \frac{\chi(z^\prime, \nu, \vec{d})}{\mu} \mathop{\dd{}z^\prime},
 \end{equation}
 we can write the RTE as
 \begin{equation}
@@ -198,12 +198,13 @@ This can then be substituted into \eqref{Eq:ShortCharForm} (with $\Delta := \tau
     \frac{\Delta - 1 + \exp(-\Delta)}{\Delta} S_{\tau_0} +
     \frac{1 - \exp(-\Delta) - \Delta\exp(-\Delta)}{\Delta} S_{\tau_1}.
 \end{equation}
-This expression can be applied recursively from one end of the atmospheric model (assuming that the incoming radiation field is known), to the other, to provide the emergent intensity.
-It is this procedure we refer to as computing a formal solution, and this will typically need to be computed for multiple directions (angles to the surface normal in the plane-parallel case) to compute the the angle-averaged radiation field at each frequency and location in as model atmosphere using a weighted quadrature, such as the Gauss-Legendre quadrature.
+\NOTE{I don't think $S$ needs to be considered a functional of $I$, although its effects are of course included in $\chi$ and any scattering terms. We assume it is known a priori here.}
+This expression can be applied \replaced{repeatedly}{recursively} from one end of the atmospheric model (assuming that the incoming radiation field is known), to the other, to provide the emergent intensity.
+It is this procedure we refer to as computing a formal solution, and this will typically need to be computed for multiple directions (angles to the surface normal in the plane-parallel case) to compute the angle-averaged radiation field at each frequency and location in a model atmosphere using a weighted quadrature, such as the Gauss-Legendre quadrature.
 
 In atmospheres with very well resolved spatial grids, this method works quite well, however whenever the true source function has positive curvature, the intensity is overestimated, and underestimated for negative curvature. These effects can become quite significant in more sparsely sampled atmospheres.
 
-The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust formulation is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across local three consecutive points (i.e. a three point stencil), but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
+The short characteristics method can be improved by using higher order polynomial interpolants, however these can lead to spurious ringing artifacts, negatively affecting their precision. One commonly used robust formulation is the monotonic piecewise parabolic method of \citet{Auer1994}. This method assumes a parabolic variation of the source function across three consecutive points (i.e. a three point stencil), but limits it to the value obtained from linear interpolation if the parabolic interpolant exits the range bounded by these three points.
 
 Other interpolating functions can be used. For example, the cubic Bézier spline technique of \citet{DelaCruzRodriguez2013}, provides a higher order approximation in regions of smooth variation, and can be limited through the control points to prevent any ringing instability. A similar approach has been taken with the BESSER quadratic Bézier spline approach of \citet{Stepan2013}.
 For the plane-parallel case, all of these methods can be derived analogously to the linear formal solver presented above.
@@ -240,10 +241,10 @@ Expressing this mathematically, we write the total transition rate $P_{ij}$ per 
 where $R_{ij}$ is the rate of radiative transitions (due to absorption, spontaneous, and stimulated emission) and $C_{ij}$ is the rate of collisional transitions.
 As the total population of each element must remain constant we can write the kinetic equilibrium equation (which can be derived from the Boltzmann equation)
 \begin{equation}
-    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{\varv}) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime},
+    \frac{\partial n_l}{\partial t} + \nabla \cdot (n_l \vec{\varv}_s) = \sum_{l^\prime\neq l} (n_{l^\prime} P_{l^\prime l}) - n_l \sum_{l^\prime\neq l} P_{ll^\prime},
     \label{Eq:KinEq}
 \end{equation}
-where $n_l$ is the number density of atoms in level $l$ of the atomic species in question.
+where $n_l$ is the number density of atoms in level $l$ of the atomic species in question \added{and $\vec{\varv}_s$ is the bulk velocity of this species}.
 
 Equation \eqref{Eq:KinEq} is frequently simplified to the statistical equilibrium equation, by setting the left-hand side to 0 giving
 \begin{equation}
@@ -292,7 +293,7 @@ The normalised line absorption profile then describes the probability of a photo
 Typically it is assumed that the plasma is sufficiently collisional for elastic collisions to redistribute the electrons of an atom in an excited state over all sub-states of an energy level prior to emission.
 If this is not the case then the frequency of the outgoing photon will be correlated with the frequency of the photon that excited the atom into this state.
 Thus the spectral line will have an emission profile distinct from its absorption profile.
-This effect is known as partial redistribution (PRD) and will be discussed in Sec.~\ref{Sec:Prd}.
+This effect is known as partial \added{frequency} redistribution (PRD) and will be discussed in Sec.~\ref{Sec:Prd}.
 The typical state of affairs, where there is sufficient redistribution from elastic collisions for these two processes to be uncorrelated is known as complete redistribution (CRD).
 In the following, we will always express line emission processes through an emission profile for generality, even if they are treated as CRD.
 
@@ -393,7 +394,7 @@ The failure of Lambda iteration can be remedied by a process known as operator s
 \begin{equation}
     \Lambda = \Lambda^* + (\Lambda - \Lambda^*),
 \end{equation}
-with $\Lambda^*$ an approximation of $\Lambda$. The iterative scheme them becomes
+with $\Lambda^*$ an approximation of $\Lambda$. The iterative scheme then becomes
 \begin{equation}
     I(\nu, \vec{d}) = \Lambda_{\nu, \vec{d}}^*[S(\nu, \vec{d})] + (\Lambda_{\nu, \vec{d}} - \Lambda_{\nu, \vec{d}}^*)[S^{\dagger}(\nu, \vec{d})],
     \label{Eq:Ali}
@@ -479,8 +480,13 @@ We can then write
     \label{Eq:GammaR}
 \end{equation}
 for $l\neq l^\prime$.
+\added{As the collisional rates can be treated directly we have simply}
+\begin{equation}
+    \Gamma^C_{ll^\prime} = C_{l^\prime l},
+\end{equation}
+for $l\neq l^\prime$.
 The problem is now represented by a system of equations linear in the level populations.
-Due to the necessity of total number conservation the sum of the entries in each column of $\Gamma$ must be 0, which allows us to compute the diagonal terms as
+Due to the necessity of total number conservation the sum of the entries in each column of $\Gamma$ must be 0, which allows us to compute the diagonal \replaced{entries of the complete $\Gamma$ matrix}{ terms} as
 \begin{equation}
     \Gamma_{ll} = -\sum_{m\neq l} \Gamma_{ml}.
 \end{equation}
@@ -678,7 +684,7 @@ Hyperbolic problems take the form
 \begin{equation}\label{Eq:ConsLaw}
     q_t + f(q)_x = 0,
 \end{equation}
-where $f$ is a function describing the the flux of $q$ at each location in the domain, $t$ indicates a temporal coordinate, and $x$ a spatial coordinate.
+where $f$ is a function describing the flux of $q$ at each location in the domain, $t$ indicates a temporal coordinate, and $x$ a spatial coordinate.
 In the following discussions, there is an inherent assumption that the flux function is local, and acts only on the local state variables $q$.
 This is not necessarily the case with radiative terms, but these can be incorporated into such a scheme by determining their local effects on the plasma energy.
 
@@ -724,7 +730,7 @@ These terms are also added to the right-hand side of the equations of \eqref{Eq:
 
 The typical first choice for numerically solving differential equations is to apply a finite difference method.
 In this class of method, the problem is discretised, similarly to the approach taken in radiative transfer, and the values associated with each grid point represent the local pointwise value.
-The local gradient of the conserved quantities can then be estimated from pointwise difference between in the quantity between adjacent cells.
+The local gradient of the conserved quantities can then be estimated from pointwise difference in the quantity between adjacent cells.
 This method can be applied to discrete problems in both space and time.
 Applying a basic one-sided method to the advection equation \eqref{Eq:Advection} gives
 \begin{equation}\label{Eq:FdmAdvection}
@@ -933,22 +939,22 @@ This can be effectively combatted by the use of high-order reconstruction scheme
 \subsection{Time Integration, Stability, and Splitting Schemes}\label{Sec:HydroStability}
 
 Explicit schemes are only stable (i.e. do not diverge or introduce spurious oscillations) if the Courant-Friedrichs-Lewy (CFL) condition is met.
-The CFL condition states that the numerical domain of dependence of the the equation (i.e. the terms used in the computation of a value in the next timestep) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
+The CFL condition states that the numerical domain of dependence of the equation (i.e. the terms used in the computation of a value in the next timestep) must encompass the analytic domain of dependence to ensure that all necessary information is taken into account.
 This is a necessary, but not sufficient condition, and the exact requirements of each scheme can often be derived analytically, although it is common to apply an additional safety margin to the maximum permitted value of the CFL condition.
 
-For explicit methods the CFL condition sets the maximum timestep that can be used based on the current simulation conditions.
+For explicit methods the CFL condition typically sets the maximum timestep that can be used based on the current simulation conditions.
 In a hyperbolic system the CFL condition takes the form
 \begin{equation}
     C = \frac{\varv\Delta t}{\Delta x},
 \end{equation}
-and will be constrained to a maximum value ($\leq 1$) for stability of an explicit method.
+and will be constrained to a maximum value ($\leq 1$) for stability of a \added{low order} explicit method.
 Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
-This is discussed \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost ratio despite the method being nominally stable for large CFL values.
+This is discussed by \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost ratio despite the method being nominally stable for large CFL values.
 
 It is difficult to achieve better than second order accuracy due to the temporal discretisations discussed so far, but by viewing $F_i^t$ as the flux at time $t$, we can achieve higher order accuracy by applying a multi-step method to more accurately integrate these fluxes (and any associated source terms) over time.
 A good choice for this is a method in the family of total-variation diminishing Runge-Kutta methods \citep[e.g.][]{Shu1988}.
 These multi-step time integration methods can be combined with fractional step methods that allow us to perform \emph{operator splitting}.
-That is, splitting an equation into two subproblems that can solved independently.
+That is, splitting an equation into two subproblems that can be solved independently.
 An example of this would be the radioactive decay of an isotope transported by advection.
 Splitting this into an advection and a reaction problem allows for standard methods to be used in both of these problems, but clearly their results need to be coupled to each other.
 A naive first approach is to solve one of the subproblems over the timestep, and then solve the other, but this method cannot be better than first order accurate in time for coupled subproblems.

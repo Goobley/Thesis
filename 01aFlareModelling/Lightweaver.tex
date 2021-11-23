@@ -31,7 +31,7 @@ The use of a tested framework also allows researchers confidence in the core num
 The steps involved in solving the NLTE radiative transfer problem, e.g. formal solution, calculation of preconditioned rates, population updates, conservation of charge, and calculation of the PRD line profile ratio, are quite modular, and we provide optimised methods for the most commonly used steps following the standard techniques outlined previously.
 They are building blocks that can be combined in different ways, to produce different tools.
 These building blocks are the core offering of the \Lw{} framework, and are intended to be combined by the user in a new Python program to solve their particular problem.
-If at any point a user wishes to fully replace a core component of \Lw{}, this can be done in Python, inside their program, with no modification the framework itself, whilst the other components can continue to be used as before.
+If at any point a user wishes to fully replace a core component of \Lw{}, this can be done in Python, inside their program, with no modification of the framework itself, whilst the other components can continue to be used as before.
 This flexibility is encompassed by one of the core design goals, which is to allow Python code written by the user to ``interfere'' with all of the numerical treatment of the NLTE problem.
 
 All other radiative transfer codes that the author has interacted with have been designed with a strict limit of one simulation per computer process.
@@ -145,7 +145,7 @@ Due to its importance in obtaining a correct background opacity, the molecular H
 \Lw{} can compute the formation of molecules, assuming that they form in instantaneous chemical equilibrium.
 Their formation will reduce the total populations of the species bound up in them, and they may contribute to the background opacities (e.g. CH, OH, H$_2$).
 
-In \Lw{}, the time-dependent population updates are computing using the fully implicit variant of the method described in Sec.~\ref{Sec:TimeDepPopUpdates}, i.e. with $\theta=1$.
+In \Lw{}, the time-dependent population updates are computed using the fully implicit variant of the method described in Sec.~\ref{Sec:TimeDepPopUpdates}, i.e. with $\theta=1$.
 In general, we have found no difference between the fully- and semi-implicit treatments of the term, and adopt $\theta=1$ for simplicity.
 It is simple to replace the time-dependent population update scheme with one that performs the semi-implicit integration without modifying the core of \Lw{} itself.
 
@@ -162,7 +162,7 @@ A proof of concept implementation utilising MPI for a grid of models was underta
 
 A secondary form of parallelisation is also incorporated into \Lw{}.
 This consists of splitting time-consuming work from a single simulation over multiple threads in the same machine.
-This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any line profile ratios needed for PRD, which are parallelised over wavelength
+This work primarily consists of the formal solution, accumulation of terms into the $\Gamma$ matrix, and calculation of any line profile ratios needed for PRD, which are parallelised over wavelength.
 These terms typically represent the vast majority of the program's runtime for non-trivial simulations.
 The calculation of line absorption profiles, when using atomic models with the default Voigt profile implementation, along with the optional \texttt{FastBackground} implementation of background opacities, emissivities, and scatterings, are also parallelised.
 The choices of the terms to parallelise has been motivated by our observations of the most time-consuming processes when using \Lw{} to undertake the numerical experiments presented in Chaps.~\ref{Chap:TimeDepRt} and \ref{Chap:2DRT}.
@@ -520,8 +520,8 @@ ax[1].set_ylim(6, 11)
 ax[2].set_ylim(1, 6.25)
 ax[3].set_ylim(10, 11)
 
-ax[2].set_xlabel('$\log\,m$ [cm$^{-2}$]')
-ax[3].set_xlabel('$\log\,m$ [cm$^{-2}$]')
+ax[2].set_xlabel('$\log\,m$ [g cm$^{-2}$]')
+ax[3].set_xlabel('$\log\,m$ [g cm$^{-2}$]')
 
 ax[0].set_ylabel('$T$ [K]')
 ax[1].set_ylabel('$\log\,n(n=1)$ [cm$^{-3}$]')
@@ -591,7 +591,7 @@ Fig.~\ref{Fig:LwRhComparison} presents a comparison of the synthesis of \CaLine{
 This is a static, semi-empirical quiet Sun atmosphere, so the synthesis is performed in statistical equilibrium.
 RH's solution is shown in blue, with the \Lw{} solution overlaid in dashed orange.
 There is clearly very good agreement between these codes in this simple static test.
-This figure also shows the sensitivity of \CaLine{} to the electron density when computed under the assumption of LTE ionisation (green), and how the the charge conservation method implemented in \Lw{} can help to mitigate these effects when the electron density is not known \emph{a priori} (red).
+This figure also shows the sensitivity of \CaLine{} to the electron density when computed under the assumption of LTE ionisation (green), and how the charge conservation method implemented in \Lw{} can help to mitigate these effects when the electron density is not known \emph{a priori} (red).
 The line profile computed from the simulation with the charge conservation strategy approaches the reference solution, where the electron density is provided by the FAL model.
 The primary differences between these treatments is likely due to other species, such as Fe, being treated in LTE.
 
@@ -600,7 +600,7 @@ The vertical velocity structure of the atmosphere is defined to be two periods o
 The electron density is set and held fixed at the value given by the LTE ionisation state of the plasma.
 This is to allow for easier comparison between the codes with different formulations for their model atmospheres.
 Here RH's solution is once again shown in blue, \Lw{}'s in dashed orange, and SNAPI's in dot-dashed green.
-This problem serves primarily as a test of the formal solver: the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail.
+This problem serves primarily as a test of the formal solver: the piecewise parabolic method of \citet{Auer1994} implemented in RH, which falls back to monotonic linear interpolation if the parabolic terms under- or overshoot, was unable to correctly solve the problem, causing the iteration to fail \added{by producing a singular $\Gamma$ matrix}.
 The cubic Bézier method of \citet{DelaCruzRodriguez2013} normally used in all three of these codes, along with their standard MALI iteration machinery, provides a very similar solution in all three cases.
 The slight differences apparent around $\Delta\lambda=\SI{-0.1}{\nano\metre}$ is likely to be caused by differences in the formal solver implementations; the version implemented in RH uses the method of \citet{Fritsch1984} to compute numerical estimates of the necessary derivatives, whereas we use the method of \citet{Steffen1990} in \Lw{} following the recommendation of \citet{Janett2018}, as the accuracy of \citet{Fritsch1984} falls to first-order on non-uniform grids.
 Additionally, the implementation present in RH chooses to limit the control points on the spline interpolants to positive values, but following the advice of J. de la Cruz Rodríguez (\emph{private communication}) we remove this limitation as negative absorption can occur with sufficient stimulated emission.
@@ -622,7 +622,8 @@ This difference is present only over a very small range of wavelengths and we co
 \begin{figure}[p]
     \centering
     \includegraphics[width=0.85\columnwidth]{01aFlareModelling/StaticFigs/Judge2017Fig4.png}
-    \caption[Fig. 4 of Judge (2017). Time-dependent response of hydrogen populations to instantaneous temperature change.]{Fig. 4 of \citet{Judge2017}. The response of hydrogen levels ($n=1, 2$) and continuum ($\kappa$) are shown for an instantaneous perturbation of the temperature of the FALC model (top-left panel). Each black line shows the population densities once every \SI{1}{\second}. © AAS. Reproduced with permission.}
+    \caption[Fig. 4 of Judge (2017). Time-dependent response of hydrogen populations to instantaneous temperature change.]{Fig. 4 of \citet{Judge2017}. The response of hydrogen levels ($n=1, 2$) and continuum ($\kappa$) are shown for an instantaneous perturbation of the temperature of the FALC model (top-left panel). Each black line shows the population densities once every \SI{1}{\second}. Note that the abcissa should be labelled as \si{\gram\per\square\centi\metre}.
+    © AAS. Reproduced with permission.}
     \label{Fig:Judge2017Original}
 \end{figure}
 \py[Lw]|chLw.get_figure('LwValidationJudge')|
@@ -637,15 +638,17 @@ The black lines represent the solutions for each population every \SI{1}{\second
 The $x$-axis on these plots is the atmospheric column mass, and Fig.~\ref{Fig:LwValidationJudge} is prepared in cgs to allow direct comparison to Fig.~\ref{Fig:Judge2017Original}.
 The typically temperature-dependent (i.e. due to assuming a Maxwellian electron distribution) collisional ionisation and excitation ``strengths'' are fixed to their values at \SI{7000}{\kelvin} obtained using the method of \citet{Johnson1972} (P. Judge, \emph{private communication}; we note that the collisional \emph{rates} associated with these still scale with $\sqrt{T}$).
 
+\NOTE{Commented on column mass, there is a mistake in the source plot.}
+
 We see good overall agreement with \citet{Judge2017}, but the differences are larger than those presented in the previous figures.
 The method used by \citet{Judge2017} is different to ours, and uses full preconditioning but with a $\Lambda$ operator based on the escape probability formalism of \citet{Hummer1982}, using a one-sided escape probability.
 This approach is much more approximate than the full MALI treatment applied in \Lw{}, as it only performs the approximate formal solution at one wavelength per transition, and computes the integrals over wavelength and angle analytically.
 The advantage of this treatment is that it is much less computationally intensive.
 Thus, the use of this approximate method by \citet{Judge2017} is likely to be the origin of the differences between our results, and we find that the level populations converge to similar final solutions, at apparently similar rates.
-The most substantial difference between our results is for the $n=2$ population: in Fig.~\ref{Fig:Judge2017Original}, the points close to a column mass of \SI{-4.9315}{\per\square\centi\metre} do not vary from their initial values, whereas in our model they change quite dramatically, with an enhancement of up to 2\,dex, leaving the range of the original plot, but converge close to the expected final solution.
+The most substantial difference between our results is for the $n=2$ population: in Fig.~\ref{Fig:Judge2017Original}, the points close to a column mass of \SI{-4.9315}{\gram\per\square\centi\metre} do not vary from their initial values, whereas in our model they change quite dramatically, with an enhancement of up to 2\,dex, leaving the range of the original plot, but converge close to the expected final solution.
 This is likely an effect of downgoing radiation not being considered in the escape probability based formal solution of \citet{Judge2017}.
 The maximum enhancement in this level also peaks higher than that seen in Fig.~\ref{Fig:Judge2017Original}, but rapidly drops towards the expected solution.
-The downgoing radiation is also likely responsible for the offset of the final populations from the initial model in the \SI{-4.9315}{\per\square\centi\m} region that is not present in Fig.~\ref{Fig:Judge2017Original}, as the populations stay stable when the populations are advanced in time through the same process without the temperature perturbation, i.e. statistical equilibrium is maintained.
+The downgoing radiation is also likely responsible for the offset of the final populations from the initial model in the \SI{-4.9315}{\gram\per\square\centi\m} region that is not present in Fig.~\ref{Fig:Judge2017Original}, as the populations stay stable when the populations are advanced in time through the same process without the temperature perturbation, i.e. statistical equilibrium is maintained.
 This simple example illustrates that \Lw{}'s behaviour is reasonable when applied to time-dependent problems, and the quality of its treatment will become apparent in the in-depth comparisons with \Radyn{} presented in Chap.~\ref{Chap:TimeDepRt}.
 
 \py[Lw]|chLw.get_figure('LwValidationTimeDepNe')|

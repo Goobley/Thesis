@@ -49,7 +49,7 @@
     \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
     \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 1}] at (2,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+    \node at (\raystartx, \raystarty) [below] {\color{TolCyan} ?};
 
     % (3.5,2)
     \pgfmathsetmacro\rayc{2 - \raym * 3.5}
@@ -59,7 +59,7 @@
     \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
     \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 2}] at (3.5,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+    \node at (\raystartx, \raystarty) [below] {\color{TolCyan} ?};
 
     % (4,2)
     \pgfmathsetmacro\rayc{2 - \raym * 4}
@@ -69,7 +69,7 @@
     \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
     \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=right:{\footnotesize 3}] at (4,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+    \node at (\raystartx, \raystarty) [below] {\color{TolCyan} ?};
 
     % (5,2)
     \pgfmathsetmacro\rayc{2 - \raym * 5}
@@ -79,7 +79,7 @@
     \pgfmathsetmacro{\rayendx}{divide(\rayendy - \rayc,  \raym)}
     \draw[->, domain={\raystartx}:{\rayendx}, samples=3, thin] plot(\x, {\raym * (\x) + \rayc});
     \node[circle, fill=black, inner sep=0 pt, minimum size=3pt, label=left:{\footnotesize 4}] at (5,2) {};
-    \node at (\raystartx, \raystarty) [below] {\color{TolBlue} ?};
+    \node at (\raystartx, \raystarty) [below] {\color{TolCyan} ?};
     \node at (\rayendx, \rayendy) [right] {\color{TolTeal} ?};
 
     % (2,2.5)
