@@ -47,6 +47,10 @@ This same process simultaneously solves for the population updates, heat conduct
 
 A significant benefit of this implicit approach is a relaxation of the timestep constraints present in explicit approaches.
 This is particularly important when considering the very fine grid spacing often required by the dynamic grid which, combined with the large bulk velocities occurring in flares, can lead to extremely oppressive timestep constraints.
+\added{
+Thermal conduction (which is typically stiff in an explicit treatment) is also computed as part of this system, using the flux limiter of \citet{Campbell1984}.
+Whilst this limiter will limit the local electron flux to below the free-streaming limit, the implementation is not physically accurate and non-local transport terms resulting from the solution of the Vlasov-Fokker-Planck equation may further affect this term, however any adjustment of the thermal conduction treatment is outside the scope of the work presented here.
+}
 
 Despite its elegance, there are several major downsides to this implicit approach.
 Foremost of these is the complexity engendered by the coupled design of the system, and the need to ensure that all necessary derivatives are analytically derived and correctly computed.
@@ -111,7 +115,11 @@ Our testing of this show that the approximation is relatively good, but short te
 For this reason, all simulations presented here use the version with the beam energy deposition data.
 
 With the above data we have sufficient information to construct the \Radyn{} thermodynamic atmosphere at any of its internal timesteps.
-\Lw{} does not make use of the mass density directly, but instead maps it to hydrogen density.
+\added{
+\Lw{} is then responsible for the determining the radiation field and atomic level populations throughout the atmosphere using the thermodynamic properties at each timestep loaded from the \Radyn{} output and the populations at the previous timestep.
+Thus, the atomic level populations are computed in statistical equilibrium for the \Radyn{} starting atmosphere and are then evolved only by our simulation code using \Lw{}, and not \Radyn{}, which simply provides the thermodynamic structure of the atmosphere at each timestep.
+}
+\Lw{} does not make use of the mass density stored by \Radyn{} directly, but instead maps it to hydrogen density.
 For this we use the default abundances in \Lw{}, based on \citet{Asplund2009}.
 These differ to those used in \Radyn{}, but not significantly for any of the species discussed here.
 
@@ -302,7 +310,8 @@ The low-energy cut-off is in accord with the findings of \citet{Sui2007} whose a
 Another study of 53 flares using RHESSI by \citet{Saint-Hilaire2008} found that the photon spectral index $\gamma$ was distributed between 2 and 5, peaking between 3 and 3.5.
 Given this, our choice of spectral index is reasonable and lies well inside this distribution as the spectral index of the electron beam is related to the photon spectral index by $\delta = \gamma + 1$.
 
-For both of these simulations \Radyn{}'s coronal irradiation terms were disabled due to discrepancies that were found between the implementation of these in \Radyn{} and \Lw{}.
+For both of these simulations \Radyn{}'s additional coronal \added{X-ray and extreme ultraviolet (XEUV)} irradiation terms were disabled due to discrepancies that were found between \replaced{these and their re-implementation in}{ the implementation of these in \Radyn{} and} \Lw{}.
+\added{Thus, no coronal XEUV irradiation terms were used in either \Radyn{} or \Lw{}, as this was necessary to ensure agreement in the LE case, allowing the differences in the LI case to be assessed.}
 Additionally, the maximum timestep allowed in \Radyn{} was limited to \SI{0.01}{\second}.
 This was primarily due to experiments with the explicit advection scheme, but likely also reduced the possible loss of accuracy due to the operator splitting scheme used in our final reprocessed simulations.
 
@@ -666,6 +675,10 @@ There is a significant feature contributing to the violet wing of the LE models 
 In this same region both the upper and lower level populations for the \CaLine{} transition are significantly enhanced over their LI values, creating an increase in opacity, whilst keeping the source function approximately constant, leading to the attenuation of radiation from deeper in the atmosphere.
 Under the LI treatment we instead see that there is substantially more \Caiii{} in this region, likely due to \Caii{} to \Caiii{} photoionisation from Lyman lines formed in the upper chromosphere and transition region.
 In the F10 simulation there is also a significant difference between the \Caiii{} populations computed in the two treatments around the temperature minimum region; this is much deeper than any of the \Caii{} spectral line cores typically form, but is likely due to the same photoionisation process and the effects of the much larger Lyman line intensity that occurs in the F10 model.
+
+\added{
+For both the F9 and F10 simulations, the effect of the Lyman lines on the calcium level populations (enhanced \Caiii{}, reduced \Caii{}) in the upper chromosphere is similar to that found by \citet{Gouttebroze2002} in prominence models, although the magnitude of the effect is larger here, likely due to the strong enhancement of the Lyman lines in these flare models.
+}
 
 \subsection{Radiative Losses}
 %spell-checker: disable
@@ -1567,3 +1580,8 @@ Empirically, we have found that the majority of convergence problems originate f
 If similar convergence issues also affect these lines, then it would be desirable to devise and implement an approximation scheme similar to that used for Ly$\alpha$ and Ly$\beta$.
 As previously mentioned, it has been suggested that \Radyn{}'s treatment of the \Caii{} resonance lines in CRD overestimates the radiative losses but this overestimation is compensated by not considering the Mg\,\textsc{ii} h and k lines \citep[e.g.][]{Carlsson2002,Kerr2019a}.
 The techniques presented in this chapter should allow for a thorough investigation of this assumption and the development of suitable PRD approximations if necessary.
+
+\added{
+In summary, we found that it is essential to consider the photoionising effects of the Lyman lines when modelling the \Caii{} lines in flares, but a statistical equilibrium treatment of the \Caii{} level populations appears to be sufficient in general.
+Considering PRD effects, we found that the Doppler-like approximation used in \Radyn{} appears accurate for Ly$\alpha$ and Ly$\beta$, and similar approximations should be investigated for the \Caii{} resonance lines, as their line profiles and radiative losses vary dramatically between PRD and CRD treatments (as previously remarked by \citet{Uitenbroek2002} in wave-heated chromospheric simulations).
+}

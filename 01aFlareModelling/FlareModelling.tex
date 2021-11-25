@@ -1000,6 +1000,13 @@ We have provided an overview of the commonly used techniques for simulating sola
 The core components of radiative transfer, hydrodynamics, and heat conduction have been discussed in depth, along with an overview of the numerical treatments of these terms.
 Whilst there are other important terms in the RHD equations, such as the heating model, these represent the core of any flare simulation.
 
+\added{
+In Chaps.~\ref{Chap:Lw}--\ref{Chap:2DRT} we will build on the theory presented in this chapter with simulations built using our \Lw{} framework.
+The \Lw{} radiative transfer framework is described in detail in Chap.~\ref{Chap:Lw} and provides components for computing the intensity and atomic level population updates (in both statistical equilibrium and time-dependent situations) as described in Sec.~\ref{Sec:IntroRT}.
+It is therefore not a complete RHD code like \Radyn{}, but provides a more thorough treatment of the radiative transfer terms through the use of the fully preconditioned MALI method with a cubic Bézier spline formal solver.
+The novel modularity of its design enables greater flexibility when treating the radiative terms of RHD flare modelling and revisiting existing assumptions regarding their treatment, as different methods can easily be combined and compared.
+}
+
 Modern RHD simulations have significantly enhanced our understanding of flares, but remain limited in the dimensionality of their treatments and cannot currently produce plausible synthetic light-curves without the artificial superposition of many individual simulations \citep[e.g.][]{Kerr2020}.
 It is likely that significant progress will be made on these limitations in the coming 1--2 decades as computing power and numerical techniques improve.
-In the meantime, we can undertake numerical experiments to evaluate individual components of these larger treatments (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{} based experiments.
+In the meantime, we can undertake numerical experiments to evaluate individual components of these larger treatments (along with re-evaluating certain current assumptions) and we will present several of these using our \Lw{}-based experiments\added{, that leverage the dynamics of \Radyn{} RHD simulations, with the flexible and enhanced treatment of radiative transfer and level populations from \Lw{}}.

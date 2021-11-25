@@ -693,7 +693,7 @@ The other $x$ boundary is treated equivalently, but using the fixed initial quie
 Similarly to the process described in the previous chapter a time-dependent simulation is run, again reprocessing the thermodynamic atmospheric properties using RADYN's internal timestep.
 The separate components of this model share a $z$ stratification based on a combination of RADYN's grids used for both the initial quiet sun atmosphere and the current timestep.
 This method ensures that 450 points are spaced across the entire altitude range of the atmosphere and provide sufficient resolution for the transition region of both the quiet sun model \emph{and} that of the flare model.
-The populations are interpolated between the $z$ grids from one timestep to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
+The populations \added{determined by \Lw{}} are interpolated between the $z$ grids from one timestep to the next, and locally scaled to follow the mass density (this is typically a small adjustment, but without it errors can grow as points move through the transition region).
 The electron density in the flare model is loaded from the RADYN output, and charge is conserved in the 2D slab using the secondary Newton-Raphson iteration procedure discussed in Sec.~\ref{Sec:ChargeCons}.
 The 6 rays per octant of the unit sphere quadrature of \citet{Stepan2020} was chosen, as the plasma in the 2D slab is static and these rays capture more than enough detail to describe the radiation field leaving the plane parallel model (where the radiative transfer model natively uses 5 Gauss-Legendre rays per quadrant of the unit disc).
 In addition to the 450 points in $z$, we use 41 linearly spaced points in $x$ to discretise the two-dimensional atmosphere.
@@ -713,9 +713,16 @@ These populations are then consistent with the adjacent plane-parallel atmospher
 There should not be any need to perform the same process at the quiet sun boundary, as it is placed \SI{2}{\mega\metre} away and should change very little over the course of the simulation, remaining consistent on both sides of the boundary.
 
 This configuration produces the outgoing intensity at 12 different angles from each of the 41 cells in $x$.
-We can use the symmetric definition of these to synthesise the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
+\added{These rays are symmetric in the $z$-axis, so we} can use the symmetric definition of these to synthesise the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
 This is shown in Fig.~\ref{Fig:2DSimFlipped} for an observation inclined as shown we are observing the radiation along the blue arrows.
-For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.
+\replaced{Reflecting the entire simulation in the $z$-axis, the intensity observed along the blue ray from the reflected atmosphere is the same as the radiation along the magenta ray produced in the original simulation configuration shown in Fig.~\ref{Fig:2DSimConfig}.
+Using the information produced by the original simulation configuration we can therefore produce this view of both sides of the flare.}{ For the reflected atmosphere, the blue arrow shown is equivalent to the magenta arrow from the simulated atmosphere.}
+
+\added{
+In the following results, we consider that the flaring boundary is at $x=0$ and will be presented as infinitesimally narrow, with the simulated atmosphere in positive $x$, and its reflection in negative $x$.
+To better describe the atmosphere we will split it into regions based on $x$-coordinate as follows: $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
+We will use minuscules (lower-case) of these designations to denote the reflections of their associated regions in the $z$-axis (i.e. in negative $x$).
+}
 
 \begin{figure}[tbp]
 \centering
@@ -1116,8 +1123,8 @@ Once again, there is a large difference between the positive and negative $x$ re
 This is likely due to rays passing through the positive $x$ region encountering more scattered light from the flare and directly intersecting the flaring atmosphere.
 There is some enhancement in the negative $x$ region, presenting as a narrowing of the line core in \Ha{} and enhancement of the core of \CaLine{}, but it is much less significant than that present in the positive $x$ region.
 Despite the horizontal uniformity of plasma properties in this atmosphere, there is substantial variation in the observed radiation.
-To better discuss these effects in detail we will split the atmosphere into regions based on $x$-coordinate as follows: $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
-We will use minuscules ($a$, $b$, $c$) of these designations to denote the reflections of their associated regions in the $x$-axis.
+\deleted{To better discuss these effects in detail we will split the atmosphere into regions based on $x$-coordinate as follows: $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
+We will use minuscules ($a$, $b$, $c$) of these designations to denote the reflections of their associated regions in the $x$-axis.}
 
 Starting with the \Ha{} line profiles shown in Fig.~\ref{Fig:HaFull2dPlot}, during heating ($t=\SI{5}{\second}$) we see a line profile in region $A$ with a broadened core in absorption (dark in the figure) and enhanced secondary peaks in both the red and blue around $|\Delta\lambda|=\SI{0.06}{\nano\metre}$.
 In $B$, the line core is enhanced relative to both $A$ and its quiet value with the secondary peaks in the wings around decaying rapidly, producing a shallower absorption profile, before a smooth return to the quiet sun line profile over $C$.
@@ -1556,7 +1563,7 @@ The relative change in the population is computed as
 where $n_{i,t}$ is the number density of atomic level $i$ at time $t$.
 The indexing of the levels shown in the plots is the indexing used by \Lw{}'s model atoms, which is zero indexed.
 These properties are all shown at $t=\SI{10}{\second}$.
-The contribution function and local opacity effect are computed by treating the atmosphere at $x=\SI{50}{\kilo\metre}$ as plane-parallel and computing the contribution function in the traditional way.
+The contribution function and local opacity effect are computed by treating the atmosphere \added{close to the flaring boundary} at $x=\SI{50}{\kilo\metre}$ as plane-parallel and computing the contribution function in the traditional way.
 This approach was taken due to the difficulty formulating the contribution function in the two-dimensional slab: the wavelength varying contributions of even a single output spectrum from a two-dimensional atmosphere cannot be represented directly on a two-dimensional plot, and this problem of dimensionality becomes greater still when investigating the contribution to each outgoing pixel.
 We therefore use this simplified model as it should still inform us of the primary line forming and absorbing regions, especially as the thermodynamic structure of the two-dimensional slab is constant (other than the first column, copied from the flaring boundary).
 The $\chi_\nu / \tau_\nu$ plot is computed equivalently to the contribution function.
@@ -1771,7 +1778,9 @@ Above this, the radiation field is primarily upgoing and injects energy into the
 
 \Ha{} appears relatively isotropic up to $z=\SI{1.45}{\mega\metre}$, with a slight upward anisotropy likely due to plasma motions of up to \SI{15}{\kilo\metre\per\second}, and becoming primarily upgoing above this.
 From the contribution function in Fig.~\ref{Fig:2dLevelsF10T10} the \Ha{} line core in the slab continues to form up to $z\approx\SI{1.75}{\mega\metre}$, and the anisotropic injection of energy is likely partially responsible for the diagonal structure seen in the population change plot of \Ha{}'s upper level.
-It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$, which coincides approximately with the bottom of the ionisation region depicted in the right-hand panel.
+\replaced{The \Caii{} K radiation field behaves similarly ot \CaLine{}, but forms slightly higher, with a strong anisotropic component around $z=\SI{1.15}{\mega\metre}$, corresponding roughly with the bottom of the ionisation region depicted in the right-hand panel.
+This line will be somewhat affected by the region of enhanced electron density, but less than either of the hydrogen lines presented.}
+{ It is also interesting to note how significantly the strength of the \Caii{} K radiation drops above $z=\SI{1.15}{\mega\metre}$, which coincides approximately with the bottom of the ionisation region depicted in the right-hand panel.}
 
 There is a significant enhancement of electron density within the triangular region shown in the right-hand panel of Fig.~\ref{Fig:F10AnisotropyNe}, which appears to be due primarily to photoionisation (as the temperature within the slab cannot change).
 This increase in electron density affects line formation within the slab, both in terms of the line profiles, but also collisional rates and LTE populations.
@@ -1780,7 +1789,10 @@ It overlaps well with the more complex features shown in the population change p
 From the population change figures shown in this section it becomes clear that the far wings and continuum of both of these spectral lines are not affected by the incident radiation due to the lack of changes in the populations in the deep chromosphere and photosphere.
 It is likely that the plasma here is both too optically thick, and collisionally coupled into LTE to be affected by the incoming radiation.
 Thus, without a thermodynamic change deep in the slab it is not possible for the continuum levels to change.
-It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.
+\replaced{
+It is not easy to disentangle the how the atomic populations in flaring boundary and the slab both contribute to the outgoing radiation.
+}{
+It is not easy to disentangle the effects of the population changes in the flare from the effects on the outgoing radiation.}
 Nevertheless, it is clear that the flare's effects penetrate far into the slab and have a lasting impact on the populations, on both spatial and temporal scales that should be easily resolvable in upcoming optical instruments.
 
 \subsection{Importance of Time-Dependence}\label{Sec:2dTimeDepSE}
@@ -2405,11 +2417,18 @@ In both the simulation and the observation this is in part due to the variation 
 Given the additional complexity of the observed configuration, the difference in viewing angle, timescale, and the likelihood of thermodynamic changes occurring in proximity to the flare (including Doppler shifts from plasma flows), it is unwise to attempt to interpret the comparison of these offsets in much greater depth than this qualitative agreement.
 The basic agreement between the simulation and observation suggests that this simulation is an accurate ``first-order'' approximation of this problem, and is capturing some of the observed effects through the treatment of radiation alone, although further simulation of more complex configurations and in-depth comparisons are needed.
 
+\added{
+Future comparisons between this style of modelling and observations can follow the methodology presented here, although it would be advantageous to more closely match the viewing angle of the observation and simulation.
+Whilst it is important to consider inclined observations, when using the approach presented here, slightly inclined simulations are significantly less computationally intensive than ones with extreme inlcination, due to the need for the rays exiting the top of the atmosphere to not simply sample the flaring boundary.
+This can likely be addressed by modifying the functionality of the formal solver for the final synthesis, so as to pick rays that will intersect with the chromospheric regions of interest.
+}
 
 \section{Discussions}
 
 The basic two-dimensional simulations shown in Sec.~\ref{Sec:2dSimResults} demonstrate that even for a two-dimensional slab of plasma with a fixed quiet Sun temperature structure, the time-dependent illumination by an adjacent flare will create significant variations in the level populations deep in the slab, causing notable enhancements in the observed \Ha{} and \CaLine{} optical spectral lines \SI{1}{\mega\metre} and further from the flaring boundary.
 Traditional inversion techniques performed on this region are likely to lead to incorrect conclusions as to the thermodynamic structure of the slab, as the outgoing radiation is not necessarily directly linked to the slab's local thermodynamic properties, but is instead significantly influenced by the incident radiation.
+\added{If the thermodynamic properties were allowed to vary through absorption of radiation and cross-field heat conduction (it is difficult to forsee other terms being possible without resorting to 2D RMHD simulation), then the local thermodynamic properties would be more closely linked to the observed radiation and changes in continuum flux would become possible.
+We have shown that the effects of radiation alone in the chromosphere are sufficient to produce significant changes in the observed line profiles and it does not seem likely that thermodynamic effects would dominate given the magnitude of the radiative effects, so care should still be taken when applying traditional inversion techniques.}
 
 It is necessary to perform a time-dependent treatment of the hydrogen populations in this problem, taking into account the effects of non-equilibrium ionisation, and this species' slow return to statistical equilibrium, despite the lack of time-varying thermodynamic modifications of the quiet Sun slab.
 With the electron density provided by non-equilibrium hydrogen ionisation\replaced{, a statistical equilibrium treatment of calcium}{ calcium treated in statistical equilibrium} was able to accurately reproduce the time-dependent \CaLine{} line profile (similarly to our results from Chap.~\ref{Chap:TimeDepRt}).
@@ -2421,4 +2440,4 @@ This may have implications for the calculation of filling factors, due to the wa
 Nevertheless, these enhancements are on scales that are observable with current generation instruments such as SST/CRISP, and are likely to become more important with the improved resolution of upcoming telescopes such as DKIST.
 We have presented an initial analysis of these effects in SST/CRISP data and found enhancements of a similar order of magnitude sharing a number of observational characteristics, but significant differences remain, likely due to the limitations of our simple model.
 It is likely that the temperatures in such a slab will vary due to the absorption of radiation, thermal conduction and other modes of heating occurring adjacent to the flare.
-Thus, the results presented here likely underestimate the magnitude of these line enhancement effects.
+Thus, the results presented here likely underestimate the magnitude of these line enhancement effects \added{which could be more accurately captured by using the detailed two-dimensional radiative transfer available in \Lw{} in conjunction with an RMHD model responding to the incoming energy.}
