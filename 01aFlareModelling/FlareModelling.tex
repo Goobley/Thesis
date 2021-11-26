@@ -66,9 +66,9 @@ $P = n_{\textnormal{tot}} k_B T$, where $n_{\textnormal{tot}}$ is the total part
 All of the quasi-one dimensional codes solve a variant of the RHD equations presented in \eqref{Eq:RhdEquations}. The first of these describes mass continuity, the second conservation of momentum, and the third conservation of energy.
 The nuance typically occurs in ensuring that all terms are solved in a self-consistent fashion and the treatment of the optically thick radiation source and sink terms appearing in the energy equation.
 
-The first generation of hydrodynamic flare models \citet{Nagai1980,Mariska1982,McClymont1983} focused on capturing the gas dynamics of the flaring event, using simplified radiative treatments.
+The first generation of hydrodynamic flare models \citep{Nagai1980,Mariska1982,McClymont1983} focused on capturing the gas dynamics of the flaring event, using simplified radiative treatments.
 These early models were, in general, much more limited due to computational constraints. \citet{Nagai1980} and \citet{Mariska1982} both employ optically thin losses with ad hoc corrections to avoid over-cooling the lower atmosphere.
-\citet{McClymont1983} employ an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer, but vastly more accurate than assuming the chromosphere to be optically thin (or an ad hoc modulation thereof).
+\citet{McClymont1983} employed an escape probability formalism for determining the transition rates of hydrogen, which is a faster, less precise method than detailed radiative transfer, but vastly more accurate than assuming the chromosphere to be optically thin (or an ad hoc modulation thereof).
 Escape probability methods are unable to directly take radiative backwarming into account -- where radiation produced higher in the atmosphere is absorbed at a lower point -- which can be an important factor for strong solar optical transitions used to diagnose atmospheric properties.
 
 The current generation of RHD codes includes RADYN \citep{Carlsson1992a,Carlsson1995,Carlsson1999, Allred2015}, FLARIX \citep{Varady2010,Heinzel2015}, HYDRAD \citep{Bradshaw2003, Bradshaw2013}, and HYDRO2GEN \citep{Druett2018,Druett2019}.
@@ -84,7 +84,7 @@ Its techniques are discussed further in Sec.~\ref{Sec:RadynDissection}.
 
 FLARIX, on the other hand, consists primarily of three separate modules. The hydrodynamics is solved by a variant of the NRL Solar Flux Tube Model described in \citet{Mariska1982,Mariska1989}, extended with a MALI module (considering non-overlapping spectral lines with constant background continuum as described in \citet{Rybicki1991}) for detailed radiation transfer, and a test-particle code for determining heating and electron deposition \citep{Varady2010, Heinzel2015}.
 
-RADYN and FLARIX have recently been tested against each other and shown to provide remarkable agreement, despite their different heritage \citep{Kasparova2019}, and early tests also show good consistency with HYDRAD when its recent extensions are enabled\footnote{Initial comparisons undertaken following the International Space Science Institute meeting: ``Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving'' led by G.S. Kerr and V. Polito.}.
+RADYN and FLARIX have recently been tested against each other and provide remarkable agreement, despite their different heritage \citep{Kasparova2019}, and early tests also show good consistency with HYDRAD when its recent extensions are enabled\footnote{Initial comparisons undertaken following the International Space Science Institute meeting: ``Interrogating Field-Aligned Solar Flare Models: Comparing, Contrasting and Improving'' led by G.S. Kerr and V. Polito.}.
 
 \section{An Eye to the Future: Radiative Magnetohydrodynamics}
 
@@ -116,7 +116,7 @@ It is non-trivial to incorporate a full treatment of this phenomenon into RHD co
 
 The simulations of flares discussed thus far allow us to model the time-evolution of heating a starting atmosphere and in turn predict line and continuum emission through the tools of radiative transfer.
 These detailed results can be compared against observations, and have provided significant insight into chromospheric properties (e.g. \citet{Kuridze2015,RubioDaCosta2016,Kowalski2017,Simoes2017}).
-The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult and lies close to the field of automated inversions, which we will address later in Chapters~\ref{Chap:FlareObservations} and \ref{Chap:Radynversion}.
+The manual forward-fitting process involved in attempting to reproduce these observations with simulations is both time-consuming and difficult and lies close to the field of automated inversions, which we will address later in Chaps.~\ref{Chap:FlareObservations} and \ref{Chap:Radynversion}.
 
 We will now present a more detailed overview of the physics involved in the most important terms of the RHD equations \eqref{Eq:RhdEquations}, starting with complexities of radiative transfer outside of local thermodynamic equilibrium.
 
@@ -212,7 +212,7 @@ In Sec.~\ref{Sec:2DFS} we describe the implementation of the BESSER method in a 
 
 \subsection{Other Formal Solvers}
 
-\citet{Janett2018} proposes a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern three-dimensional RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
+\citet{Janett2018} propose a novel approach to the formal solver,  using an optimised solver for the differing optical thickness in each slab. They show that this leads to substantial performance benefits whilst also being more numerically stable. They comment that whilst higher order formal solvers will theoretically converge better to the true result, due to the assumptions that are made in their derivation, this will only occur if the variation of the source function in relevant regions of the atmosphere is sufficiently smooth. The modern three-dimensional RMHD simulations use relatively coarse spatial grids with large transients in atmospheric parameters that risk provoking instability in the higher order formal solvers, especially in the case of full Stokes radiative transfer.
 
 As work continues on these higher resolution RMHD simulations an investigation into how each formal solver handles discontinuous parameters is needed.
 This has been discussed by \citet{Steiner2016}, and the methods employed for reconstructing discontinuous parameters in numerical hydrodynamics (see Sec.~\ref{Sec:HydroReconstruction} for a description of these) may present a future avenue for more robust, accurate, and efficient formal solvers.
@@ -403,7 +403,7 @@ with $\Lambda^*$ an approximation of $\Lambda$. The iterative scheme then become
 where $\dagger$ identifies values from the previous iteration. This method is termed accelerated Lambda iteration (ALI), and can be shown to accelerate convergence by significantly amplifying the size of the corrections that would be computed by Lambda iteration at large optical depths, for an appropriately chosen $\Lambda^*$.
 From \eqref{Eq:Ali} we can see that it is necessary to invert $\Lambda^*$ to obtain the updated value of $S$, on which $I$ is also dependent.
 For a two-level atom this is discussed at length in Chaps. 12 and 13 of \citet{Hubeny2014}.
-The full coupling of the terms in the multilevel NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the local radiation field.
+The full coupling of the terms in the multilevel NLTE problem will be made explicit in Sec.~\ref{Sec:MALI} when the MALI methods are presented; for now it is clear that the source function depends on the emissivity and opacity of each species, which in turn are controlled by the atomic populations, which are affected by the radiation field.
 
 A good choice for $\Lambda^*$ is not immediately evident, as it should be cheap to construct and invert, whilst providing a good approximation of $\Lambda$.
 \citet{Scharmer1981} presented an upper triangular approximate operator that fits these criteria and showed its relation to the core-saturation approach of \citet{Rybicki1972} (where the net rates in the line core and wing are treated separately to precondition the net radiative rates by removing the large proportion of photons that are emitted in the wing and immediately reabsorbed).
@@ -524,7 +524,12 @@ This system is then iterated until $\vec{n}^{t+1}$ converges, for a new evaluati
 Most solar spectral lines form in regions where complete frequency redistribution (CRD) holds.
 That is to say that the plasma is sufficiently collisional that elastic collisions redistribute electrons across all sub-states of an energy level prior to emission.
 In this case, the emission frequency of a photon is not correlated with the frequency of the photon absorbed to excite the atom into this state i.e. photons are completely redistributed in frequency and the line emission and absorption profiles are equal.
-In lower density regions with strong, typically resonance\footnote{A transition whose lower state is the ground state of the atom is known as a resonance transition.}, lines where radiative effects dominate over collisional effects, there is said to be a natural population of a certain level: a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions \citep{Hubeny2014}.
+In lower density regions with strong, typically resonance\footnote{A transition whose lower state is the ground state of the atom is known as a resonance transition.}, lines where radiative effects dominate over collisional effects,
+\replaced{
+a portion of the population of each level will emit photons with a frequency correlated with the previous absorption frequency.
+The remainder of the level population is said to be \emph{natural}, with an emission frequency independent of the manner in which the level was populated.
+}{ there is said to be a natural population of a certain level: a population where the emission frequency is correlated to the absorption frequency, and has not been redistributed by collisions}
+\citep{Hubeny2014}.
 The line's emission and absorption profiles then differ and this coherent scattering must be treated explicitly.
 This imposes substantial computational effort, but we will briefly describe the key points of the process, and how it fits into the MALI framework following \citet{Uitenbroek2001} and \citet{Hubeny2014}.
 
@@ -536,7 +541,7 @@ From this definition of $\rho_{ij}$, under the assumptions of a line with an inf
     \rho_{ij}(\nu, \vec{d}) = 1 &+ \gamma\frac{\sum_{l < j}n_j B_{lj}}{n_j P_j} \oint\frac{1}{4\pi}\int I(\nu^\prime, \vec{d}^\prime) \\ &\cdot \left[ \frac{R^{II}_{lji}(\nu^\prime, \vec{d}^\prime; \nu, \vec{d})}{\phi_{ij}(\nu, \vec{d})} - \phi_{lj}(\nu^\prime, \vec{d}) \right] \mathop{\dd{}\nu^\prime}\mathop{\dd{}\Omega^\prime},
 \end{split}
 \end{align}
-where $R^{II}$ is the generalised redistribution function for transitions of this kind \citep{Hubeny1982}, and $\gamma$ is the coherency fraction.
+where $R^{II}$ is the generalised redistribution function for transitions of this kind \citep{Hubeny1982},  $\gamma$ is the coherency fraction, \added{and $P_j$ is the total depopulation rate of level $j$}.
 The $lji$ subscript on $R^{II}$ describes the scattering process, indicating that electrons can start from any level $l$ in the range $[i, j)$.
 These scattering processes are then summed.
 The cross-redistribution, or Raman scattering, processes for which $l\neq i$ are typically less important than resonance scattering ($l = i$).
@@ -549,7 +554,7 @@ This is computed as
 \begin{equation}
     \gamma = \frac{P_j}{P_j + Q_j},
 \end{equation}
-where $P_j$ is the total depopulation rate of level $j$, and $Q_j$ is the total rate of elastic collisions affecting this level.
+where $Q_j$ is the total rate of elastic collisions affecting level $j$.
 
 Ignoring bulk plasma motions that create anisotropy in the radiation field, the integrals over angle and frequency can be split, and render the calculation of this angle-averaged form of $\rho_{ij}$ much simpler and less computationally demanding.
 Also defining $g_{II}(\nu, \nu^\prime) = R^{II}(\nu, \nu^\prime)/\phi_{ij}(\nu^\prime)$ such that the fast approximation of \citet{Gouttebroze1986} and \citet{Uitenbroek1989} can be employed, and ignoring cross redistribution terms we have
@@ -573,7 +578,7 @@ The atomic populations are held constant during this process, and a handful of i
 \subsection{Charge Conservation}\label{Sec:ChargeCons}
 
 We have thus far assumed that the electron density is known \emph{a priori} as part of the atmospheric model.
-Unfortunately, it is also insufficient to assume that the electron density follows the LTE ionisation state of the plasma, as many species (in particular hydrogen) with important NLTE spectral lines will be far from their LTE ionisation state \citep{Heinzel1995,Paletou1995,Bjorgen2019}.
+Unfortunately, it is also insufficient to assume that the electron density follows the LTE ionisation state of the plasma, as many species (in particular hydrogen) with important NLTE spectral lines will be far from their LTE ionisation state \citep[e.g.][]{Heinzel1995,Paletou1995,Bjorgen2019}.
 Synthesis of lines with an incorrect electron density will often converge to different final populations, and produce different spectral line shapes.
 A secondary iteration process is needed to determine the electron density in self-consistent way within the MALI framework.
 This is achieved through a Newton-Raphson iteration first proposed by \citet{Heinzel1995} and \citet{Paletou1995}.
@@ -764,8 +769,8 @@ This implies
 Rewriting the conservation law \eqref{Eq:ConsLaw} in an integral form then gives
 \begin{equation}
     \int_{x_i}^{x_{i+1}} q^{t+1}(x) \mathop{\dd{}x} = \int_{x_i}^{x_{i+1}} q^{t}(x) \mathop{\dd{}x}
-                                         \,+ \int_{t_t}^{t_{t+1}} q_i(t) \mathop{\dd{}t}
-                                         \,- \int_{t_t}^{t_{t+1}} q_{i+1}(t) \mathop{\dd{}t},
+                                         \,+ \int_{t_t}^{t_{t+1}} f(q(x_i, t)) \mathop{\dd{}t}
+                                         \,- \int_{t_t}^{t_{t+1}} f(q(x_{i+1}, t)) \mathop{\dd{}t},
 \end{equation}
 which can then be written as the flux-differencing form
 \begin{equation}\label{Eq:FiniteVolumeMethod}
@@ -875,7 +880,7 @@ That states on either side of these waves will need to be computed using an iter
 
 As the complexity of the system and the equation of state increases, it becomes harder (or impossible) to compute this solution in an efficient manner.
 Fortunately, it is rarely necessary to compute the exact solution to the Riemann problem as many efficient approximate solvers exist, but the structure originating from this simple case can be used to interpret and validate other numerical methods.
-This solution will need to be computed at every interface to determine the fluxes the cells, but the question remains of how to define the states left and right of the interface in the definition of the Riemann problem.
+This solution will need to be computed at every interface to determine the fluxes between the cells, but the question remains of how to define the states left and right of the interface in the definition of the Riemann problem.
 
 % N.B. The characteristic of a system like this is a line for which the the solution q is constant. i.e. for advection this is x(t) = x0 + ut
 % For linear systems we can transform to characteristic variables, for which the coefficient matrix is diagonal and we have a system of independent scalar advection equations.
@@ -896,7 +901,7 @@ This is a fundamental requirement of stability and will be discussed in more det
 
 This method provides a basic framework for solving conservation laws.
 It is limited by the assumption that the data is piecewise constant, but nevertheless paved the way for some of the most accurate numerical methods for conservation laws.
-\citet{VanLeer1979} provided one of the first higher order extension to Godunov's method.
+\citet{VanLeer1979} provided one of the first higher order extensions to Godunov's method.
 It is tempting to attempt to estimate the value of $q$ at the cell interfaces with higher accuracy by using some form of reconstruction (a method closely related to interpolation), but care must be taken with this approach.
 The Monotonic Upstream-centred  Scheme for Conservation Laws (MUSCL) method of \citet{VanLeer1979} uses a piecewise linear approach to reconstruction in each grid cell, but limits the gradient of the reconstruction to prevent the addition of under- or over-shoots to the data.
 This is achieved through use of a slope-limiter such that a monotonic series of cell averages be preserved by ensuring that the reconstructed slope not take values beyond the average of the adjacent cells.
@@ -948,7 +953,7 @@ In a hyperbolic system the CFL condition takes the form
 \begin{equation}
     C = \frac{\varv\Delta t}{\Delta x},
 \end{equation}
-and will be constrained to a maximum value ($\leq 1$) for stability of a \added{low order} explicit method.
+and will be constrained to a maximum value ($\leq 1$) for the stability of a \added{low order} explicit method.
 Most implicit methods do not place an upper limit on the CFL condition for stability (as all points are coupled), but typically need to remain $\sim 1$ to avoid losing fine detail in the solution.
 This is discussed by \citet{Viallet2011}, who comment that CFL $\sim 1$ serves as an accuracy criterion and typically represents the optimum accuracy/computational cost ratio despite the method being nominally stable for large CFL values.
 

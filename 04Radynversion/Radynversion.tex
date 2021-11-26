@@ -33,7 +33,7 @@ Our theory of radiative transfer does not give any immediate insight into the fo
 
 The RADYNVERSION model was the first machine learning model for solar inversions to address the problem of degeneracies in the inversion, but not the first to approach inversions of solar observations.
 Simple fully connected networks have long been used to obtain plausible atmospheric parameters based on Milne-Eddington inversions \citep[e.g.][]{Carroll2001, SocasNavarro2005}.
-\citet{AsensioRamos2019} and \citet{Milic2020} both presented models focused on the photosphere, that learn to mimic the results of traditional inversions with convolutional neural networks, the former using spatial correlations and inferring the depth of the Wilson depression, the latter using a much simpler model and taking a pixel-by-pixel approach.
+\citet{AsensioRamos2019} and \citet{Milic2020} both presented models focused on the photosphere, that learn to mimic the results of traditional inversions with convolutional neural networks, the former using spatial correlations and allowing inference of the depth of the Wilson depression, the latter using a much simpler model and taking a pixel-by-pixel approach.
 These models are not theoretically capable of handling degeneracies, but in practice produce plausible results, much faster than is possible with any traditional gradient-based inversion code.
 \citet{Gafeira2021} caution against the direct use of these CNN models directly, and instead applied the model of \citet{Milic2020} to initialise traditional inversions, allowing them to converge substantially faster, and in some cases, produce more accurate fits.
 More recently, \citet{DiazBaso2021} have presented an elegant Bayesian method using normalising flows, a family of methods related to the one we present below.
@@ -53,7 +53,7 @@ A traditional fully connected or convolutional layer used in an ANN is not gener
 Indeed, whilst a fully connected layer with equal number of inputs and outputs and an invertible activation function \emph{can} be inverted, it is extremely computationally expensive to do so due to the cost of inverting the potentially large square matrix of weights.
 The INN is instead built on trivially invertible blocks which can be trained to naturally learn our bijective function.
 These blocks are built using DNNs, and are thus universal function approximators themselves, meaning they can learn to map different density (in the sense of probability \emph{density}) distributions to each other.
-This is the cornerstone of how the form of the latent space is learned; the INN is trained to map the samples of the latent distribution to a known distribution.
+This is the cornerstone of how the form of the latent space is learned: the INN is trained to map the samples of the latent distribution to a known distribution.
 Provided there is sufficient dimensionality to represent the original distribution, it can be remapped to another without any loss of information.
 We can therefore choose to represent the latent space as any smooth continuous distribution desired and the INN will internally learn the mapping to the form of the ``true'' latent space contained within the training data.
 For simplicity we choose to represent the latent space as the unit multivariate Gaussian distribution with mean 0 and variance 1, which we denote $\mathcal{N}(0, \mathcal{I}_n)$ for an $n$ dimensional case.
@@ -154,7 +154,7 @@ Models with both three and five affine coupling layers were trialled, with the l
 Whilst it is possible to continue to increase the depth of this network, this is not without significant computational cost, and did not seem necessary given the quality of the results.
 
 RADYNVERSION is trained using RHD simulations generated with \Radyn{}, which contain the structure of a model flaring atmosphere and the synthesised emergent radiation (here the \Ha{} and \CaLine{} spectral lines).
-The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time; in our case the temperature $T$, electron density $n_e$, and velocity $v$.
+The input to the RADYNVERSION network then consists of a reduced set of atmospheric parameters at a given point in time; in our case the temperature $T$, electron density $n_e$, and velocity $\varv$.
 These are provided to the network on a fixed height stratification, with 50 points covering the entire atmosphere.
 The large dynamic range of these parameters (both across a single atmosphere, and between different timesteps at a fixed location in the atmosphere) can have a negative impact on the training and accuracy of the ANN, and we therefore map $T\mapsto\log_{10} T$, $n_e\mapsto\log_{10} n_e$, and $\varv\mapsto\textnormal{sign}(\varv)\log_{10} \left( |\varv_{\si{\kilo\metre\per\s}}| + 1\right)$.
 The mapping for $\varv$ serves to scale it based on its base-10 logarithmic value, whilst preserving its sign information.
@@ -170,7 +170,7 @@ Thus the input and total output (i.e. output and latent space) must be of length
 To improve the generalisation performance of the network and allow it a greater dimensionality for its representation of the data we choose to set the input and output size to 384.
 The input to the network is zero-padded to this length, and the output and latent space are concatenated with zero-padding in between.
 This width was also determined empirically, as it was found that the model had difficulties converging for the minimum width of 210.
-This problem was greatly mitigated by increasing the width, a technique that was found in the examples associated with \citep{2018Ardizzone}, so no other values were trialled.
+This problem was greatly mitigated by increasing the width, a technique that was found in the examples of \citet{2018Ardizzone}, so no other values were trialled.
 The deep neural networks used inside the affine coupling layers have an input and output of length 192, but this is increased to 384 for the inner layers, to further increase their representational ability.
 
 The RADYNVERSION model presented here considers each set of atmospheric parameters and observables as instantaneous quantities.
@@ -197,7 +197,7 @@ The remaining 5 points are then exponentially spread through the corona from \SI
 Our training method is based on the one presented in \citet{2018Ardizzone} and the network is constructed using their framework, FrEIA\footnote{\url{https://github.com/VLL-HD/FrEIA}}.
 The INN is trained in both directions to ensure the conditioning of both the forward and inverse problems.
 The model is trained using minibatching with the same minibatch of the training set being used in both directions.
-Both training directions are constrained by two loss functions and a linear combination of these serves as our final loss to minimise.
+Both training directions are constrained by two loss functions, and a linear combination of these serves as our final loss to minimise.
 The forward direction (from atmospheric parameters to line profiles) uses an L2 loss ($||y-y_\textnormal{true}||_2^2$, where $y$ indicates the output of the network and $y_\textnormal{true}$ the expected output) on the output vector of line profiles and zero padding.
 This latent space is constrained by a Maximum Mean Discrepancy (MMD) loss.
 The MMD is a loss that compares distributions from finite samples, and is computed between batches of [$y$, $z$] and [$y_\textnormal{true}$, $\mathcal{N}(0, \mathcal{I}_z)$].
@@ -224,7 +224,7 @@ It is parametrised as
     \xi(n) = \left( \min\left( \frac{n}{0.4 N_\textnormal{fade}}, 1 \right) \right)^3,
 \end{equation}
 where $n$ is the current epoch, and $N_\textnormal{fade}$ is the fade-in period.
-This terms serves to slowly increase the effect of the MMD loss, as this was otherwise found to hinder the training of both the forward and inverse problems by dominating $\textnormal{loss}_b$ and guiding the system away from a solution that minimised both terms.
+This term serves to slowly increase the effect of the MMD loss, as this was otherwise found to hinder the training of both the forward and inverse problems by dominating $\textnormal{loss}_b$ and guiding the system away from a solution that minimised both terms.
 To ensure that the output in the zero-padded sections remains close to zero we also use $1-\xi$ to initialise these with a small amount of random noise, decaying over this same period.
 This increases the activation of these neurons early on, forcing the network to learn that these must be adjusted towards 0 for all inputs.
 Through a manual hyperparameter search we found that for a fade-in period of 800 epochs, a good choice for the loss weights was $w_\textnormal{pred}=4000$, $w_\textnormal{latent}=900$, and $w_\textnormal{rev}=1000$.

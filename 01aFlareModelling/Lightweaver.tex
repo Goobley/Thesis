@@ -153,7 +153,7 @@ The derivatives of the collisional rates needed for the Newton-Raphson charge co
 This is relatively efficient as these rates depend only on local parameters, and much less restrictive than requiring a user to also compute the analytic derivative of any collisional rate formalisms they add to their own model atoms.
 
 As discussed in Sec.~\ref{Sec:ShortChar}, we adopt a short-characteristics formal solver to solve the RTE, and in \Lw{}, the default implementation for plane-parallel atmospheres is the cubic Bézier spline technique of \citet{DelaCruzRodriguez2013}.
-We also provide an implementation of the simple linear short-characteristics scheme, and allow for users to load their own formal solvers from shared libraries at runtime, provided they implement the interface described by the \Lw{} codebase.
+We also provide an implementation of the simple linear short-characteristics scheme, and allow for users to load their own formal solvers from shared libraries at runtime, provided they implement the interface described in the \Lw{} codebase.
 
 \section{Parallelisation}\label{Sec:LwParallelisation}
 
@@ -631,7 +631,7 @@ This difference is present only over a very small range of wavelengths and we co
 Slightly more complex examples are needed to test the time-dependent machinery present in \Lw{}, and neither SNAPI nor RH, with their time-independent viewpoints can be used for comparison here.
 We instead use the example of a perturbed FALC atmosphere presented by \citet{Judge2017}.
 This figure is reproduced here as Fig.~\ref{Fig:Judge2017Original}.
-After converging to the statistical equilibrium solution in a standard FALC atmosphere, the temperature is perturbed as shown by the blue line of the top-left panel of both Fig.~\ref{Fig:Judge2017Original} and our own solution presented in Fig.~\ref{Fig:LwValidationJudge}.
+After converging to the statistical equilibrium solution in a standard FALC atmosphere, the temperature is perturbed as shown by the blue line of the top-left panel of both Fig.~\ref{Fig:Judge2017Original} and our own solution is presented in Fig.~\ref{Fig:LwValidationJudge}.
 This model uses a three level plus continuum model hydrogen atom, and the populations of the ground, first excited, and continuum states are shown in the top-right, bottom-left, and bottom-right panels of these figures respectively.
 The red line shows their starting values, and the blue line their final values after the simulation has been allowed to run for \SI{500}{\second} in the case of Fig.~\ref{Fig:Judge2017Original} and \SI{60}{\second} for Fig.~\ref{Fig:LwValidationJudge}, as we find the solution has stabilised by this point.
 The black lines represent the solutions for each population every \SI{1}{\second}.
@@ -668,7 +668,7 @@ Other tests have been undertaken to verify the performance of \Lw{}, but those p
 
 During the development of \Lw{}, a simpler pedagogic framework was also constructed.
 This framework, \emph{Lightspinner}\footnote{Available on GitHub (\url{https://github.com/Goobley/Lightspinner}), with archival on Zenodo.} \citep{Lightspinner}, is written in pure Python and focuses on documenting the internal numerics of a simple formal solver and the MALI method using full preconditioning (under the assumption of CRD).
-It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE radiative transfer and some of the techniques present in \Lw{}; it presents the core concepts clearly, and naïvely, without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
+It is accompanied by a slide deck highlighting the most important terms that need to be understood to implement these methods following \citet{Rybicki1992} and \citet{Uitenbroek2001} for iteration, and \citet{Olson1987} and \citet{Auer1994} for the short-characteristics formal solver (although only a linear formal solver is implemented in the code). This framework can be employed to help users familiarise themselves with the concepts of NLTE radiative transfer and some of the techniques present in \Lw{}: it presents the core concepts clearly, and naïvely, without focusing on performance, so can easily be dismantled and understood by a single person over the course of a few days.
 
 \section{Discussions}
 

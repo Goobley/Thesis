@@ -282,7 +282,7 @@ In exchange for this they can only observe in limited spectral bands (due to the
 To some degree the effects of atmospheric seeing can be accounted for and corrected, but the magnitude of these effects will vary on a daily basis.
 Our aim is to develop predictions and techniques allowing the more thorough exploitation of the high spatially and spectrally resolved data obtained from the current and next-generation of ground-based optical telescopes to enhance our understanding of the chromosphere during solar flares.
 
-There are but a handful of spectral lines that are accessible to these ground-based telescopes and that are sensitive to the chromosphere.
+There are but a handful of spectral lines that are both accessible to these ground-based telescopes and that are sensitive to the chromosphere.
 Following \citet{DelaCruzRodriguez2017} these are primarily the \Caii{} H \& K lines, the \Caii{} infrared triplet, \Ha{}, He\,\textsc{i} D3, and He\,\textsc{i} \SI{1083}{\nano\metre}.
 Many other spectral lines with chromospheric diagnostic potential, such as Ly$\alpha$, Mg\,\textsc{ii} h \& k, He\,\textsc{ii} \SI{30.4}{\nano\metre} can only be observed from space.
 The decision regarding which of these to focus on depends both on the availability of observations (current and future) and the complexity of modelling.
@@ -306,7 +306,7 @@ Simulations have found them to form at different heights within the chromosphere
 Diagnostics involving both \Ha{} and \CaLine{} can therefore reliably constrain chromospheric models, and are sensitive to a larger region of the solar atmosphere than is possible with just one of the two.
 Both of these lines have been reliably modelled without the need for additional time-consuming PRD calculations, which is not the case for the \Caii{} H \& K lines.
 Whilst \Ha{} can be treated in CRD, \citet{Leenaarts2012a} find that three-dimensional radiative transfer modelling is needed to correctly reproduce the expected intensity structure from RMHD models.
-\citet{Bjorgen2019} found that the magnitude of this effect was reduced for the brightest regions of a three-dimensional active region simulation \citep{Cheung2019}, due to the localised high chromospheric mass density, but three-dimensional modelling remained important for regions adjacent to these bright structures.
+\citet{Bjorgen2019} found that the magnitude of this effect was reduced for the brightest regions of a three-dimensional active region simulation, due to the localised high chromospheric mass density, but three-dimensional modelling remained important for regions adjacent to these bright structures.
 Flare models with detailed chromospheric treatment are not yet possible in three-dimensions, but with the large gradients in the radiation field that occur in flares it is likely that this effect will also be important in regions adjacent to flares (as supported by the simulations presented in Chap.~\ref{Chap:2DRT}).
 
 
@@ -340,7 +340,7 @@ DKIST is expected to start making routine observations in 2021 and promises obse
 
 \section{Introduction to Inverse Problems}\label{Sec:InverseProblems}
 
-From the previous chapters we have an understanding of the so-called ``forward problem'' of radiative transfer, that is, the synthesis of a spectrum from a known atmospheric model.
+From the previous chapter we have an understanding of the so-called ``forward problem'' of radiative transfer, that is, the synthesis of a spectrum from a known atmospheric model.
 The inverse of this problem is not well-posed; there is no guarantee of uniqueness, and typically the problem is extremely underdetermined.
 The radiation field inside the plasma couples the atomic populations at all depths (as is evident from the form of the $\Lambda$ operator) in a way that cannot be trivially disentangled and information is then lost in the forward process that is needed for the inverse process.
 
@@ -459,7 +459,7 @@ $\mathcal{Z}$ is difficult to conceptualise, and harder still to characterise; i
 As an example we can pose the simple problem of the function $f : \mathbb{R} \rightarrow \mathbb{R}^+; x \mapsto x^2$. This function is clearly not bijective, as for any $y$ in $\mathbb{R}^+$ it is ambiguous whether the expected input $x$ was $\sqrt{y}$ or $-\sqrt{y}$.
 If the domain of this function was instead $\mathbb{R}^+$, there would be no ambiguity here.
 Instead, we can introduce a latent space, the form of which is chosen by us and captures the lost information, i.e. the sign of the input ($\{1,\,-1\}$).
-With this we can define the bijective function $g : \mathbb{R}^+\times\,\{1,\,-1\} \rightarrow \mathbb{R}; (y, z) \mapsto z \sqrt{y}$.
+With this we can define the bijective function $g : (\mathbb{R}^+\times\,\{1,\,-1\}) \rightarrow \mathbb{R}; (y, z) \mapsto z \sqrt{y}$.
 Discarding $z$, the forward process of $g^{-1}$ is equivalent to that described by $f$, but the invertibility of the problem is now assured.
 This example does not illustrate how to discover the correct $z$, and for a purely mathematical case such as this, there is no unambiguous solution given only $y$.
 However, the form of the latent space is known (and in this case finite), and this can allow us to infer the different possibilities for $x$.
@@ -732,7 +732,7 @@ Classification ANNs will typically employ an activation function on the output l
 ANNs are universal function approximators; they can learn arbitrarily complex classification and regression problems \citep{Rumelhart1986,1989Cybenko}.
 This was theoretically proven for shallow neural networks (with only one hidden layer) using sigmoidal activation functions by \citet{1989Cybenko}.
 Increasing the precision to which a function is approximated may however require exponential increases in layer width and training.
-A similar proof for the commonly used ReLU activation function was provided by \citet{Lu2017}, who investigated the bounded expressions for the layer width and network depth needed to approximate functions to arbitrary precision.
+A similar proof for the commonly used ReLU activation function was provided by \citet{Lu2017}, who developed bounded expressions for the layer width and network depth needed to approximate functions to arbitrary precision.
 Unfortunately these results can be difficult to apply to many real world scenarios where the intrinsic dimensionality of the function being approximated is not known (these results are also affected by any imperfections in the training data).
 
 It is also possible to increase the approximation capability of an ANN by increasing its depth (the number of stacked layers), these stacked layers then represent the composition of functions, and each additional layer increases the complexity of the representation of its input, allowing for very complex tasks to be approximated \citep{Raschka2015}.

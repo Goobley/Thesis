@@ -1,4 +1,4 @@
-% \listofchanges
+\listofchanges
 
 \chapter{Introduction}\label{Chap:Intro}
 % spell-checker: disable
@@ -203,12 +203,13 @@ import lightweaver as lw
 import sys
 import seaborn as sns
 pythonVersion = '{:d}.{:d}.{:d}'.format(*sys.version_info[:-2])
+
 \end{pycode}
 
 This thesis is produced using PythonTeX \citep{Poore2015}, and all figures are produced by Python code stored inline.
 Diagrams are produced using the Paul Tol's vibrant colourblind accessible colour scheme\footnote{\url{https://personal.sron.nl/~pault/}}.
 The complete source of this document, and the data necessary to reproduce it, will be distributed and archived following typical practices.
-Whilst a complete list of packages will be made available with this distribution, the current version has been compiled with Python \py[Intro]|pythonVersion|, NumPy \py[Intro]|np.__version__| \citep{Harris2020}, SciPy \py[Intro]|scipy.__version__| \citep{Virtanen2020}, Matplotlib \py[Intro]|mpl.__version__| \citep{Hunter2007}, seaborn \py[Intro]|sns.__version__| for its colorblind accessible colour scheme \citep{Waskom2021}, Astropy \py[Intro]|astropy.__version__| \citep{Robitaille2013,Price-Whelan2018}, and Lightweaver \py[Intro]|lw.__version__| \citep{Osborne2021}.
+Whilst a complete list of packages will be made available with this distribution, the current version has been compiled with Python \py[Intro]|pythonVersion|, NumPy \py[Intro]|np.__version__| \citep{Harris2020}, SciPy \py[Intro]|scipy.__version__| \citep{Virtanen2020}, Matplotlib \py[Intro]|mpl.__version__| \citep{Hunter2007}, seaborn \py[Intro]|sns.__version__| for its colourblind accessible colour scheme \citep{Waskom2021}, Astropy \py[Intro]|astropy.__version__| \citep{Robitaille2013,Price-Whelan2018}, and Lightweaver \py[Intro]|lw.__version__| \citep{Osborne2021}.
 For all validations of the \Lw{} framework presented herein the data is produced using simulations run during the compilation of the document, and for the other chapters the complete post-processed simulation output or observational product is ingested, with the exception of Chap.~\ref{Chap:2DRT} where the small region isolated in the observational data was extracted in a separate step to reduce the necessary volume of information.
 The source of this thesis therefore documents how this data was processed to produce the figures presented and can easily be modified to analyse the available data in other ways.
 

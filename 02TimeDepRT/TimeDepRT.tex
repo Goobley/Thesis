@@ -80,7 +80,7 @@ The \Caii{} H and K lines are also somewhat affected by PRD, in addition to the 
 For the Lyman lines we will discuss strategies for approximating this treatment.
 For \Caii{} H and K, it has been suggested that considering the radiative losses of these lines in CRD approximately accounts for the lack of detailed Mg\,\textsc{ii} h and k treatment if all of these transitions were treated with PRD \citep{Carlsson2002, Kerr2019a}.
 
-Whilst the lines of these four species\added{, H, He, Mg, and Ca} are some of the strongest in the solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can also be used to diagnose the atmosphere.
+Whilst the lines of these four species\added{, H, He, Mg, and Ca} are some of the strongest in the solar spectrum, and their continua mediate much of the energy leaving the chromosphere, there are other chromospheric transitions that can be used to diagnose the atmosphere.
 An element treated as a ``minority species'' is assumed to not interact significantly with the energy balance of the simulation (i.e. the thermodynamic response of the model does not change significantly if this species is subject to a complete radiative treatment).
 This should be true for most species with trace populations.
 For example, optically thick Si\,\textsc{iv} formation in a heated chromosphere has been investigated in a minority species context by \citet{Kerr2019c}.
@@ -90,8 +90,8 @@ Due to the lack of atmospheric thermodynamic response to changes in the radiativ
 
 An approach similar to that of minority species modelling can be applied to testing the methods used in \Radyn{}, the importance of certain omissions, and the feasibility of extensions.
 Due to the reduced complexity of solving the kinetic equilibrium equations rather than the entire RHD system, these calculations typically run significantly faster than the original simulation.
-In the following we will discuss the creation of a minority species tool for reprocessing \Radyn{} simulations, built on the \Lw{} framework, as well as its application to investigating the importance of overlapping transitions, and discussing the difficulties of including PRD in these simulations.
-From the previous discussion, building such a tool on the \Lw{} framework should provide researchers with a modern, simpler codebase that is easier to conceptualise and modify, allowing for investigation of effects to be included in \Radyn{} or future RHD codes.
+In the following we will discuss the creation of a minority species tool for reprocessing \Radyn{} simulations, built on the \Lw{} framework, as well as its application to investigating the importance of overlapping transitions, and discuss the difficulties of including PRD in these simulations.
+Building such a tool on the \Lw{} framework should provide researchers with a modern, simpler codebase that is easier to conceptualise and modify, allowing for investigation of effects to be included in \Radyn{} or future RHD codes.
 Excluding the model atom definitions, the source code of the simulations presented in this chapter totals $\sim$1000 lines of Python, mostly following modern best practices.
 
 This approach could also be applied to a simple investigation of the effects of a magnetic field on the outgoing radiation, by imposing an \emph{ad hoc} magnetic field (constant or varying) on the model atmosphere and computing the emergent line profiles, in a much simpler way than modifying \Radyn{} for this task.
@@ -1208,7 +1208,7 @@ It is compared against the \Radyn{} solution (blue), using the same approximate 
 Once again, our CRD treatment of the problem with \Lw{} yields very good results when compared to \Radyn{} as a reference solution.
 Other than the line wings at $t=\SI{5}{\second}$ and to a lesser extent at $t=\SI{40}{\second}$ the PRD and CRD (with reduced broadening terms) match well, although the PRD line core at $t=\SI{20}{\second}$ is a fair amount deeper than the CRD case.
 This is encouraging for the use of this approximation, especially in light of the difficulties converging the PRD problem in time-dependent simulations.
-Furthermore, the PRD solution, due to its poor convergence at later times, is extremely computationally costly when compared to the CRD solution, taking close to two orders of magnitude more CPU time (73 vs 1.2 wall hours\footnote{Wall hours refer to a real world elapsed time, despite the fact multiple CPU cores are used in the problem. This metric also captures the fact that the implementation of updating $\rho_{ij}$ is less parallelised \Lw{} than the CRD MALI method which dominates the runtime of the CRD case (average $\sim65$\,\% utilisation of 12 threads, rather than 98\,\%).} on \emph{hephaistos}).
+Furthermore, the PRD solution, due to its poor convergence at later times, is extremely computationally costly when compared to the CRD solution, taking close to two orders of magnitude more CPU time (73 vs 1.2 wall hours\footnote{Wall hours refer to a real world elapsed time, despite the fact multiple CPU cores are used in the problem. This metric also captures the fact that the implementation of updating $\rho_{ij}$ is less parallelised in \Lw{} than the CRD MALI method which dominates the runtime of the CRD case (average $\sim65$\,\% utilisation of 12 threads, rather than 98\,\%).} on \emph{hephaistos}).
 
 Ly$\alpha$ is not the only line affected by PRD in this simulation; we also investigated the effects on Ly$\beta$ and the \Caii{} H and K resonance lines.
 Ly$\beta$ was found to have very good agreement between the approximate and complete PRD treatments in \Lw{}, similar or better than that found for Ly$\alpha$.
@@ -1526,14 +1526,14 @@ The left-hand panel once again shows the time-dependent response function comput
 Immediately we see a large difference between the middle panel and the other two.
 This is due to the hydrogen populations, and more specifically its ionisation state, relaxing back to the statistical equilibrium solution.
 The information presented on this middle panel is not equivalent to the left-hand panel, showing responses in the line core at locations both deeper and shallower than those found in the time-dependent solution.
-The right-hand panel (holding the hydrogen populations and electron density fixed) agrees better with the time-dependent response function, but there are still significant distances in the structure above \SI{1.2}{\mega\metre}, with additional positive responses appearing.
+The right-hand panel (holding the hydrogen populations and electron density fixed) agrees better with the time-dependent response function, but there are still significant differences in the structure above \SI{1.2}{\mega\metre}, with additional positive responses appearing.
 It was found that running the time-dependent response functions for long timesteps ($>\SI{100}{\s}$), started to produce similar structure, although these did not converge to the same result.
 It may be acceptable to use this second form of statistical equilibrium response function to diagnose the \CaLine{} response in RHD simulations, but it typically took longer to converge than the time-dependent approach, and cannot be generalised to compute response functions of hydrogen lines, due to these populations being held fixed.
 \added{The difference between the time-dependent and statistical equilibrium with fixed electron density response functions is qualitatively similar in the F9 simulation and at other times in this simulation, although at later times ($t \gtrsim \SI{35}{\s}$), as the populations settle the differences are reduced in both simulations.}
 
 The time-dependent response functions discussed here are a more NLTE-motivated approach to the problem of spectral line formation in RHD simulations.
 They allow the identification of the regions and parameters to which the line is sensitive (which may be due to non-local radiative effects), and show whether a change in a parameter will provoke a positive or negative response on the outgoing radiation.
-This differentiated response functions from the contribution function by showing the negative response to temperature above $\sim\SI{1.2}{\mega\m}$.
+This differentiates response functions from the contribution function by showing the negative response to temperature above $\sim\SI{1.2}{\mega\m}$.
 Response functions can also be used to separate the effects of different parameters in these models, a feature that will likely become increasingly important as the complexity of flare modelling increases further.
 We stress that as response functions represent a local gradient, they are only valid in small parameter regions around those the model was computed with.
 The time-dependent formalism presented here will need additional development for quantitative uses, but we feel that it already provides information complementary to the contribution function and are optimistic about future applications to improve the interpretation of line formation in RHD simulations
