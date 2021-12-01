@@ -116,7 +116,7 @@ For this reason, all simulations presented here use the version with the beam en
 
 With the above data we have sufficient information to construct the \Radyn{} thermodynamic atmosphere at any of its internal timesteps.
 \added{
-\Lw{} is then responsible for the determining the radiation field and atomic level populations throughout the atmosphere using the thermodynamic properties at each timestep loaded from the \Radyn{} output and the populations at the previous timestep.
+\Lw{} is then responsible for determining the radiation field and atomic level populations throughout the atmosphere using the thermodynamic properties at each timestep loaded from the \Radyn{} output and the populations at the previous timestep.
 Thus, the atomic level populations are computed in statistical equilibrium for the \Radyn{} starting atmosphere and are then evolved only by our simulation code using \Lw{}, and not \Radyn{}, which simply provides the thermodynamic structure of the atmosphere at each timestep.
 }
 \Lw{} does not make use of the mass density stored by \Radyn{} directly, but instead maps it to hydrogen density.
