@@ -188,17 +188,6 @@ This is an early development branch of the code, as this method was not retained
 
 \emph{The content of this section is based on the work presented in \citet{Osborne2021a}.}
 
-The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of the Lyman lines on \Caii{} photoionisation in these models, as this was theorised to be the origin of possible differences in the \Caii{} line profiles.
-In \Radyn{}, the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
-The hydrogen Lyman lines are strongly enhanced in flares, and a two dex enhancement relative to quiet sun intensity was found by \citet{RubioDaCosta2009} using observations from the Transition Region and Coronal Explorer (TRACE).
-RHD modelling using \Radyn{} has also suggested that enhancements at least this large are to be expected in this line \citep{Brown2018, Hong2019}.
-Fig.~\ref{Fig:CaIIOverlaps} shows the overlap between the hydrogen Lyman transitions and the \Caii{} continua present in our model.
-Radiation from Ly$\alpha$ photoionises \Caii{} from all levels other than the ground state.
-All of the other Lyman transitions present can photoionise \Caii{} to \Caiii{} from all levels present in this model.
-Additionally, in flaring conditions, the higher lines of the Lyman sequence are significantly Stark broadened and create a quasi-continuum between Ly$\delta$ and the Lyman continuum \citep{DeFeiter1975}, which will further enhance the photoionisation of \Caii{} from what is considered in our model.
-These highly enhanced transitions therefore provide an important mechanism for the photoionisation of \Caii{} to \Caiii{} and in the following we will investigate the effect this has on both the emergent line profiles and the radiative losses of several RHD models.
-These effects have long been considered in prominence modelling, starting with the work of \citet{Ishizawa1971}, however we are not aware of any previous detailed investigation of these effects in RHD modelling of flares, where the Lyman transitions become so significantly enhanced.
-
 %spell-checker: disable
 \begin{pycode}[TimeDepRT]
 from MsLightweaverAtoms import H_6, CaII
@@ -258,11 +247,22 @@ plt.subplots_adjust(left=0.02, right=0.98)
 lFig = chRT.save_figure('CaIIOverlaps', fig, fext='.pgf')
 lFig.caption = r'The overlap betwen the hydrogen Lyman lines and continuum with the Ca\,\textsc{ii} continua present in the model atom used here. Both the Ca\,\textsc{ii} 3p$^6$ 4p and 3p$^6$ 3d levels contain two sub-levels with indistinguishably different continuum edges.'
 lFig.short_caption = r'Overlap between Lyman transitions and \Caii{} continua in model atoms used.'
-lFig.placement = 'hbtp'
+lFig.placement = 'thbp'
 \end{pycode}
 
 \py[TimeDepRT]|chRT.get_figure('CaIIOverlaps')|
 %spell-checker: enable
+
+The methods discussed above can be used to reprocess the radiative transfer aspects of \Radyn{} simulations and thus investigate the effects of the Lyman lines on \Caii{} photoionisation in these models, as this was theorised to be the origin of possible differences in the \Caii{} line profiles.
+In \Radyn{}, the photoionisation of \Caii{} by the hydrogen Lyman continuum is considered, but the effects of the Lyman lines are not.
+The hydrogen Lyman lines are strongly enhanced in flares, and a two dex enhancement relative to quiet sun intensity was found by \citet{RubioDaCosta2009} using observations from the Transition Region and Coronal Explorer (TRACE).
+RHD modelling using \Radyn{} has also suggested that enhancements at least this large are to be expected in this line \citep{Brown2018, Hong2019}.
+Fig.~\ref{Fig:CaIIOverlaps} shows the overlap between the hydrogen Lyman transitions and the \Caii{} continua present in our model.
+Radiation from Ly$\alpha$ photoionises \Caii{} from all levels other than the ground state.
+All of the other Lyman transitions present can photoionise \Caii{} to \Caiii{} from all levels present in this model.
+Additionally, in flaring conditions, the higher lines of the Lyman sequence are significantly Stark broadened and create a quasi-continuum between Ly$\delta$ and the Lyman continuum \citep{DeFeiter1975}, which will further enhance the photoionisation of \Caii{} from what is considered in our model.
+These highly enhanced transitions therefore provide an important mechanism for the photoionisation of \Caii{} to \Caiii{} and in the following we will investigate the effect this has on both the emergent line profiles and the radiative losses of several RHD models.
+These effects have long been considered in prominence modelling, starting with the work of \citet{Ishizawa1971}, however we are not aware of any previous detailed investigation of these effects in RHD modelling of flares, where the Lyman transitions become so significantly enhanced.
 
 The hydrogen (five bound levels with H\,\textsc{ii} continuum and ten lines), helium, and calcium (five bound \Caii{} levels with \Caiii{} continuum and five lines) model atoms used in the simulations presented here are the same as those used in \Radyn{}.
 All other model atoms used in the LTE background opacities are taken from the \Lw{} standard library (and have in turn been converted from  RH distribution \citep{Uitenbroek2001}).
@@ -394,6 +394,7 @@ fig = plot_8542_profiles(liData, leData, radyn)
 lFig = chRT.save_figure('F9Profiles', fig, fext='.pgf')
 lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{\nano\metre} line profiles during the F9 simulation.'
 lFig.short_caption = r'Comparison of \CaLine{} treatments in the F9 simulation.'
+lFig.placement = 'th'
 
 radynF10 = LazyRadynData(chRT.data_file('Flat1e10NoIncRad/radyn_out.cdf'))
 liDataF10 = zarr.convenience.open(chRT.data_file('Flat1e10NoIncRad/Flat1e10NoIncRadLIThesis.zip'), 'r')
@@ -404,6 +405,7 @@ lFig.caption = r'Comparison of the LI, LE, and RADYN Ca\,\textsc{ii} \SI{854.2}{
 lFig.short_caption = r'Comparison of \CaLine{} treatments in the F10 simulation.'
 \end{pycode}
 \py[TimeDepRT]|chRT.get_figure('F9Profiles')|
+
 \py[TimeDepRT]|chRT.get_figure('F10Profiles')|
 %spell-checker: enable
 
@@ -781,7 +783,9 @@ lFig = chRT.save_figure('F10LossComparison', fig, fext='.pgf', dpi=500)
 lFig.caption = 'Time evolution of the calcium losses in the F10 simulation. The left-hand panel shows the absolute relative change in losses due to the different calcium treatments, and the right-hand panel shows the proportion of the total radiative losses due to the calcium lines.'
 lFig.short_caption = 'Time evolution of the calcium losses in the F10 simulation.'
 \end{pycode}
+
 \py[TimeDepRT]|chRT.get_figure('F9LossComparison')|
+
 \py[TimeDepRT]|chRT.get_figure('F10LossComparison')|
 %spell-checker: enable
 
@@ -817,7 +821,9 @@ fig = plot_loss_variation(F9PanelData, F10PanelData)
 lFig = chRT.save_figure('LossVariation', fig, fext='.pgf', dpi=500)
 lFig.caption = r'The absolute relative change of the radiative losses considered here due to the two different calcium treatments in each of the simulations (i.e. the product of the two panels in each of Figs.~\ref{Fig:F9LossComparison} and \ref{Fig:F10LossComparison}).'
 lFig.short_caption = r'Effect of calcium losses on total radiative losses in the two simulations.'
+lFig.placement = 'bt'
 \end{pycode}
+
 \py[TimeDepRT]|chRT.get_figure('LossVariation')|
 %spell-checker: enable
 
@@ -1460,8 +1466,6 @@ In the analysis of \citet{Carlsson2002} the full rate matrix was found to signif
 \citet{Judge2005} applied a simplified variant of the mathematical framework of \citet{Gayley1990} showing how, at high optical depths, NLTE radiative transfer effects can reduce the radiative decay rate.
 Extreme care should be taken when trying to make quantitative use of these time-dependent response functions, especially for longer timesteps, but for now we shall focus on qualitative aspects.
 
-\py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
-
 Time-dependent response functions were computed for perturbations in temperature and velocity to the same atmospheres for which the contribution functions were considered in Section~\ref{Sec:TimeDep8542Profiles}.
 These properties were chosen as they are important but ``relatively'' free parameters in the system.
 It is also common to compute the response functions to electron density, microturbulent velocity and magnetic field, however these parameters are either not considered or not truly free.
@@ -1476,6 +1480,8 @@ where these terms are defined as follows: the total derivative of $I$ with respe
 This method was originally presented for computing the response of an intermediate parameter such as the source function or opacity to $n_e$, but there is no reason why it cannot be applied directly to intensity.
 In the context of inversions, this additional response is very useful, however our RHD models should normally remain self-consistent.
 Nevertheless, this could also be useful for interpretation, but is $\sim2\times$ more computationally costly than other parameters due to the requirement of additional derivatives.
+
+\py[TimeDepRT]|chRT.get_figure('F9RfComp11s')|
 
 \py[TimeDepRT]|chRT.get_figure('F9RfComp20s')|
 \py[TimeDepRT]|chRT.get_figure('F10RfComp11s')|

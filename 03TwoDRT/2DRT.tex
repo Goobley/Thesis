@@ -712,6 +712,13 @@ To minimise these effects we copy the flare atmosphere and populations into this
 These populations are then consistent with the adjacent plane-parallel atmosphere and the radiation emerging from it which is used as a fixed boundary condition.
 There should not be any need to perform the same process at the quiet sun boundary, as it is placed \SI{2}{\mega\metre} away and should change very little over the course of the simulation, remaining consistent on both sides of the boundary.
 
+\begin{figure}[t]
+\centering
+\subimport{03TwoDRT/}{SimFlipped}
+\caption[Configuration of two-dimensional simulation to produce radiation that would be observed by a slit spectrograph looking across the model flare.]{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere. The angles of the rays shown in this diagram are exaggerated relative to those used in the results presented later, to better illustrate the configuration.}
+\label{Fig:2DSimFlipped}
+\end{figure}
+
 This configuration produces the outgoing intensity at 12 different angles from each of the 41 cells in $x$.
 \added{These rays are symmetric in the $z$-axis, so we} can use the symmetric definition of these to synthesise the radiation observed by a theoretical slit spectrograph viewing the sun from a particular inclination with the flare in the centre of the slit.
 This is shown in Fig.~\ref{Fig:2DSimFlipped} for an observation inclined as shown we are observing the radiation along the blue arrows.
@@ -723,13 +730,6 @@ In the following results, we consider that the flaring boundary is at $x=0$ and 
 To better describe the atmosphere we will split it into regions based on $x$-coordinate as follows: $A := (0, 0.5]$ \si{\mega\metre}, $B := (0.5, 1]$ \si{\mega\metre}, $C := (1, 2]$ \si{\mega\metre}.
 We will use minuscules (lower-case) of these designations to denote the reflections of their associated regions in the $z$-axis (i.e. in negative $x$).
 }
-
-\begin{figure}[tbp]
-\centering
-\subimport{03TwoDRT/}{SimFlipped}
-\caption[Configuration of two-dimensional simulation to produce radiation that would be observed by a slit spectrograph looking across the model flare.]{Using the single simulation shown in Fig.~\ref{Fig:2DSimConfig} to investigate the radiation observed by a slit spectrograph looking across the flaring region. The radiation emitted along the {\color{TolBlue}blue} arrow from the reflected atmosphere is the same as that from the {\color{TolMagenta}magenta} arrow in the simulated atmosphere. The angles of the rays shown in this diagram are exaggerated relative to those used in the results presented later, to better illustrate the configuration.}
-\label{Fig:2DSimFlipped}
-\end{figure}
 
 We will focus primarily on these inclined observations as flares are extremely unlikely to occur at exactly disc centre and the effects of inclination are therefore important.
 Even a slight inclination can have a large effect, and in the following we will focus primarily on the most vertical ray present in our quadrature, with an angle of approximately \SI{18}{\degree} ($\mu_z\approx0.95$) to the surface normal.
@@ -1069,6 +1069,7 @@ ax[1].set_yticklabels([])
 lFig = ch2DRT.save_figure('ZeroBcSpectro', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Intensity at $t=\SI{10}{\second}$ in the F10 model for both \Ha{} and \CaLine{} with the boundary conditions in $x$ set to emit no radiation.'
 lFig.short_caption = r'Spectroscopy at $t=\SI{10}{\second}$ in the F10 model with $x$ boundary conditions set to zero.'
+lFig.placement = 't'
 \end{pycode}
 %spell-checker: enable
 
@@ -1536,7 +1537,7 @@ plot_rel_change_pops(fig, dataPops, dataRad, atmost, 10, hIdxU=2, hIdxL=1, caIdx
 lFig = ch2DRT.save_figure('2dLevelsT10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to the upper and lower level populations from initial values for the \Ha{} and \CaLine{} lines in the F9 simulation at $t=\SI{10}{\second}$. The $\tau=1$ line and initial line profile are plotted in red and dashed black respectively in the first column. The pink line profile shows the flaring boundary condition. The other solid and dashed line profiles in the first panel are synthesised at 200, and \SI{400}{\kilo\metre} from the flaring boundary respectively, with orange being positive $x$ and green being negative $x$."
 lFig.short_caption = r'Contribution function, $\chi_\nu/\tau_\nu$ and relative population changes at $t=\SI{10}{\second}$ in the F9 simulation.'
-lFig.placement = 'ptb'
+lFig.placement = 'p'
 
 atmostF10 = read_atmost(ch2DRT.data_file('atmost_F10.dat'))
 atmostF10.to_SI()
@@ -1547,7 +1548,7 @@ plot_rel_change_pops(fig, dataPopsF10, dataRadF10, atmostF10, 10, hIdxU=2, hIdxL
 lFig = ch2DRT.save_figure('2dLevelsF10T10', fig, fext='.pgf', dpi=500)
 lFig.caption = r"Contribution functions, $\chi_\nu/\tau_\nu$, and relative changes to atomic populations equivalent to Fig.~\ref{Fig:2dLevelsT10} for the F10 simulation at $t=\SI{10}{\second}$."
 lFig.short_caption = r'Contribution function, $\chi_\nu/\tau_\nu$, and relative population changes at $t=\SI{10}{\second}$ in the F10 simulation.'
-lFig.placement =  'ptb'
+lFig.placement =  'p'
 
 \end{pycode}
 
@@ -1578,14 +1579,14 @@ Where the relative change is roughly similar in both the upper and lower levels 
 This leads to no net change in the source function, thus this higher altitude region will proportionately contribute more significantly to the outgoing radiation as the increase in opacity blocks light from deeper in the ray's path.
 This enhancement does not appear to be sufficient to directly create the secondary peaks in the \Ha{} profiles other than in the columns closest to the flaring boundary, as evidenced by the green line profiles, but the increased source function in the higher temperature region of the upper chromosphere is sufficient to significantly enhance the core of the line profile at large distances from the flare ($\sim\SI{1}{\mega\metre}$).
 
+\py[2DRT]|ch2DRT.get_figure('2dLevelsF10T10')|
+
 The \Caii{} populations, shown in the lower row of Fig.~\ref{Fig:2dLevelsT10}, are much more dramatically affected than the hydrogen populations previously discussed.
 Both the upper and lower levels of the \CaLine{} spectral line are affected in the same $z=1.25-\SI{1.75}{\mega\metre}$ region at the $x=\SI{0}{\mega\metre}$ boundary, tapering off as $x$ increases.
 The populations are substantially reduced from their initial statistical equilibrium values over this range, with a maximum relative change of approximately $-20$.
 The lower level of this transition is significantly more reduced than the upper level, which will lead to a dramatic reduction in the local opacity whilst the emissivity remains less affected.
 This will lead to an increase in the local source function as well as a reduction in the opacity affecting the line core radiation formed just below this level.
 This reduction is likely due to photoionisation effects similar to those considered in Sec.~\ref{Sec:CaiiPhotoionisation}, and will be discussed more in the context of the F10 model.
-
-\py[2DRT]|ch2DRT.get_figure('2dLevelsF10T10')|
 
 An equivalent figure for the F10 simulation at $t=\SI{10}{\second}$ is shown in Fig.~\ref{Fig:2dLevelsF10T10}.
 Due to the increased magnitude of the population changes in the transition region, it is harder to interpret the population change plots for the F10 model.
@@ -2162,9 +2163,8 @@ ax[1].set_xlabel(r'$x$ [$^{\prime\prime}$]')
 
 lFig = ch2DRT.save_figure('2dCaContext', fig, fext='.pgf', dpi=500)
 lFig.caption = r'Ca \textsc{{ii}} line core observation of M1.1 flare at time {}'.format(sliceData['times'][529-450][:-4])
+lFig.placement = 'htb'
 \end{pycode}
-
-\py[2DRT]|ch2DRT.get_figure('2dCaContext')|
 
 \begin{pycode}[2DRT]
 from astropy.time import Time
@@ -2353,7 +2353,7 @@ lFig.short_caption = r'Offset between the enhancement of the blue and red wings 
 lFig.placement = 'ptb'
 \end{pycode}
 
-\py[2DRT]|ch2DRT.get_figure('2dCrispCaSliceEnhance')|
+\py[2DRT]|ch2DRT.get_figure('2dCaContext')|
 % spell-checker: enable
 
 Whilst any real world flare situation is far more complex than the simplified two-dimensional model presented in the previous section, we will compare these results against observations of the two-ribbon M1.1 flare SOL 20140906T17:09 from the CRISP instrument, observed in \Ha{} and \CaLine{}.
@@ -2363,6 +2363,8 @@ We have selected a region on edge of the western ribbon for this comparison, whi
 The chosen region is 100 x 10\,{}px, with each pixel of the CRISP instrument being $0.057^{\prime\prime}$ ($\sim\SI{42}{\kilo\metre}$).
 This region was chosen as it represents the intersection between the flare ribbon and some of the quieter material present in the data (the east ribbon overlaps a sunspot), lies approximately perpendicular to the structure visible here, and is close to the region analysed by \citet{Kuridze2015}.
 We note that for both spectral lines, the angular size of 2\,px is less than the diffraction limit of the SST at these wavelengths (Sec.~\ref{Sec:CRISP}), and this may slightly affect the extents of the enhancements measured in this data.
+
+\py[2DRT]|ch2DRT.get_figure('2dCrispCaSliceEnhance')|
 
 To investigate the effects presented in the simulation we shall analyse the variation of the radiation in the selected region as a function of $x$ location and time.
 The 10\,{}px in $y$ are averaged to increase the signal-to-noise ratio.

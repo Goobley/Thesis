@@ -498,33 +498,6 @@ This approach is rapid and works quite well for quiet photospheric lines, such a
 
 \subsection{Generalisation Through Response Functions}\label{Sec:IntroRfs}
 
-
-It can be very limiting to impose a chosen source function, especially in regions where the temperature does not vary monotonically.
-A far more flexible approach is to attempt to fit a source function.
-From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
-\begin{equation}
-    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau} \mathop{\dd{}\tau},
-\end{equation}
-whereby we have once again assumed that $I(\tau=\infty)=0$.
-If the source function is taken to be constant in each slab this becomes
-\begin{equation}\label{Eq:LinearResponse}
-    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau} \mathop{\dd{}\tau},
-\end{equation}
-and for each slab the associated integral represents its contribution to the outgoing intensity.
-In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
-We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
-This response function does not change with the source function due to the linearity of the problem.
-In theory, we should therefore be able to infer the depth stratified form of the source function.
-However, two primary difficulties arise.
-
-Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
-Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning (is extremely sensitive to errors in the input) and thus cannot be inverted directly.
-An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can attempt to tackle both problems at once.
-
-Applying this method to a simple example with a quadratically varying source function stratified across 61 depth points using a constant line strength and line profile with 101 wavelength points we find the result shown in Fig.~\ref{Fig:InferredSourceFn}.
-The poor quality of the pseudoinverse solution is apparent from the large oscillations and poor agreement with the true source function, and this example showcases the simple case of a static atmosphere with constant line strength.
-If these parameters are also allowed to vary then the solution is likely to deteriorate further.
-
 %spell-checker: disable
 \begin{pycode}[FlareObs]
 import lightweaver as lw
@@ -570,7 +543,35 @@ lFig.short_caption = r'Failure of pseudoinverse in inferring quadratic varying s
 \end{pycode}
 %spell-checker: enable
 
+
+It can be very limiting to impose a chosen source function, especially in regions where the temperature does not vary monotonically.
+A far more flexible approach is to attempt to fit a source function.
+From the previous discussion of formal solvers we know that for a discretised atmosphere wherein the source function follows a prescribed functional form over each interval we can write
+\begin{equation}
+    I(\tau=0) = \sum_i \int_{\tau_i}^{\tau_{i+1}} S(\tau)e^{-\tau} \mathop{\dd{}\tau},
+\end{equation}
+whereby we have once again assumed that $I(\tau=\infty)=0$.
+If the source function is taken to be constant in each slab this becomes
+\begin{equation}\label{Eq:LinearResponse}
+    I(\tau=0) = \sum_i S(\tau_i) \int_{\tau_i}^{\tau_{i+1}} e^{-\tau} \mathop{\dd{}\tau},
+\end{equation}
+and for each slab the associated integral represents its contribution to the outgoing intensity.
+In fact, as each contribution is linear in the source function, it represents the \emph{response function} here i.e. the response in the outgoing intensity to a perturbation in the source function at this depth.
+We can therefore form a response matrix associating, for each wavelength and depth, the response to a change in source function at this depth.
+This response function does not change with the source function due to the linearity of the problem.
+In theory, we should therefore be able to infer the depth stratified form of the source function.
+However, two primary difficulties arise.
+
 \py[FlareObs]|chFlareObs.get_figure('InferredSourceFn')|
+
+Typically observations of a line contain many more wavelength points than the number of depth points it is feasible to have in our discretised source function, leading to an overdetermined system with no direct inverse.
+Even if one were to modify the system so that these dimensions are compatible, the response matrix typically has extremely poor conditioning (is extremely sensitive to errors in the input) and thus cannot be inverted directly.
+An immediate solution is then to use a pseudoinverse based on the singular value decomposition of the response matrix, as this can attempt to tackle both problems at once.
+
+Applying this method to a simple example with a quadratically varying source function stratified across 61 depth points using a constant line strength and line profile with 101 wavelength points we find the result shown in Fig.~\ref{Fig:InferredSourceFn}.
+The poor quality of the pseudoinverse solution is apparent from the large oscillations and poor agreement with the true source function, and this example showcases the simple case of a static atmosphere with constant line strength.
+If these parameters are also allowed to vary then the solution is likely to deteriorate further.
+
 
 % Therefore, there is a need for \emph{regularisation} of the solution, penalising deviations from smooth solutions.
 % This can be achieved in several ways, a common choice of which is Tikhonov regularisation.
