@@ -1,0 +1,17 @@
+name: Thesis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python==3.8
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - pip:
+    - seaborn
+    - astropy
+    - zarr
+    - lightweaver
+    - git+https://github.com/Goobley/texfigure.git
+    - git+https://github.com/ITA-Solar/helita.git@v0.9.0
