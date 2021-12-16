@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python==3.8
+  - python=3.8
   - pip
   - numpy
   - scipy
@@ -12,6 +12,8 @@ dependencies:
     - seaborn
     - astropy
     - zarr
+    - pygments
+    - radynpy
     - lightweaver
     - git+https://github.com/Goobley/texfigure.git
     - git+https://github.com/ITA-Solar/helita.git@v0.9.0
